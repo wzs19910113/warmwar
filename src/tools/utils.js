@@ -22,11 +22,11 @@ export function r(min,max){
     }];
     let newarr = bulbsort(oldarr,'vote');
  */
-export function bulbsort(arr,valname='val'){
+export function bulbsort(arr,valname='val',type=1){
     let res = [...arr];
     for(let i=0;i<res.length-1;i++){
         for(let j=0;j<res.length-1-i;j++){
-            if(res[j][valname]<res[j+1][valname]){
+            if(type||(res[j][valname]<res[j+1][valname])){
                 let temp=res[j];
                 res[j] = res[j+1];
                 res[j+1] = temp;
@@ -138,6 +138,18 @@ export function genRandomRoomName(){ // 随机生成房间名字
 export function genRandomFactoryName(){ // 随机生成工厂名字
     return genName(CONFIG.namespace.common,CONFIG.namespace.common,CONFIG.namespace.factory);
 }
+export function genRandomRoom(id,{fid,power,durab,risk,auto,level}={}){ // 随机生成房间
+    return {
+        id,
+        fid: fid||0,
+        name: genRandomRoomName(),
+        power: r(CONFIG.init.randmOtherRoomPowerRange[0],CONFIG.init.randmOtherRoomPowerRange[1]),
+        durab: r(CONFIG.init.randmOtherRoomDurabRange[0],CONFIG.init.randmOtherRoomDurabRange[1]),
+        risk: r(CONFIG.init.randmOtherRoomRiskRange[0],CONFIG.init.randmOtherRoomRiskRange[1]),
+        auto: r(CONFIG.init.randmOtherRoomAutoRange[0],CONFIG.init.randmOtherRoomAutoRange[1]),
+        level: r(CONFIG.init.randmOtherRoomLevelRange[0],CONFIG.init.randmOtherRoomLevelRange[1]),
+    }
+}
 export function genRandomWorker(id,{fid,rid,tid,initJob}={}){ // 随机生成工人
     function rate(){
         let a = r(0,4),
@@ -173,6 +185,13 @@ export function getListByID(id,idname,arr){ // 根据ID获取列表
         }
     });
     return res;
+}
+export function retireAllByJob(job,arr){ // 解除所有相关职务
+    Array.from(arr,inst=>{
+        if(inst.job==job){
+            inst.job = 0;
+        }
+    });
 }
 
 

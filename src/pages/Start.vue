@@ -45,7 +45,7 @@
 
 <script>
 // Copyright (c) 2018 Copyright Holder All Rights Reserved.
-import { query, r, bulbsort, genRandomWorkerName, genRandomRoomName, genRandomFactoryName, genRandomWorker, genRandomTerminal, genRandomRoom, getListByID } from '../tools/utils';
+import { query, r, bulbsort, genRandomWorkerName, genRandomRoomName, genRandomFactoryName, genRandomRoom, genRandomWorker, genRandomTerminal, getListByID } from '../tools/utils';
 import { DEBUG, CONFIG } from '../config/config';
 export default {
     name: 'Start',
@@ -172,6 +172,7 @@ export default {
                 terminalList = [],
                 workerList = [],
                 relationList = [],
+                logList = [],
                 data,
                 init = CONFIG.init;
             // 生成工厂列表
@@ -180,6 +181,8 @@ export default {
                 name: genRandomFactoryName(),
                 money: init.money,
                 image: init.image,
+                hrp: init.humanResourcePoint,
+                rrp: init.roomResourcePoint,
             });
             for(let i=1;i<factoryCount;i++){
                 factoryList.push({
@@ -202,16 +205,7 @@ export default {
             });
             for(let f=1;f<factoryList.length;f++){
                 for(let i=0;i<r(init.randomOtherRoomRange[0],init.randomOtherRoomRange[1]);i++){
-                    roomList.push({
-                        id: window.GLOBAL.accRoomID++,
-                        fid: factoryList[f].id,
-                        name: genRandomRoomName(),
-                        power: r(init.randmOtherRoomPowerRange[0],init.randmOtherRoomPowerRange[1]),
-                        durab: r(init.randmOtherRoomDurabRange[0],init.randmOtherRoomDurabRange[1]),
-                        risk: r(init.randmOtherRoomRiskRange[0],init.randmOtherRoomRiskRange[1]),
-                        auto: r(init.randmOtherRoomAutoRange[0],init.randmOtherRoomAutoRange[1]),
-                        level: r(init.randmOtherRoomLevelRange[0],init.randmOtherRoomLevelRange[1]),
-                    });
+                    roomList.push(genRandomRoom(window.GLOBAL.accRoomID++,{fid:factoryList[f].id}));
                 }
             }
             // 生成终端列表
@@ -255,7 +249,7 @@ export default {
             	job: 0,
             });
             for(let i=0;i<init.workerCount;i++){ // 我的初始员工
-                workerList.push(genRandomWorker(window.GLOBAL.accWorkerID++,{fid:factoryList[0].id}));
+                workerList.push(genRandomWorker(window.GLOBAL.accWorkerID++,{fid:factoryList[0].id,}));
             }
             for(let f=1;f<factoryList.length;f++){ // 生成其他工厂员工
                 let factory = factoryList[f],
@@ -285,7 +279,7 @@ export default {
                 }
             }
             // 合成初始数据
-            data = { factoryList, roomList, terminalList, workerList, relationList };
+            data = { factoryList, roomList, terminalList, workerList, relationList, logList, };
             return data;
         },
     }
