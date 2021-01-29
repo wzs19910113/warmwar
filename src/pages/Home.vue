@@ -47,7 +47,7 @@
                                 <a class="btn btn-icon" @click="onTapAddWorker(3)">+</a>
                                 <a v-if="tempData.room.maintainer" class="btn btn-icon" @click="onTapRemoveWorker(3)">-</a>
                             </b></div>
-                            <div class="index-cell"><b>公关:
+                            <div class="index-cell"><b>门面:
                                 <span v-if="tempData.room.imageAgent">{{tempData.room.imageAgent.name}} <a class="btn btn-icon" @click="jump(tempData.room.imageAgent.id,4)">@</a></span>
                                 <a class="btn btn-icon" @click="onTapAddWorker(4)">+</a>
                                 <a v-if="tempData.room.imageAgent" class="btn btn-icon" @click="onTapRemoveWorker(4)">-</a>
@@ -71,7 +71,7 @@
                 <!--终端-->
                 <div class="tab-panel" v-if="tempData.terminal" v-show="state==3">
                     <div class="row">
-                        <h2 class="room-name">{{tempData.room.name}}的终端-{{tempData.terminal.id}} <a class="btn btn-edit" @click="showEditTerminal=true">操作</a></h2>
+                        <h2 class="room-name">{{tempData.room.name}} 终端-{{tempData.terminal.id}} <a class="btn btn-edit" @click="showEditTerminal=true">操作</a></h2>
                     </div>
                     <div class="row">
                         <div class="index">
@@ -85,6 +85,7 @@
                             <div class="index-cell">
                                 <b>执行:
                                     <span>{{tempData.terminal.job||'-'}}</span>
+                                    <a v-if="tempData.terminal.operator&&tempData.terminal.operator.id" class="btn btn-icon" @click="onTapAddJob(tempData.terminal)">+</a>
                                 </b>
                             </div>
                             <div class="index-cell"><b>老化: {{tempData.terminal.durab}}%</b></div>
@@ -132,8 +133,12 @@
                     <h3>策略:</h3>
                     <a class="risk-item" :class="{'select':tempData.room.risk==index}" v-for="index in [1,2,3]" @click="onTapRiskLevel(index)">{{config.risk_name_map[index-1]}}</a>
                 </div>
+                <div class="row risk">
+                    <h3>全体命令:</h3>
+                    <a class="risk-item" v-for="index in [0,1,2,3]" @click="onTapEntireOrder(index)">{{['发电','挖矿','交易','维护'][index]}}</a>
+                </div>
                 <div class="row sell">
-                    <a class="risk-item" @click="onTapSellRoom(tempData.room)">出售（$）</a>
+                    <a class="risk-item" @click="onTapSellRoom">出售</a>
                 </div>
             </div>
         </nut-popup>
@@ -163,12 +168,19 @@
                 <List title="选择人员" ref="workerListPop" :data="tempData.myWorkerList" :columns="WORKER_LIST_COLUMN" @onDoubleTap="onDoubleTapPopWorker" />
             </div>
         </nut-popup>
+        <nut-popup v-model="showConfirmSellRoom">
+            <div class="row room-board" v-if="tempData.room">
+                <div class="row level">
+                    <a class="btn" @click="onTapConfirmSellRoom">确认出售（{{tempData.room.sell||0}}$）</a>
+                </div>
+            </div>
+        </nut-popup>
     </div>
 </template>
 
 <script>
 import List from '../components/List'
-import { query, r, bulbsort, getParentNode, numFormat, genRandomWorkerName, genRandomRoomName, genRandomFactoryName, genRandomRoom, genRandomWorker, genRandomTerminal, getListByID, retireAllByJob } from '../tools/utils';
+import { query, r, bulbsort, getParentNode, numFormat, avg, genRandomWorkerName, genRandomRoomName, genRandomFactoryName, genRandomRoom, genRandomWorker, genRandomTerminal, getListByID, retireAllByJob } from '../tools/utils';
 import { DEBUG, CONFIG } from '../config/config';
 export default {
     name: 'Home',
@@ -199,7 +211,8 @@ export default {
             },
             config: CONFIG,
 
-            searchingID: '', // 当前搜索的ID
+            searchingRoomID: '', // 当前搜索的房间ID
+            searchingTerminalID: '', // 当前搜索的终端ID
             // 弹出层
             showSystemMenu: false,
             showEditFactoryName: false,
@@ -207,6 +220,8 @@ export default {
             showEditTerminal: false,
             showWorkerList: false,
             showJobPop: false,
+            showConfirmSellRoom: false,
+            showConfirmSellWorker: false,
 
             // const
             ROOM_LIST_COLUMN: [
@@ -236,11 +251,21 @@ export default {
                 {name:'img',title:'形象',width:'15%',},
                 {name:'job',title:'职能',width:'15%',format:v=>`${CONFIG.job_name_map[v]}`,},
             ],
+            WORKER_LIST_2_COLUMN: [
+                {name:'id',title:'ID',width:'10%',},
+                {name:'name',title:'名字',width:'15%',},
+                {name:'str',title:'体力',width:'10%',},
+                {name:'int',title:'智力',width:'10%',},
+                {name:'com',title:'交流',width:'10%',},
+                {name:'img',title:'形象',width:'10%',},
+                {name:'room',title:'房间',width:'20%',},
+                {name:'job',title:'职能',width:'15%',format:v=>`${CONFIG.job_name_map[v]}`,},
+            ],
         };
     },
     mounted(){
         if(DEBUG){
-            window.GLOBAL = JSON.parse('{"game":{"factoryList":[{"id":1,"name":"京夏集团","money":1000,"image":0,"hrp":0,"rrp":0},{"id":2,"name":"光定控股","money":12100,"image":765},{"id":3,"name":"漫它控股","money":9887,"image":143}],"roomList":[{"id":1,"fid":1,"name":"索银山","power":50,"durab":0,"risk":1,"auto":0,"level":1},{"id":2,"fid":2,"name":"小资冲","power":456,"durab":0,"risk":3,"auto":29,"level":1},{"id":3,"fid":2,"name":"湖鲁公园","power":3913,"durab":0,"risk":2,"auto":8,"level":3},{"id":4,"fid":3,"name":"环泽广场","power":1402,"durab":0,"risk":1,"auto":27,"level":2},{"id":5,"fid":3,"name":"想门区","power":7457,"durab":0,"risk":3,"auto":56,"level":2},{"id":6,"fid":3,"name":"紫艺区","power":6658,"durab":0,"risk":2,"auto":6,"level":3},{"id":7,"fid":3,"name":"花合路","power":2295,"durab":0,"risk":3,"auto":81,"level":2},{"id":8,"fid":3,"name":"麦仁镇","power":3606,"durab":0,"risk":2,"auto":11,"level":1}],"terminalList":[{"id":1,"fid":1,"rid":1,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":2,"fid":1,"rid":1,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":3,"fid":1,"rid":1,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":4,"fid":1,"rid":1,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":5,"fid":1,"rid":1,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":6,"fid":1,"rid":1,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":7,"fid":2,"rid":2,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":8,"fid":2,"rid":2,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":9,"fid":2,"rid":2,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":10,"fid":2,"rid":2,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":11,"fid":2,"rid":2,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":12,"fid":2,"rid":2,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":13,"fid":2,"rid":3,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":14,"fid":2,"rid":3,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":15,"fid":2,"rid":3,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":16,"fid":2,"rid":3,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":17,"fid":2,"rid":3,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":18,"fid":2,"rid":3,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":19,"fid":2,"rid":3,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":20,"fid":2,"rid":3,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":21,"fid":2,"rid":3,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":22,"fid":2,"rid":3,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":23,"fid":3,"rid":4,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":24,"fid":3,"rid":4,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":25,"fid":3,"rid":4,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":26,"fid":3,"rid":4,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":27,"fid":3,"rid":4,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":28,"fid":3,"rid":4,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":29,"fid":3,"rid":4,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":30,"fid":3,"rid":4,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":31,"fid":3,"rid":5,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":32,"fid":3,"rid":5,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":33,"fid":3,"rid":5,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":34,"fid":3,"rid":5,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":35,"fid":3,"rid":5,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":36,"fid":3,"rid":5,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":37,"fid":3,"rid":5,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":38,"fid":3,"rid":5,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":39,"fid":3,"rid":6,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":40,"fid":3,"rid":6,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":41,"fid":3,"rid":6,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":42,"fid":3,"rid":6,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":43,"fid":3,"rid":6,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":44,"fid":3,"rid":6,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":45,"fid":3,"rid":6,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":46,"fid":3,"rid":6,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":47,"fid":3,"rid":6,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":48,"fid":3,"rid":6,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":49,"fid":3,"rid":7,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":50,"fid":3,"rid":7,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":51,"fid":3,"rid":7,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":52,"fid":3,"rid":7,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":53,"fid":3,"rid":7,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":54,"fid":3,"rid":7,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":55,"fid":3,"rid":7,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":56,"fid":3,"rid":7,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":57,"fid":3,"rid":8,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":58,"fid":3,"rid":8,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":59,"fid":3,"rid":8,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":60,"fid":3,"rid":8,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":61,"fid":3,"rid":8,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":62,"fid":3,"rid":8,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1}],"workerList":[{"id":1,"tid":0,"rid":0,"fid":1,"tfid":0,"name":"高级鱼","str":100,"int":100,"com":100,"img":98,"job":0},{"id":2,"fid":1,"rid":0,"tid":0,"ftid":0,"name":"易函雪","str":46,"int":41,"com":13,"img":30,"job":0},{"id":3,"fid":1,"rid":0,"tid":0,"ftid":0,"name":"王婷謇","str":19,"int":10,"com":44,"img":66,"job":11},{"id":4,"fid":2,"rid":2,"tid":0,"ftid":0,"name":"苏罗","str":40,"int":84,"com":29,"img":42,"job":0},{"id":5,"fid":2,"rid":2,"tid":0,"ftid":0,"name":"周旅宾","str":19,"int":10,"com":9,"img":43,"job":0},{"id":6,"fid":2,"rid":2,"tid":0,"ftid":0,"name":"顾帆麴","str":30,"int":71,"com":86,"img":98,"job":0},{"id":7,"fid":2,"rid":2,"tid":0,"ftid":0,"name":"莫清昕","str":9,"int":16,"com":14,"img":9,"job":0},{"id":8,"fid":2,"rid":2,"tid":0,"ftid":0,"name":"沈罗","str":16,"int":17,"com":47,"img":22,"job":0},{"id":9,"fid":2,"rid":2,"tid":0,"ftid":0,"name":"张谯芷","str":37,"int":60,"com":11,"img":36,"job":0},{"id":10,"fid":2,"rid":3,"tid":0,"ftid":0,"name":"刘衷","str":31,"int":22,"com":43,"img":49,"job":0},{"id":11,"fid":2,"rid":3,"tid":0,"ftid":0,"name":"宰芸","str":76,"int":76,"com":11,"img":8,"job":0},{"id":12,"fid":2,"rid":3,"tid":0,"ftid":0,"name":"范璞子","str":1,"int":37,"com":13,"img":6,"job":0},{"id":13,"fid":2,"rid":3,"tid":0,"ftid":0,"name":"陈懿公","str":50,"int":40,"com":7,"img":35,"job":0},{"id":14,"fid":2,"rid":3,"tid":0,"ftid":0,"name":"堵馨","str":4,"int":27,"com":17,"img":58,"job":0},{"id":15,"fid":2,"rid":3,"tid":0,"ftid":0,"name":"周卜","str":49,"int":20,"com":24,"img":20,"job":0},{"id":16,"fid":2,"rid":3,"tid":0,"ftid":0,"name":"廖怀晓","str":17,"int":6,"com":31,"img":37,"job":0},{"id":17,"fid":3,"rid":4,"tid":0,"ftid":0,"name":"郁白皓","str":24,"int":23,"com":2,"img":22,"job":0},{"id":18,"fid":3,"rid":4,"tid":0,"ftid":0,"name":"胡弘英","str":50,"int":47,"com":55,"img":44,"job":0},{"id":19,"fid":3,"rid":4,"tid":0,"ftid":0,"name":"冉惜芬","str":10,"int":15,"com":40,"img":27,"job":0},{"id":20,"fid":3,"rid":4,"tid":0,"ftid":0,"name":"张庄","str":27,"int":30,"com":74,"img":52,"job":0},{"id":21,"fid":3,"rid":4,"tid":0,"ftid":0,"name":"高晓天","str":48,"int":83,"com":34,"img":45,"job":0},{"id":22,"fid":3,"rid":4,"tid":0,"ftid":0,"name":"武樊寄","str":10,"int":83,"com":39,"img":10,"job":0},{"id":23,"fid":3,"rid":5,"tid":0,"ftid":0,"name":"陈楠紫","str":33,"int":60,"com":77,"img":1,"job":0},{"id":24,"fid":3,"rid":5,"tid":0,"ftid":0,"name":"王竹","str":42,"int":25,"com":14,"img":45,"job":0},{"id":25,"fid":3,"rid":5,"tid":0,"ftid":0,"name":"康山贞","str":44,"int":14,"com":55,"img":19,"job":0},{"id":26,"fid":3,"rid":5,"tid":0,"ftid":0,"name":"刘帖","str":41,"int":63,"com":49,"img":34,"job":0},{"id":27,"fid":3,"rid":5,"tid":0,"ftid":0,"name":"刘泽叔","str":50,"int":33,"com":84,"img":26,"job":0},{"id":28,"fid":3,"rid":5,"tid":0,"ftid":0,"name":"戴濯严","str":11,"int":4,"com":44,"img":72,"job":0},{"id":29,"fid":3,"rid":5,"tid":0,"ftid":0,"name":"刘赧飞","str":49,"int":15,"com":12,"img":38,"job":0},{"id":30,"fid":3,"rid":6,"tid":0,"ftid":0,"name":"黄云冼","str":43,"int":37,"com":18,"img":57,"job":0},{"id":31,"fid":3,"rid":6,"tid":0,"ftid":0,"name":"朱贤霞","str":18,"int":49,"com":28,"img":11,"job":0},{"id":32,"fid":3,"rid":6,"tid":0,"ftid":0,"name":"农昆","str":53,"int":18,"com":40,"img":30,"job":0},{"id":33,"fid":3,"rid":6,"tid":0,"ftid":0,"name":"尤凡奚","str":4,"int":40,"com":33,"img":67,"job":0},{"id":34,"fid":3,"rid":6,"tid":0,"ftid":0,"name":"廖明倚","str":88,"int":51,"com":12,"img":44,"job":0},{"id":35,"fid":3,"rid":6,"tid":0,"ftid":0,"name":"王如","str":81,"int":43,"com":4,"img":84,"job":0},{"id":36,"fid":3,"rid":6,"tid":0,"ftid":0,"name":"王拜波","str":40,"int":16,"com":17,"img":7,"job":0},{"id":37,"fid":3,"rid":6,"tid":0,"ftid":0,"name":"万阚厚","str":34,"int":37,"com":17,"img":24,"job":0},{"id":38,"fid":3,"rid":7,"tid":0,"ftid":0,"name":"刘任","str":8,"int":73,"com":81,"img":33,"job":0},{"id":39,"fid":3,"rid":7,"tid":0,"ftid":0,"name":"罗芳","str":42,"int":18,"com":25,"img":38,"job":0},{"id":40,"fid":3,"rid":7,"tid":0,"ftid":0,"name":"嵇雅琴","str":45,"int":66,"com":15,"img":38,"job":0},{"id":41,"fid":3,"rid":7,"tid":0,"ftid":0,"name":"庾碧","str":54,"int":37,"com":68,"img":77,"job":0},{"id":42,"fid":3,"rid":7,"tid":0,"ftid":0,"name":"王光豪","str":7,"int":13,"com":91,"img":88,"job":0},{"id":43,"fid":3,"rid":7,"tid":0,"ftid":0,"name":"王简检","str":96,"int":30,"com":56,"img":79,"job":0},{"id":44,"fid":3,"rid":7,"tid":0,"ftid":0,"name":"满英畅","str":64,"int":19,"com":48,"img":29,"job":0},{"id":45,"fid":3,"rid":7,"tid":0,"ftid":0,"name":"韩施","str":4,"int":26,"com":19,"img":23,"job":0},{"id":46,"fid":3,"rid":8,"tid":0,"ftid":0,"name":"段仪兰","str":87,"int":22,"com":15,"img":4,"job":0},{"id":47,"fid":3,"rid":8,"tid":0,"ftid":0,"name":"彭桃欣","str":1,"int":47,"com":10,"img":13,"job":0}],"relationList":[{"from":1,"to":2,"invest":0,"support":0,"jointID":0,"spyID":0},{"from":1,"to":3,"invest":0,"support":0,"jointID":0,"spyID":0},{"from":2,"to":1,"invest":0,"support":0,"jointID":0,"spyID":0},{"from":2,"to":3,"invest":0,"support":0,"jointID":0,"spyID":0},{"from":3,"to":1,"invest":0,"support":0,"jointID":0,"spyID":0},{"from":3,"to":2,"invest":0,"support":0,"jointID":0,"spyID":0}]},"accFactoryID":4,"accRoomID":9,"accTerminalID":63,"accWorkerID":48,"day":1}');
+            window.GLOBAL = JSON.parse('{"game":{"factoryList":[{"id":1,"name":"京夏集团","money":100000,"image":0,"hrp":0,"rrp":0},{"id":2,"name":"光定控股","money":12100,"image":765},{"id":3,"name":"漫它控股","money":9887,"image":143}],"roomList":[{"id":1,"fid":1,"name":"索银山","power":50,"durab":0,"risk":1,"auto":0,"level":1},{"id":2,"fid":2,"name":"小资冲","power":456,"durab":0,"risk":3,"auto":29,"level":1},{"id":3,"fid":2,"name":"湖鲁公园","power":3913,"durab":0,"risk":2,"auto":8,"level":3},{"id":4,"fid":3,"name":"环泽广场","power":1402,"durab":0,"risk":1,"auto":27,"level":2},{"id":5,"fid":3,"name":"想门区","power":7457,"durab":0,"risk":3,"auto":56,"level":2},{"id":6,"fid":3,"name":"紫艺区","power":6658,"durab":0,"risk":2,"auto":6,"level":3},{"id":7,"fid":1,"name":"花合路","power":2295,"durab":0,"risk":3,"auto":81,"level":2},{"id":8,"fid":3,"name":"麦仁镇","power":3606,"durab":0,"risk":2,"auto":11,"level":1}],"terminalList":[{"id":1,"fid":1,"rid":1,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":2,"fid":1,"rid":1,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":3,"fid":1,"rid":1,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":4,"fid":1,"rid":1,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":5,"fid":1,"rid":1,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":6,"fid":1,"rid":1,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":7,"fid":2,"rid":2,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":8,"fid":2,"rid":2,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":9,"fid":2,"rid":2,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":10,"fid":2,"rid":2,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":11,"fid":2,"rid":2,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":12,"fid":2,"rid":2,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":13,"fid":2,"rid":3,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":14,"fid":2,"rid":3,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":15,"fid":2,"rid":3,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":16,"fid":2,"rid":3,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":17,"fid":2,"rid":3,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":18,"fid":2,"rid":3,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":19,"fid":2,"rid":3,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":20,"fid":2,"rid":3,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":21,"fid":2,"rid":3,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":22,"fid":2,"rid":3,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":23,"fid":3,"rid":4,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":24,"fid":3,"rid":4,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":25,"fid":3,"rid":4,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":26,"fid":3,"rid":4,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":27,"fid":3,"rid":4,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":28,"fid":3,"rid":4,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":29,"fid":3,"rid":4,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":30,"fid":3,"rid":4,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":31,"fid":3,"rid":5,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":32,"fid":3,"rid":5,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":33,"fid":3,"rid":5,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":34,"fid":3,"rid":5,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":35,"fid":3,"rid":5,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":36,"fid":3,"rid":5,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":37,"fid":3,"rid":5,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":38,"fid":3,"rid":5,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":39,"fid":3,"rid":6,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":40,"fid":3,"rid":6,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":41,"fid":3,"rid":6,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":42,"fid":3,"rid":6,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":43,"fid":3,"rid":6,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":44,"fid":3,"rid":6,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":45,"fid":3,"rid":6,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":46,"fid":3,"rid":6,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":47,"fid":3,"rid":6,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":48,"fid":3,"rid":6,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":49,"fid":3,"rid":7,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":50,"fid":3,"rid":7,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":51,"fid":3,"rid":7,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":52,"fid":3,"rid":7,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":53,"fid":3,"rid":7,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":54,"fid":3,"rid":7,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":55,"fid":3,"rid":7,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":56,"fid":3,"rid":7,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":57,"fid":3,"rid":8,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":58,"fid":3,"rid":8,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":59,"fid":3,"rid":8,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":60,"fid":3,"rid":8,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":61,"fid":3,"rid":8,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":62,"fid":3,"rid":8,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1}],"workerList":[{"id":1,"tid":0,"rid":0,"fid":1,"tfid":0,"name":"高级鱼","str":100,"int":100,"com":100,"img":98,"job":0},{"id":2,"fid":1,"rid":0,"tid":0,"ftid":0,"name":"易函雪","str":46,"int":41,"com":13,"img":30,"job":0},{"id":3,"fid":1,"rid":0,"tid":0,"ftid":0,"name":"王婷謇","str":19,"int":10,"com":44,"img":66,"job":11},{"id":4,"fid":2,"rid":2,"tid":0,"ftid":0,"name":"苏罗","str":40,"int":84,"com":29,"img":42,"job":0},{"id":5,"fid":2,"rid":2,"tid":0,"ftid":0,"name":"周旅宾","str":19,"int":10,"com":9,"img":43,"job":0},{"id":6,"fid":2,"rid":2,"tid":0,"ftid":0,"name":"顾帆麴","str":30,"int":71,"com":86,"img":98,"job":0},{"id":7,"fid":2,"rid":2,"tid":0,"ftid":0,"name":"莫清昕","str":9,"int":16,"com":14,"img":9,"job":0},{"id":8,"fid":2,"rid":2,"tid":0,"ftid":0,"name":"沈罗","str":16,"int":17,"com":47,"img":22,"job":0},{"id":9,"fid":2,"rid":2,"tid":0,"ftid":0,"name":"张谯芷","str":37,"int":60,"com":11,"img":36,"job":0},{"id":10,"fid":2,"rid":3,"tid":0,"ftid":0,"name":"刘衷","str":31,"int":22,"com":43,"img":49,"job":0},{"id":11,"fid":2,"rid":3,"tid":0,"ftid":0,"name":"宰芸","str":76,"int":76,"com":11,"img":8,"job":0},{"id":12,"fid":2,"rid":3,"tid":0,"ftid":0,"name":"范璞子","str":1,"int":37,"com":13,"img":6,"job":0},{"id":13,"fid":2,"rid":3,"tid":0,"ftid":0,"name":"陈懿公","str":50,"int":40,"com":7,"img":35,"job":0},{"id":14,"fid":2,"rid":3,"tid":0,"ftid":0,"name":"堵馨","str":4,"int":27,"com":17,"img":58,"job":0},{"id":15,"fid":2,"rid":3,"tid":0,"ftid":0,"name":"周卜","str":49,"int":20,"com":24,"img":20,"job":0},{"id":16,"fid":2,"rid":3,"tid":0,"ftid":0,"name":"廖怀晓","str":17,"int":6,"com":31,"img":37,"job":0},{"id":17,"fid":3,"rid":4,"tid":0,"ftid":0,"name":"郁白皓","str":24,"int":23,"com":2,"img":22,"job":0},{"id":18,"fid":3,"rid":4,"tid":0,"ftid":0,"name":"胡弘英","str":50,"int":47,"com":55,"img":44,"job":0},{"id":19,"fid":3,"rid":4,"tid":0,"ftid":0,"name":"冉惜芬","str":10,"int":15,"com":40,"img":27,"job":0},{"id":20,"fid":3,"rid":4,"tid":0,"ftid":0,"name":"张庄","str":27,"int":30,"com":74,"img":52,"job":0},{"id":21,"fid":3,"rid":4,"tid":0,"ftid":0,"name":"高晓天","str":48,"int":83,"com":34,"img":45,"job":0},{"id":22,"fid":3,"rid":4,"tid":0,"ftid":0,"name":"武樊寄","str":10,"int":83,"com":39,"img":10,"job":0},{"id":23,"fid":3,"rid":5,"tid":0,"ftid":0,"name":"陈楠紫","str":33,"int":60,"com":77,"img":1,"job":0},{"id":24,"fid":3,"rid":5,"tid":0,"ftid":0,"name":"王竹","str":42,"int":25,"com":14,"img":45,"job":0},{"id":25,"fid":3,"rid":5,"tid":0,"ftid":0,"name":"康山贞","str":44,"int":14,"com":55,"img":19,"job":0},{"id":26,"fid":3,"rid":5,"tid":0,"ftid":0,"name":"刘帖","str":41,"int":63,"com":49,"img":34,"job":0},{"id":27,"fid":3,"rid":5,"tid":0,"ftid":0,"name":"刘泽叔","str":50,"int":33,"com":84,"img":26,"job":0},{"id":28,"fid":3,"rid":5,"tid":0,"ftid":0,"name":"戴濯严","str":11,"int":4,"com":44,"img":72,"job":0},{"id":29,"fid":3,"rid":5,"tid":0,"ftid":0,"name":"刘赧飞","str":49,"int":15,"com":12,"img":38,"job":0},{"id":30,"fid":3,"rid":6,"tid":0,"ftid":0,"name":"黄云冼","str":43,"int":37,"com":18,"img":57,"job":0},{"id":31,"fid":3,"rid":6,"tid":0,"ftid":0,"name":"朱贤霞","str":18,"int":49,"com":28,"img":11,"job":0},{"id":32,"fid":3,"rid":6,"tid":0,"ftid":0,"name":"农昆","str":53,"int":18,"com":40,"img":30,"job":0},{"id":33,"fid":3,"rid":6,"tid":0,"ftid":0,"name":"尤凡奚","str":4,"int":40,"com":33,"img":67,"job":0},{"id":34,"fid":3,"rid":6,"tid":0,"ftid":0,"name":"廖明倚","str":88,"int":51,"com":12,"img":44,"job":0},{"id":35,"fid":3,"rid":6,"tid":0,"ftid":0,"name":"王如","str":81,"int":43,"com":4,"img":84,"job":0},{"id":36,"fid":3,"rid":6,"tid":0,"ftid":0,"name":"王拜波","str":40,"int":16,"com":17,"img":7,"job":0},{"id":37,"fid":3,"rid":6,"tid":0,"ftid":0,"name":"万阚厚","str":34,"int":37,"com":17,"img":24,"job":0},{"id":38,"fid":3,"rid":7,"tid":0,"ftid":0,"name":"刘任","str":8,"int":73,"com":81,"img":33,"job":0},{"id":39,"fid":3,"rid":7,"tid":0,"ftid":0,"name":"罗芳","str":42,"int":18,"com":25,"img":38,"job":0},{"id":40,"fid":3,"rid":7,"tid":0,"ftid":0,"name":"嵇雅琴","str":45,"int":66,"com":15,"img":38,"job":0},{"id":41,"fid":3,"rid":7,"tid":0,"ftid":0,"name":"庾碧","str":54,"int":37,"com":68,"img":77,"job":0},{"id":42,"fid":3,"rid":7,"tid":0,"ftid":0,"name":"王光豪","str":7,"int":13,"com":91,"img":88,"job":0},{"id":43,"fid":3,"rid":7,"tid":0,"ftid":0,"name":"王简检","str":96,"int":30,"com":56,"img":79,"job":0},{"id":44,"fid":3,"rid":7,"tid":0,"ftid":0,"name":"满英畅","str":64,"int":19,"com":48,"img":29,"job":0},{"id":45,"fid":3,"rid":7,"tid":0,"ftid":0,"name":"韩施","str":4,"int":26,"com":19,"img":23,"job":0},{"id":46,"fid":3,"rid":8,"tid":0,"ftid":0,"name":"段仪兰","str":87,"int":22,"com":15,"img":4,"job":0},{"id":47,"fid":3,"rid":8,"tid":0,"ftid":0,"name":"彭桃欣","str":1,"int":47,"com":10,"img":13,"job":0}],"relationList":[{"from":1,"to":2,"invest":0,"support":0,"jointID":0,"spyID":0},{"from":1,"to":3,"invest":0,"support":0,"jointID":0,"spyID":0},{"from":2,"to":1,"invest":0,"support":0,"jointID":0,"spyID":0},{"from":2,"to":3,"invest":0,"support":0,"jointID":0,"spyID":0},{"from":3,"to":1,"invest":0,"support":0,"jointID":0,"spyID":0},{"from":3,"to":2,"invest":0,"support":0,"jointID":0,"spyID":0}]},"accFactoryID":4,"accRoomID":9,"accTerminalID":63,"accWorkerID":48,"day":1}');
         }
         if(window.GLOBAL&&window.GLOBAL.game){
             this.game = window.GLOBAL.game;
@@ -280,6 +305,36 @@ export default {
                 data: JSON.stringify(window.GLOBAL),
             });
         },
+        calcBalance(myRoomWorkerList){ // 计算协调
+            let manager, // 房间管理员
+                myWorkerList = []; // 房间内正在终端工作的人员列表
+            for(let worker of myRoomWorkerList){
+                if(worker.job==1||worker.job==2||worker.job==3||worker.job==4){
+                    myWorkerList.push(worker);
+                }
+                else if(worker.job==7){
+                    manager = worker;
+                }
+            }
+            let balance = 0;
+            if(myWorkerList.length==1){
+                balance = 100;
+            }
+            else if(manager&&myWorkerList.length>1){
+                balance = avg([manager.com,manager.com,manager.com,manager.img,manager.img,manager.int]); // 3点交流，2点形象，1点智力
+            }
+            else if(myWorkerList.length>1){
+                balance = avg(myWorkerList,'com');
+            }
+            // console.log('jisuanxietiao',balance,myWorkerList.length);
+            return balance;
+        },
+        calcWorkerValue(){ // 计算人员价格
+            return 50;
+        },
+        calcRoomValue(){ // 计算房间价格
+            return 350;
+        },
 
         onTapDrag(index){ // 点击【悬浮拖拽】按钮
             if(this.loading) return;
@@ -305,13 +360,27 @@ export default {
             this.showEditFactoryName = true;
         },
         onTapRoomLevelUp(){ // 点击【房间升级】按钮
-            let room = this.tempData.room,
+            let rid = (this.tempData.room||{}).id,
+                tid = (this.tempData.terminal||{}).id,
+                room = getListByID(rid,'id',this.game.roomList)[0],
                 cost = this.config.room_levelup_cost[room.level-1];
             if(room.level<this.config.max_room_level){
                 if(this.game.factoryList[0].money>=cost){
                     this.game.factoryList[0].money -= cost;
                     room.level += 1;
-                    this.$refs.roomList&&this.$refs.roomList.asyn();
+                    let addition = CONFIG.terminal_count_distribution[room.level-1]-this.tempData.myTerminalList.length;
+                    for(let i=0;i<addition;i++){
+                        this.game.terminalList.push({
+                            id: window.GLOBAL.accTerminalID++,
+                            fid: this.game.factoryList[0].id,
+                            rid: room.id,
+                        	durab: CONFIG.init.terminalDurab,
+                        	powerLevel: CONFIG.init.terminalPowerLevel,
+                        	digLevel: CONFIG.init.terminalDigLevel,
+                        	tradeLevel: CONFIG.init.terminalTradeLevel,
+                        });
+                    }
+                    this.asynAllPages(rid,tid);
                 }
                 else{
                     this.$toast.text('资金不够');
@@ -319,16 +388,17 @@ export default {
             }
         },
         onTapTerminalLevelUp(type){ // 点击【房终端升级】按钮
-            let terminal = this.tempData.terminal;
+            let rid = (this.tempData.room||{}).id,
+                tid = (this.tempData.terminal||{}).id,
+                terminal = getListByID(tid,'id',this.game.terminalList)[0];
             if(terminal){
-                let level = this.tempData.terminal[type+'Level'];
+                let level = terminal[type+'Level'];
                 if(level<this.config.max_terminal_level){
                     let cost = this.config[type+'_levelup_cost'][level-1];
                     if(this.game.factoryList[0].money>=cost){
                         this.game.factoryList[0].money -= cost;
                         terminal[type+'Level'] += 1;
-                        this.$refs.roomList&&this.$refs.roomList.asyn();
-                        this.$refs.terminalList&&this.$refs.terminalList.asyn();
+                        this.asynAllPages(rid,tid);
                     }
                     else{
                         this.$toast.text('资金不够');
@@ -382,12 +452,17 @@ export default {
                     }
                 break;
             }
-            this.asynHomePage();
-            rid&&this.asynRoomPage(rid);
-            tid&&this.asynTerminalPage(tid);
-            this.$refs.roomList&&this.$refs.roomList.asyn();
-            this.$refs.terminalList&&this.$refs.terminalList.asyn();
-            this.$refs.workerListPop&&this.$refs.workerListPop.asyn();
+            this.asynAllPages(rid,tid);
+        },
+        onTapAddJob(){ // 点击【职能+】按钮
+            this.showJobPop = true;
+        },
+        onTapSellRoom(){ // 点击【出售房间】按钮
+            this.tempData.room.sell = this.calcRoomValue()*CONFIG.sell_factor;
+            this.showConfirmSellRoom = true;
+        },
+        onTapConfirmSellRoom(){ // 点击【确认出售房间】按钮
+            console.log('点击【确认出售房间】按钮');
         },
         onTapJob(index){ // 点击【职能】按钮
             let rid = (this.tempData.room||{}).id,
@@ -396,13 +471,21 @@ export default {
             if(worker){
                 worker.job = index;
             }
-            this.asynHomePage();
-            rid&&this.asynRoomPage(rid);
-            tid&&this.asynTerminalPage(tid);
-            this.$refs.roomList&&this.$refs.roomList.asyn();
-            this.$refs.terminalList&&this.$refs.terminalList.asyn();
-            this.$refs.workerListPop&&this.$refs.workerListPop.asyn();
+            this.asynAllPages(rid,tid);
             this.showJobPop = false;
+        },
+        onTapEntireOrder(index){ // 点击【房间全体命令】按钮
+            let targetJob = [1,2,3,4][index]||0,
+                rid = (this.tempData.room||{}).id,
+                tid = (this.tempData.terminal||{}).id,
+                roomWorkerList = getListByID(rid,'rid',this.game.workerList),
+                myRoomWorkerList = [...roomWorkerList];
+            for(let worker of myRoomWorkerList){
+                if(worker.tid!=0)
+                    worker.job = targetJob;
+            }
+            this.showEditRoom = false;
+            this.asynAllPages(rid,tid);
         },
         onDoubleTapRoom(id){ // 双击【房间】按钮
             this.jump(id,2);
@@ -462,12 +545,7 @@ export default {
                     this.showJobPop = true;
                 break;
             }
-            this.asynHomePage();
-            rid&&this.asynRoomPage(rid);
-            tid&&this.asynTerminalPage(tid);
-            this.$refs.roomList&&this.$refs.roomList.asyn();
-            this.$refs.terminalList&&this.$refs.terminalList.asyn();
-            this.$refs.workerListPop&&this.$refs.workerListPop.asyn();
+            this.asynAllPages(rid,tid);
             this.showWorkerList = false;
         },
         jump(id,state){ // 点击【跳转】按钮
@@ -477,13 +555,32 @@ export default {
                     this.asynHoomPage();
                 break;
                 case 2: // 房间
+                    this.searchingRoomID = id;
+                    this.searchingTerminalID = 0;
+                    this.tempData.terminal = null;
                     this.asynRoomPage(id);
+                break;
                 case 3: // 终端
+                    this.searchingTerminalID = id;
                     this.asynTerminalPage(id);
                 break;
             }
-            this.searchingID = id;
             this.state = state;
+            setTimeout(e=>{
+                this.$refs.roomList&&this.$refs.roomList.asyn();
+                this.$refs.terminalList&&this.$refs.terminalList.asyn();
+                this.$refs.workerListPop&&this.$refs.workerListPop.asyn();
+            },1000*.1);
+        },
+        asynAllPages(rid,tid){ // 刷新所有页面temp数据
+            this.asynHomePage();
+            rid&&this.asynRoomPage();
+            tid&&this.asynTerminalPage();
+            setTimeout(e=>{
+                this.$refs.roomList&&this.$refs.roomList.asyn();
+                this.$refs.terminalList&&this.$refs.terminalList.asyn();
+                this.$refs.workerListPop&&this.$refs.workerListPop.asyn();
+            },1000*.1);
         },
         asynHomePage(){ // 刷新首页temp数据
             let myRoomList = getListByID(this.game.factoryList[0].id,'fid',this.game.roomList);
@@ -501,8 +598,9 @@ export default {
                 }
             }
         },
-        asynRoomPage(id){ // 刷新房间页temp数据
-            let room = getListByID(id,'id',this.game.roomList)[0],
+        asynRoomPage(){ // 刷新房间页temp数据
+            let id = this.searchingRoomID,
+                room = getListByID(id,'id',this.game.roomList)[0],
                 terminalList = getListByID(id,'rid',this.game.terminalList),
                 roomWorkerList = getListByID(room.id,'rid',this.game.workerList),
                 myRoom = {...room},
@@ -524,23 +622,19 @@ export default {
                     myWorker = {...worker};
                 if(myWorker){
                     terminal.workerName = myWorker.name;
-                    switch(myWorker.job){
-                        case 1: terminal.job = '发电';break;
-                        case 2: terminal.job = '挖矿';break;
-                        case 3: terminal.job = '交易';break;
-                        case 4: terminal.job = '维护';break;
-                        default: terminal.job = '-';
-                    }
+                    terminal.job = ['发电','挖矿','交易','维护'][myWorker.job-1]||'-';
                 }
             }
+            myRoom.balance = this.calcBalance(myRoomWorkerList);
             this.tempData.room = {
                 manager,maintainer,imageAgent,autoWorker,
                 ...myRoom,
             }
             this.tempData.myTerminalList = myTerminalList;
         },
-        asynTerminalPage(id){ // 刷新终端页temp数据
-            let terminal = getListByID(id,'id',this.game.terminalList)[0],
+        asynTerminalPage(){ // 刷新终端页temp数据
+            let id = this.searchingTerminalID,
+                terminal = getListByID(id,'id',this.game.terminalList)[0],
                 worker = getListByID(id,'tid',this.game.workerList)[0],
                 myTerminal = {...terminal},
                 myWorker = {...worker};

@@ -10,7 +10,7 @@
         </div>
         <div class="list">
             <a class="list-item" :class="{'select':item.select}" :data-id="item.id" v-for="(item,index) in localData" @click="onTapListItem($event)">
-                <div class="list-cell" v-for="(column,index) in localColumns"  :style="{width:column.width}">{{column.format?column.format(item[column.name]):item[column.name]}}</div>
+                <div class="list-cell" v-for="(column,index) in localColumns"  :style="{width:column.width}">{{column.format?column.format(item[column.name],item):item[column.name]}}</div>
             </a>
         </div>
     </div>
@@ -21,7 +21,7 @@ import { DEBUG, CONFIG } from '../config/config';
 export default {
     props:{
         title: String, // 表标题
-        columns: Array, // 表头数组 [{name,sortable,width,format}]
+        columns: Array, // 表头数组 [{name,disableSort,width,format}]
         data: Array, // 列表数组
         onDoubleTap: Function, // 双击事件
     },
@@ -52,6 +52,8 @@ export default {
         },
         onTapHead(index){
             let column = this.localColumns[index];
+            if(column.disableSort)
+                return ;
             column.sort = !column.sort;
             this.localData = bulbsort(this.localData,column.name,column.sort);
         },

@@ -118,6 +118,23 @@ export function numFormat(number){ // 货币表达格式
     // return tarr.join('');
     return number;
 }
+export function avg(arr,valname){ // 数组平均值
+    let total = 0;
+    if(valname){
+        for(let i of arr){
+            total += i[valname];
+        }
+    }
+    else{
+        for(let i of arr){
+            total += i;
+        }
+    }
+    if(total==0)
+        return 0;
+    else
+        return Math.ceil(total/arr.length);
+}
 
 function genName(arr1,arr2,arr3){ // 生成名字
     let c1 = arr1[r(0,arr1.length-1)], c2 = '', c3 = '';
