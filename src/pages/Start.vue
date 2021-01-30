@@ -45,7 +45,7 @@
 
 <script>
 // Copyright (c) 2018 Copyright Holder All Rights Reserved.
-import { query, r, bulbsort, genRandomWorkerName, genRandomRoomName, genRandomFactoryName, genRandomRoom, genRandomWorker, genRandomTerminal, getListByID } from '../tools/utils';
+import { query, r, bulbsort, percent, genRandomWorkerName, genRandomRoomName, genRandomFactoryName, genRandomRoom, genRandomWorker, genRandomTerminal, getListByID } from '../tools/utils';
 import { DEBUG, CONFIG } from '../config/config';
 export default {
     name: 'Start',
@@ -96,7 +96,7 @@ export default {
                 game = this.genGameData(initConfig); // 生成游戏初始数据
             if(DEBUG){
                 window.GLOBAL.game = game;
-                // console.log(window.GLOBAL);
+                console.log(window.GLOBAL);
                 // let wl = [];
                 // for(let i=0;i<100;i++){
                 //     wl.push(genRandomWorker(-1));
@@ -106,7 +106,7 @@ export default {
                 //     let y = sort[i].str;
                 //     $('#t').append(`<div style="width:2px;height:2px;background:blue;position:absolute;border-radius: 2px;bottom:${y}px;left:${i}px"></div>`);
                 // }
-                this.$router.push('home');
+                // this.$router.push('home');
                 // for(let i=0;i<100;i++){
                 //     console.log(genName(CONFIG.namespace.common,CONFIG.namespace.common,CONFIG.namespace.factory));
                 //     console.log(r(0,2)?genName(CONFIG.namespace.worker1,CONFIG.namespace.worker2,CONFIG.namespace.worker2):genName(CONFIG.namespace.worker1,CONFIG.namespace.worker2));
@@ -196,6 +196,7 @@ export default {
             roomList.push({
                 id: window.GLOBAL.accRoomID++,
                 fid: factoryList[0].id,
+                fname: factoryList[0].name,
                 name: genRandomRoomName(),
                 power: init.roomPower,
                 durab: init.roomDurab,
@@ -205,7 +206,7 @@ export default {
             });
             for(let f=1;f<factoryList.length;f++){
                 for(let i=0;i<r(init.randomOtherRoomRange[0],init.randomOtherRoomRange[1]);i++){
-                    roomList.push(genRandomRoom(window.GLOBAL.accRoomID++,{fid:factoryList[f].id}));
+                    roomList.push(genRandomRoom(window.GLOBAL.accRoomID++,{fid:factoryList[f].id,fname:factoryList[f].name,}));
                 }
             }
             // 生成终端列表
@@ -240,6 +241,9 @@ export default {
             	tid: 0,
                 rid: 0,
                 fid: factoryList[0].id,
+                fname: factoryList[0].name,
+                rname: '',
+                tfname: '',
             	tfid: 0,
             	name: myname,
             	str: mystrength,
@@ -247,17 +251,25 @@ export default {
             	com: mycommunication,
             	img: myimage,
             	job: 0,
+                boss: true,
             });
             for(let i=0;i<init.workerCount;i++){ // 我的初始员工
-                workerList.push(genRandomWorker(window.GLOBAL.accWorkerID++,{fid:factoryList[0].id,}));
+                workerList.push(genRandomWorker(window.GLOBAL.accWorkerID++,{fid:factoryList[0].id,fname:factoryList[0].name,}));
             }
             for(let f=1;f<factoryList.length;f++){ // 生成其他工厂员工
                 let factory = factoryList[f],
                     thisRoomList = getListByID(factory.id,'fid',roomList);
-                for(let room of thisRoomList){
-                    let rand = r(1,CONFIG.terminal_count_distribution[room.level-1]);
-                    for(let i=0;i<rand;i++){
-                        workerList.push(genRandomWorker(window.GLOBAL.accWorkerID++,{fid:factory.id,rid:room.id}));
+                for(let ri=0;ri<thisRoomList.length;ri++){
+                    let room = thisRoomList[ri],
+                        rand = r(1,CONFIG.terminal_count_distribution[room.level-1]);
+                    for(let ti=0;ti<rand;ti++){
+                        workerList.push(genRandomWorker(window.GLOBAL.accWorkerID++,{
+                            fid: factory.id,
+                            rid: room.id,
+                            fname: factory.name,
+                            rname: room.name,
+                            boss: (ti==0&&ri==0),
+                        }));
                     }
                 }
             }

@@ -135,6 +135,9 @@ export function avg(arr,valname){ // 数组平均值
     else
         return Math.ceil(total/arr.length);
 }
+export function percent(val,max){ // 百分比显示
+    return Math.floor(val*100/max);
+}
 
 function genName(arr1,arr2,arr3){ // 生成名字
     let c1 = arr1[r(0,arr1.length-1)], c2 = '', c3 = '';
@@ -155,19 +158,20 @@ export function genRandomRoomName(){ // 随机生成房间名字
 export function genRandomFactoryName(){ // 随机生成工厂名字
     return genName(CONFIG.namespace.common,CONFIG.namespace.common,CONFIG.namespace.factory);
 }
-export function genRandomRoom(id,{fid,power,durab,risk,auto,level}={}){ // 随机生成房间
+export function genRandomRoom(id,{fid,fname,power,durab,risk,auto,level}={}){ // 随机生成房间
     return {
         id,
         fid: fid||0,
+        fname: fname||'',
         name: genRandomRoomName(),
-        power: r(CONFIG.init.randmOtherRoomPowerRange[0],CONFIG.init.randmOtherRoomPowerRange[1]),
-        durab: r(CONFIG.init.randmOtherRoomDurabRange[0],CONFIG.init.randmOtherRoomDurabRange[1]),
-        risk: r(CONFIG.init.randmOtherRoomRiskRange[0],CONFIG.init.randmOtherRoomRiskRange[1]),
-        auto: r(CONFIG.init.randmOtherRoomAutoRange[0],CONFIG.init.randmOtherRoomAutoRange[1]),
-        level: r(CONFIG.init.randmOtherRoomLevelRange[0],CONFIG.init.randmOtherRoomLevelRange[1]),
+        power: (power||power==0)?power:r(CONFIG.init.randmOtherRoomPowerRange[0],CONFIG.init.randmOtherRoomPowerRange[1]),
+        durab: (durab||durab==0)?durab:r(CONFIG.init.randmOtherRoomDurabRange[0],CONFIG.init.randmOtherRoomDurabRange[1]),
+        risk: (risk||risk==0)?risk:r(CONFIG.init.randmOtherRoomRiskRange[0],CONFIG.init.randmOtherRoomRiskRange[1]),
+        auto: (auto||auto==0)?auto:r(CONFIG.init.randmOtherRoomAutoRange[0],CONFIG.init.randmOtherRoomAutoRange[1]),
+        level: (level||level==0)?level:r(CONFIG.init.randmOtherRoomLevelRange[0],CONFIG.init.randmOtherRoomLevelRange[1]),
     }
 }
-export function genRandomWorker(id,{fid,rid,tid,initJob}={}){ // 随机生成工人
+export function genRandomWorker(id,{fid,fname,rid,rname,tid,initJob,boss}={}){ // 随机生成工人
     function rate(){
         let a = r(0,4),
             z;
@@ -180,19 +184,31 @@ export function genRandomWorker(id,{fid,rid,tid,initJob}={}){ // 随机生成工
         }
         return z;
     }
-    return {
+    function adjust(val){
+        return Math.floor((100-val)/2)+val;
+    }
+    let res = {
         id,
         fid: fid||0,
+        fname: fname||'',
         rid: rid||0,
+        rname: rname||'',
         tid: tid||0,
         ftid: 0,
+        ftname: '',
         name: genRandomWorkerName(),
         str: rate(),
         int: rate(),
         com: rate(),
         img: rate(),
         job: initJob||0,
+        boss: boss?true:false,
+    };
+    if(boss){
+        res.int = adjust(res.int);
+        res.com = adjust(res.com);
     }
+    return res;
 }
 export function getListByID(id,idname,arr){ // 根据ID获取列表
     let res = [];

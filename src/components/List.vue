@@ -1,17 +1,23 @@
 <template>
     <div class="list-container list-container-room">
-        <div class="list-title">
+        <div class="list-title" v-if="!onlyList">
             <div class="list-title-head left">{{title}}</div>
-            <div class="list-title-count left">共 {{localData.length}} 条</div>
-            <a class="btn btn-asyn right" @click="asyn">刷新</a>
+            <div class="list-title-count left" v-if="!simple">共 {{localData.length}} 条</div>
+            <a class="btn btn-asyn right" v-if="!simple" @click="asyn">刷新</a>
+            <a class="btn btn-plus left" v-if="simple" @click="onTapPlus_">+</a>
         </div>
-        <div class="list-header">
-            <a class="list-cell" v-for="(column,index) in localColumns" :style="{width:column.width}" @click="onTapHead(index)">{{column.title}}</a>
-        </div>
-        <div class="list">
-            <a class="list-item" :class="{'select':item.select}" :data-id="item.id" v-for="(item,index) in localData" @click="onTapListItem($event)">
-                <div class="list-cell" v-for="(column,index) in localColumns"  :style="{width:column.width}">{{column.format?column.format(item[column.name],item):item[column.name]}}</div>
-            </a>
+        <div class="list-content" :class="{'no-border':onlyList}">
+            <div class="list-header" v-if="!onlyList">
+                <a class="list-cell" v-for="(column,index) in localColumns" v-if="column.width!=0" :style="{width:column.width}" @click="onTapHead(index)">{{column.title}}</a>
+            </div>
+            <div class="list" v-if="localData.length>0">
+                <a class="list-item" :class="{'select':item.select}" :data-id="item.id" v-for="(item,index) in localData" @click="onTapListItem($event)">
+                    <div class="list-cell" v-for="(column,index) in localColumns" v-if="column.width!=0" :style="{width:column.width}">{{column.format?column.format(item[column.name],item):item[column.name]}}</div>
+                </a>
+            </div>
+            <div class="list" v-else>
+                <div class="tip">空</div>
+            </div>
         </div>
     </div>
 </template>
@@ -23,7 +29,10 @@ export default {
         title: String, // 表标题
         columns: Array, // 表头数组 [{name,disableSort,width,format}]
         data: Array, // 列表数组
+        simple: Boolean, // 简单模式
+        onlyList: Boolean, // 只显示list模式
         onDoubleTap: Function, // 双击事件
+        onTapPlus: Function, // 点击加号事件
     },
     data() {
         return {
@@ -49,6 +58,9 @@ export default {
                     ...d,
                 }
             })
+        },
+        onTapPlus_(e){
+            this.$emit('onTapPlus');
         },
         onTapHead(index){
             let column = this.localColumns[index];
@@ -83,24 +95,43 @@ export default {
 </script>
 <style scoped>
     .list-container{
-
+        width: 100%;
     }
     .list{
+        display: inline-block;
+        min-width: 100%;
         border-top: .01rem solid #ccc;
     }
+    .list .tip{
+        height: .6rem;
+        line-height: .6rem;
+        border-bottom: .01rem solid #ccc;
+    }
+    .list-content{
+        width: 100%;
+        padding-bottom: 8px;
+        overflow-x: scroll;
+    }
     .list-item,.list-header{
-        display: flex;
-        justify-content: space-around;
-        align-items: center;
+        display: inline-block;
+        min-width: 100%;
+        white-space: nowrap;
+        word-break: keep-all;
         height: .6rem;
         line-height: .3rem;
         border-bottom: .01rem solid #ccc;
     }
-    .list-item .list-cell,.list-header .list-cell{
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        height: 100%;
+    .list-item::after,.list-header::after{
+        content: '';
+        width: 100%;
+        display: block;
+        clear: both;
+    }
+    .list-header >.list-cell, .list-item >.list-cell{
+        height: .6rem;
+        line-height: .6rem;
+        display: inline-block;
+        text-align: center;
     }
     .list .select{
         background-color: #dcdcdc;
@@ -134,5 +165,21 @@ export default {
     }
     .btn{
         color: #ff4f18;
+    }
+    .btn-plus{
+        margin-left: .1rem;
+        font-size: .3rem;
+        font-weight: bold;
+        width: .32rem;
+    }
+    .no-border{
+        padding: 0;
+        border-bottom: .01rem solid #ccc;
+    }
+    .no-border .list-header,
+    .no-border .list-item,
+    .no-border .tip,
+    .no-border .list{
+        border: none;
     }
 </style>
