@@ -152,18 +152,21 @@ function genName(arr1,arr2,arr3){ // 生成名字
 export function genRandomWorkerName(){ // 随机生成工人名字
     return r(0,2)?genName(CONFIG.namespace.worker1,CONFIG.namespace.worker2,CONFIG.namespace.worker2):genName(CONFIG.namespace.worker1,CONFIG.namespace.worker2);
 }
-export function genRandomRoomName(){ // 随机生成房间名字
-    return genName(CONFIG.namespace.common,CONFIG.namespace.common,CONFIG.namespace.room);
+export function genRandomRoomName(type){ // 随机生成房间名字
+    return genName(CONFIG.namespace.common,CONFIG.namespace.common,CONFIG.namespace.room)+CONFIG.room_type_name_map[type];
 }
 export function genRandomFactoryName(){ // 随机生成工厂名字
     return genName(CONFIG.namespace.common,CONFIG.namespace.common,CONFIG.namespace.factory);
 }
-export function genRandomRoom(id,{fid,fname,power,durab,risk,auto,level}={}){ // 随机生成房间
+export function genRandomRoom(id,{fid,fname,power,durab,risk,auto,level,type,basicImage}={}){ // 随机生成房间
+    type = (type||type==0)?type:r(0,3);
     return {
         id,
         fid: fid||0,
         fname: fname||'',
-        name: genRandomRoomName(),
+        name: genRandomRoomName(type),
+        type,
+        basicImage: (basicImage||basicImage==0)?basicImage:(r(0,100)>CONFIG.randomRoomBasicImageProb?0:r(1,CONFIG.max_basicImage)),
         power: (power||power==0)?power:r(CONFIG.init.randmOtherRoomPowerRange[0],CONFIG.init.randmOtherRoomPowerRange[1]),
         durab: (durab||durab==0)?durab:r(CONFIG.init.randmOtherRoomDurabRange[0],CONFIG.init.randmOtherRoomDurabRange[1]),
         risk: (risk||risk==0)?risk:r(CONFIG.init.randmOtherRoomRiskRange[0],CONFIG.init.randmOtherRoomRiskRange[1]),
@@ -194,7 +197,7 @@ export function genRandomWorker(id,{fid,fname,rid,rname,tid,initJob,boss}={}){ /
         rid: rid||0,
         rname: rname||'',
         tid: tid||0,
-        ftid: 0,
+        tfid: 0,
         ftname: '',
         name: genRandomWorkerName(),
         str: rate(),
@@ -219,7 +222,32 @@ export function getListByID(id,idname,arr){ // 根据ID获取列表
     });
     return res;
 }
-export function retireAllByJob(job,arr){ // 解除所有相关职务
+export function getMatchList(arr,matchList){ // 根据匹配获取列表 matchList = [['id',1],['job',2]]
+    let res = [];
+    Array.from(arr,inst=>{
+        let isMatch = true;
+        for(let m of matchList){
+            if(inst[m[0]]!=m[1]){
+                isMatch = false;
+                break;
+            }
+        }
+        if(isMatch){
+            res.push(inst);
+        }
+    });
+    return res;
+}
+export function removeFromList(id,idname,arr){ // 根据ID从列表中移除
+    let res = [];
+    Array.from(arr,inst=>{
+        if(inst[idname]!=id){
+            res.push(inst);
+        }
+    });
+    return res;
+}
+export function releaseAllByJob(job,arr){ // 解除所有相关职务
     Array.from(arr,inst=>{
         if(inst.job==job){
             inst.job = 0;

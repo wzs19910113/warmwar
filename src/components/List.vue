@@ -1,13 +1,13 @@
 <template>
     <div class="list-container list-container-room">
-        <div class="list-title" v-if="!onlyList">
+        <div class="list-title">
             <div class="list-title-head left">{{title}}</div>
             <div class="list-title-count left" v-if="!simple">共 {{localData.length}} 条</div>
             <a class="btn btn-asyn right" v-if="!simple" @click="asyn">刷新</a>
-            <a class="btn btn-plus left" v-if="simple" @click="onTapPlus_">+</a>
+            <a class="btn btn-option left" v-if="option" @click="onTapOption_">{{option}}</a>
         </div>
-        <div class="list-content" :class="{'no-border':onlyList}">
-            <div class="list-header" v-if="!onlyList">
+        <div class="list-content" :class="{'large':large}">
+            <div class="list-header">
                 <a class="list-cell" v-for="(column,index) in localColumns" v-if="column.width!=0" :style="{width:column.width}" @click="onTapHead(index)">{{column.title}}</a>
             </div>
             <div class="list" v-if="localData.length>0">
@@ -30,9 +30,10 @@ export default {
         columns: Array, // 表头数组 [{name,disableSort,width,format}]
         data: Array, // 列表数组
         simple: Boolean, // 简单模式
-        onlyList: Boolean, // 只显示list模式
+        large: Boolean, // 放大模式
         onDoubleTap: Function, // 双击事件
-        onTapPlus: Function, // 点击加号事件
+        option: String, // 其他操作按钮文字
+        onTapOption: Function, // 点击其他操作事件
     },
     data() {
         return {
@@ -59,8 +60,8 @@ export default {
                 }
             })
         },
-        onTapPlus_(e){
-            this.$emit('onTapPlus');
+        onTapOption_(e){
+            this.$emit('onTapOption');
         },
         onTapHead(index){
             let column = this.localColumns[index];
@@ -121,6 +122,10 @@ export default {
         line-height: .3rem;
         border-bottom: .01rem solid #ccc;
     }
+    .large .list-item,.large .list-header{
+        height: .8rem;
+        line-height: .8rem;
+    }
     .list-item::after,.list-header::after{
         content: '';
         width: 100%;
@@ -157,7 +162,7 @@ export default {
         float: right;
     }
     .list-title-head{
-        font-size: .3rem;
+        font-size: .26rem;
         font-weight: bold;
     }
     .list-title-count{
@@ -166,11 +171,10 @@ export default {
     .btn{
         color: #ff4f18;
     }
-    .btn-plus{
-        margin-left: .1rem;
-        font-size: .3rem;
+    .btn-option{
+        margin-left: .2rem;
+        font-size: .26rem;
         font-weight: bold;
-        width: .32rem;
     }
     .no-border{
         padding: 0;

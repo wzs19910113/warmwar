@@ -197,12 +197,14 @@ export default {
                 id: window.GLOBAL.accRoomID++,
                 fid: factoryList[0].id,
                 fname: factoryList[0].name,
-                name: genRandomRoomName(),
+                name: genRandomRoomName(init.roomType),
                 power: init.roomPower,
                 durab: init.roomDurab,
                 risk: init.roomRisk,
                 auto: init.roomAuto,
                 level: init.roomLevel,
+                type: init.roomType,
+                basicImage: init.roomBasicImage,
             });
             for(let f=1;f<factoryList.length;f++){
                 for(let i=0;i<r(init.randomOtherRoomRange[0],init.randomOtherRoomRange[1]);i++){
@@ -280,12 +282,13 @@ export default {
                     let bfactory = factoryList[j];
                     if(afactory.id!=bfactory.id){
                         relationList.push({
+                            id: j+''+i,
                             from: afactory.id,
+                            fromName: afactory.name,
                             to: bfactory.id,
+                            toName: bfactory.name,
                             invest: 0,
                             support: 0,
-                            jointID: 0,
-                            spyID: 0
                         });
                     }
                 }
