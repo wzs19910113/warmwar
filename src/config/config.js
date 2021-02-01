@@ -2,7 +2,7 @@ module.exports = {
 	DEBUG: true,
 	CONFIG:{
         init:{
-            money: 100000, // 初始资金
+            money: 0, // 初始资金
             image: 0, // 初始形象值
 			workerCount: 2, // 初始工人数量
 			humanResourcePoint: 1600, // 初始人力资源点数
@@ -38,7 +38,7 @@ module.exports = {
 		job_name_map: ['-','发电','挖矿','交易','终端维护','自动化','房间维护','管理员','门面','人力搜索','房间搜索','形象总代言','外交','间谍'], // 职能类别名称
 		room_type_name_map: ['通用房','发电站','挖矿厂','交易所'], // 房间类型名称
 		randomRoomBasicImageProb: 25, // 其他公司初始房间拥有基础形象概率
-        max_durab: 10000, // 房间最大老化值
+        max_durab: 10000, // 最大老化值
         max_balance: 100, // 房间最大平衡值
         max_auto: 10000, // 房间最大自动化值
         max_basicImage: 120, // 房间最大基础门面
@@ -48,32 +48,86 @@ module.exports = {
         max_power_level: 3, // 终端最高供电等级
         max_dig_level: 3, // 终端最高挖矿等级
         max_trade_level: 3, // 终端最高交易等级
-        room_levelup_cost: [15000,25000], // 房间升级费用
-        power_levelup_cost: [2000,5000], // 供电等级升级费用
-        dig_levelup_cost: [2000,5000], // 挖矿等级升级费用
-        trade_levelup_cost: [2000,5000], // 交易等级升级费用
+        room_levelup_cost: [10000,15000], // 房间升级费用
+        power_levelup_cost: [2000,3000], // 供电等级升级费用
+        dig_levelup_cost: [2000,3000], // 挖矿等级升级费用
+        trade_levelup_cost: [2000,3000], // 交易等级升级费用
 		sell_factor: .5, // 贩卖系数
 		randmNewRoomDurabRange: [0,6000], // 新生成房间老化化随机范围
 		randmNewRoomAutoRange: [0,0], // 新生成房间自动化随机范围
 
-		searchWorkerPointCost: 500, // 一个人员的搜索点数花费
-		searchRoomPointCost: 500, // 一个房间的搜索点数花费
+		searchRoomPointCost: 100, // 一个房间的搜索点数花费
+		searchWorkerPointCost: 100, // 一个人员的搜索点数花费
 
 		max_support: 10000, // 最大支持点数
-		invest_support_threshold: 1000, // 投资支持率阈值
+		invest_support_threshold: 3000, // 投资支持率阈值
 		steal_worker_support_threshold: 5000, // 偷取人员支持率阈值
-		steal_worker_support_cost: 1000, // 偷取人员支持率消耗
+		steal_worker_support_cost: 500, // 偷取人员支持率消耗
 		steal_room_support_threshold: 7000, // 偷取房间支持率阈值
-		steal_room_support_cost: 5000, // 偷取房间支持率消耗
-		buy_factory_support_threshold: 10000, // 收购工厂支持率阈值
-		steal_worker_image_cost: 50, // 偷取人员形象消耗
-		steal_room_image_cost: 500, // 偷取房间形象消耗
+		steal_room_support_cost: 2000, // 偷取房间支持率消耗
+		buy_factory_support_threshold: 0, // 收购工厂支持率阈值
+		steal_worker_image_cost: 250, // 偷取人员形象消耗
+		steal_room_image_cost: 1000, // 偷取房间形象消耗
 		image_price_factor: .2, // 形象/价值系数
 
 		damage_money_cost: 10000, // 一次打压资金消耗
 		damage_money_cost_factor: .5, // 打压效果系数
 
-        max_worker_ablity: 100, // 工人最高能力值
+		terminal: {
+			base: 1.5,
+			power_factor: .4,
+			durab_increase: 75,
+			dig_factor: .6,
+			dig_power_consume_base: 30,
+			dig_power_consume_factor: 15,
+			trade_money_factor: .3,
+			trade_support_factor: .15,
+			trade_power_consume_base: 30,
+			trade_power_consume_factor: 15,
+			durab_threshold: 5000,
+			durab_factor: 1.8,
+			durab_consume_factor: 1,
+		},
+
+		room: {
+			base: 1.5,
+			image_factor: .5,
+			durab_fix: 25,
+			durab_factor: 2,
+			durab_consume_factor: 2,
+			auto_factor: .25,
+			auto_power_consume: 50,
+			auto_money_consume: 50,
+			durab_threshold: 5000,
+			durab_increase_factor: .2,
+			durab_terminal_factor: .5,
+
+			type_increase_factor: 1.1,
+			type_normal_factor: 1,
+			type_decrease_factor: .8,
+		},
+
+		factory: {
+			image_increse_base: 40,
+			image_increse_factor: .12,
+			rrp_factor: .1,
+			rrp_fix: 100,
+			hrp_factor: .001,
+			hrp_fix: 50,
+		},
+
+		relation: {
+			support_decrease_fix: 100,
+			support_increase_fix: 25,
+			support_joint_increase_factor: .5,
+			support_trade_increase_factor: .5,
+			image_decrease_fix: 50,
+			image_decrease_factor_range: [.2,.8,1,1.5,2,2.5,3],
+			image_decrease_consume: 500,
+			joint_image_threshold: 5000,
+		},
+
+        max_worker_ablity: 100, // 人员最高能力值
     }
 }
 /*
@@ -103,7 +157,7 @@ terminal = {
 	id: 1,
 	rid: 1,
 	fid: 1,
-	durab: 100,(1-100)
+	durab: 100,(1-10000)
 	powerLevel: 1,(1-3)
 	digLevel: 1,(1-3)
 	tradeLevel: 1,(1-3)
@@ -119,7 +173,7 @@ room = {
 	basicImage: 1,(0-120) // 基础形象
 	durab: 1000,(1-10000)
 	risk: 1,(1-3)
-	auto: 1000,(1-10000)
+	auto: 1500,(1-10000)
 	level: 1,(1-3)
 }
 

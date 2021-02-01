@@ -15,9 +15,6 @@
                     <div class="list-cell" v-for="(column,index) in localColumns" v-if="column.width!=0" :style="{width:column.width}">{{column.format?column.format(item[column.name],item):item[column.name]}}</div>
                 </a>
             </div>
-            <div class="list" v-else>
-                <div class="tip">空</div>
-            </div>
         </div>
     </div>
 </template>

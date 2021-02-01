@@ -26,10 +26,19 @@ export function bulbsort(arr,valname='val',type=1){
     let res = [...arr];
     for(let i=0;i<res.length-1;i++){
         for(let j=0;j<res.length-1-i;j++){
-            if(type||(res[j][valname]<res[j+1][valname])){
-                let temp=res[j];
-                res[j] = res[j+1];
-                res[j+1] = temp;
+            if(type){
+                if((res[j][valname]<res[j+1][valname])){
+                    let temp=res[j];
+                    res[j] = res[j+1];
+                    res[j+1] = temp;
+                }
+            }
+            else{
+                if((res[j][valname]>res[j+1][valname])){
+                    let temp=res[j];
+                    res[j] = res[j+1];
+                    res[j+1] = temp;
+                }
             }
         }
     }

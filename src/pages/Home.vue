@@ -36,7 +36,7 @@
                     </div>
                     <div class="row no-margin">
                         <div class="index">
-                            <div class="index-cell"><b>电力: {{tempData.room.power}}</b> <a class="btn btn-edit" @click="showAssignPower=true">分配</a></div>
+                            <div class="index-cell"><b>电力: {{tempData.room.power}}</b> <a class="btn btn-edit" @click="showAssignPower=true" v-if="tempData.room.power>0">分配</a></div>
                             <div class="index-cell"><b>策略: {{config.risk_name_map[tempData.room.risk-1]}}</b></div>
                             <div class="index-cell left"><b>管理员:
                                 <span v-if="tempData.room.manager">{{tempData.room.manager.name}} <a class="btn btn-icon" @click="jump(4,tempData.room.manager.id)">@</a></span>
@@ -103,7 +103,7 @@
                 <!--人员-->
                 <div class="tab-panel" v-if="tempData.myWorkerList" v-show="state==4">
                     <div class="row no-margin">
-                        <h2 class="room-name">人员管理</h2>
+                        <h2 class="room-name">人员管理 <a class="btn btn-edit" @click="showEditWorkerPage=true">操作</a></h2>
                     </div>
                     <div class="row no-margin">
                         <div class="index filter">
@@ -200,7 +200,7 @@
                         <nut-timeline>
                             <nut-timelineitem v-for="(item,index) in game.logList" :key="index">
                                 <div class="title" slot="title">{{item.title}}</div>
-                                <div class="sub-title" @click="onTapLog(item.id)">{{item.subTitle}}</div>
+                                <div class="sub-title btn" @click="onTapLog(item.id)">{{item.subTitle}}</div>
                             </nut-timelineitem>
                         </nut-timeline>
                         <!-- <List ref="logList" :data="game.logList" :onlyList="true" :columns="LOG_COLUMN" @onDoubleTap="onDoubleTapLog" /> -->
@@ -281,8 +281,8 @@
         <nut-popup v-model="showJobPop">
             <div class="row job room-board">
                 <div class="row risk">
-                    <h3>选择职能:</h3>
-                    <a class="risk-item" :class="{'select':(tempData.terminal||{}).job==index}" v-for="index in [1,2,3,4]" @click="onTapJob(index)">{{config.job_name_map[index]}}</a>
+                    <h3>选择职能: <span class="small" v-if="tempData.room&&tempData.room.type!=0">（本房间{{config.job_name_map[tempData.room.type]}}收益加成）</span></h3>
+                    <a class="risk-item btn" :class="{'select':(tempData.terminal||{}).job==index}" v-for="index in [1,2,3,4]" @click="onTapJob(index)">{{config.job_name_map[index]}}</a>
                 </div>
             </div>
         </nut-popup>
@@ -428,10 +428,24 @@
                     <a class="risk-item" @click="onTapInvest"><b>投资</b></a>
                 </div>
                 <div class="row btn" v-if="!tempData.factory.damaged">
-                    <a class="risk-item" @click="onTapDamageFactory"><b>打压（{{config.damage_money_cost}} $）</b></a>
+                    <a class="risk-item" @click="showConfirmDamage=true"><b>打压</b></a>
                 </div>
                 <div class="row btn">
-                    <a class="risk-item" @click="onTapBuyFactory"><b>收购（{{tempData.factory.sell}} $）</b></a>
+                    <a class="risk-item" @click="showConfirmBuyFactory=true"><b>收购</b></a>
+                </div>
+            </div>
+        </nut-popup>
+        <nut-popup v-model="showConfirmDamage">
+            <div class="row room-board" v-if="tempData.factory">
+                <div class="row level">
+                    <a class="btn" @click="onTapConfirmDamage">对{{tempData.factory.name}}执行一次经济制裁（{{config.damage_money_cost}} $）</a>
+                </div>
+            </div>
+        </nut-popup>
+        <nut-popup v-model="showConfirmBuyFactory">
+            <div class="row room-board" v-if="tempData.factory">
+                <div class="row level">
+                    <a class="btn" @click="onTapConfirmBuyFactory">确认收购{{tempData.factory.name}}（{{tempData.factory.sell}} $）</a>
                 </div>
             </div>
         </nut-popup>
@@ -447,11 +461,54 @@
             </div>
         </nut-popup>
         <nut-popup v-model="showLog">
-            <div class="row log-board" v-if="tempData.log">
+            <div class="row log-board" v-if="tempData.log&&tempData.log.content">
                 <div class="title">
-                    <h3>{{tempData.log.title}}</h3>
+                    <h3>周报表：{{tempData.log.title}}</h3>
                 </div>
-                <div class="para" v-html="tempData.log.content"></div>
+                <div class="para">
+                    <div class="p1">
+                        <h3>总收入：{{tempData.log.content.moneyIncome}} $</h3>
+                        <h3>形象提升：{{tempData.log.content.imageIncome}}</h3>
+                        <h3>房间搜索点数获得：{{tempData.log.content.rrpIncome}}</h3>
+                        <h3>人力搜索点数获得：{{tempData.log.content.hrpIncome}}</h3>
+                    </div>
+                    <div class="p1" v-for="invest in tempData.log.content.investList">
+                        <h4>{{invest.name}}的投资回报：<span>{{invest.income}} $</span></h4>
+                    </div>
+                    <div class="p1" v-for="room in tempData.log.content.roomList">
+                        <h4>{{room.name}}</h4>
+                        <div class="p2">
+                            <span>资金收入：{{room.moneyIncome-room.moneyConsume}} $（+{{room.moneyIncome}}，-{{room.moneyConsume}}）</span>
+                        </div>
+                        <div class="p2">
+                            <span>生产电力：{{room.powerIncome-room.powerConsume}}（+{{room.powerIncome}}，-{{room.powerConsume}}）</span>
+                        </div>
+                        <div class="p2">
+                            <span>形象提升：{{room.imageIncome}}</span>
+                        </div>
+                    </div>
+                    <div class="p1" v-if="tempData.log.content.suffix" v-html="tempData.log.content.suffix"></div>
+                </div>
+            </div>
+        </nut-popup>
+        <nut-popup v-model="showConfirmGo">
+            <div class="row room-board">
+                <div class="row" v-if="tipList.length>0">
+                    <span class="board-tip">提示：{{tipList[tipList.length-1]}}</span>
+                </div>
+                <div class="row">
+                    <a class="btn" @click="onTapConfirmGo">结束本周</a>
+                </div>
+            </div>
+        </nut-popup>
+        <nut-popup v-model="showEditWorkerPage">
+            <div class="row room-board">
+                <div class="row">
+                    <a class="risk-item btn" @click="onTapReleaseAll">全体待命</a>
+                </div>
+                <div class="row">
+                    <a class="risk-item btn" @click="onTapAutoAssign">自动安排空闲人员</a>
+                </div>
             </div>
         </nut-popup>
     </div>
@@ -472,6 +529,7 @@ export default {
             game: {},
             filter: 1, // 人员列表页过滤器
             marketType: 1, // 市场页搜索类型
+            tipList: [], // 提示条目
             tempData: {
                 myFactoryList: [],
                 // 首页
@@ -520,7 +578,7 @@ export default {
                 investMoney: '',
 
                 // 报表
-                log: null,
+                log: {},
 
                 workListPopMode: 0,
             },
@@ -549,8 +607,12 @@ export default {
             showStealRoom: false,
             showStealWorker: false,
             showInvest: false,
+            showConfirmDamage: false,
+            showConfirmBuyFactory: false,
             showLog: false,
             showKeyborad: false,
+            showConfirmGo: false,
+            showEditWorkerPage: false,
 
             // const
             ROOM_LIST_COLUMN: [ // 房间页房间列表
@@ -568,7 +630,7 @@ export default {
                 {name:'name',title:'房间名',width:'25%',},
                 {name:'basicImage',title:'基础门面',width:'25%',},
                 {name:'durab',title:'老化',width:'25%',format:v=>`${percent(v,CONFIG.max_durab)}%`,},
-                {name:'price',title:'售价',width:'25%',},
+                {name:'price',title:'售价',width:'25%',format:v=>`${v} $`,},
             ],
             ROOM_LIST_3_COLUMN: [ // 房间页弹出房间列表
                 {name:'id',title:'ID',width:'15%',},
@@ -639,9 +701,9 @@ export default {
                 {name:'int',title:'智力',width:'12%',},
                 {name:'com',title:'交流',width:'12%',},
                 {name:'img',title:'形象',width:'12%',},
-                {name:'price',title:'售价',width:'26%',},
+                {name:'price',title:'售价',width:'26%',format:v=>`${v} $`,},
             ],
-            WORKER_LIST_7_COLUMN: [ // 市场页人员列表
+            WORKER_LIST_7_COLUMN: [ // 工厂页人员列表
                 {name:'name',title:'名字',width:'28%',},
                 {name:'str',title:'体力',width:'18%',},
                 {name:'int',title:'智力',width:'18%',},
@@ -661,9 +723,8 @@ export default {
     },
     mounted(){
         if(DEBUG){
-            window.GLOBAL = JSON.parse('{"game":{"factoryList":[{"id":4,"name":"和矿控股","money":100000,"image":0,"hrp":1600,"rrp":2350},{"id":5,"name":"亚光集团","money":38478,"image":483},{"id":6,"name":"洲复传媒","money":8316,"image":629}],"roomList":[{"id":5,"fid":4,"fname":"和矿控股","name":"新汇小区通用房","power":50,"durab":0,"risk":1,"auto":0,"level":1,"type":0,"basicImage":15},{"id":6,"fid":5,"fname":"亚光集团","name":"星乐路通用房","type":0,"basicImage":0,"power":7615,"durab":8127,"risk":2,"auto":2948,"level":2},{"id":7,"fid":5,"fname":"亚光集团","name":"国惠园交易所","type":3,"basicImage":0,"power":1279,"durab":1292,"risk":2,"auto":3528,"level":1},{"id":8,"fid":5,"fname":"亚光集团","name":"漫宇大厦挖矿厂","type":2,"basicImage":0,"power":4325,"durab":1788,"risk":2,"auto":8668,"level":3},{"id":9,"fid":6,"fname":"洲复传媒","name":"柯牛路发电站","type":1,"basicImage":0,"power":230,"durab":4761,"risk":2,"auto":2589,"level":3},{"id":10,"fid":6,"fname":"洲复传媒","name":"凡财街发电站","type":1,"basicImage":0,"power":7099,"durab":4002,"risk":1,"auto":4416,"level":1},{"id":11,"fid":6,"fname":"洲复传媒","name":"亚金镇挖矿厂","type":2,"basicImage":0,"power":1818,"durab":3997,"risk":2,"auto":2625,"level":2}],"terminalList":[{"id":25,"fid":4,"rid":5,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":26,"fid":4,"rid":5,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":27,"fid":4,"rid":5,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":28,"fid":4,"rid":5,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":29,"fid":4,"rid":5,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":30,"fid":4,"rid":5,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":31,"fid":5,"rid":6,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":32,"fid":5,"rid":6,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":33,"fid":5,"rid":6,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":34,"fid":5,"rid":6,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":35,"fid":5,"rid":6,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":36,"fid":5,"rid":6,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":37,"fid":5,"rid":6,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":38,"fid":5,"rid":6,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":39,"fid":5,"rid":7,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":40,"fid":5,"rid":7,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":41,"fid":5,"rid":7,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":42,"fid":5,"rid":7,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":43,"fid":5,"rid":7,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":44,"fid":5,"rid":7,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":45,"fid":5,"rid":8,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":46,"fid":5,"rid":8,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":47,"fid":5,"rid":8,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":48,"fid":5,"rid":8,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":49,"fid":5,"rid":8,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":50,"fid":5,"rid":8,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":51,"fid":5,"rid":8,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":52,"fid":5,"rid":8,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":53,"fid":5,"rid":8,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":54,"fid":5,"rid":8,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":55,"fid":6,"rid":9,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":56,"fid":6,"rid":9,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":57,"fid":6,"rid":9,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":58,"fid":6,"rid":9,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":59,"fid":6,"rid":9,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":60,"fid":6,"rid":9,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":61,"fid":6,"rid":9,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":62,"fid":6,"rid":9,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":63,"fid":6,"rid":9,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":64,"fid":6,"rid":9,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":65,"fid":6,"rid":10,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":66,"fid":6,"rid":10,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":67,"fid":6,"rid":10,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":68,"fid":6,"rid":10,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":69,"fid":6,"rid":10,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":70,"fid":6,"rid":10,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":71,"fid":6,"rid":11,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":72,"fid":6,"rid":11,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":73,"fid":6,"rid":11,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":74,"fid":6,"rid":11,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":75,"fid":6,"rid":11,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":76,"fid":6,"rid":11,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":77,"fid":6,"rid":11,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":78,"fid":6,"rid":11,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1}],"workerList":[{"id":14,"tid":0,"rid":0,"fid":4,"fname":"和矿控股","rname":"","tfname":"","tfid":0,"name":"王可","str":72,"int":25,"com":11,"img":90,"job":0,"boss":true},{"id":15,"fid":4,"fname":"和矿控股","rid":0,"rname":"","tid":0,"tfid":0,"ftname":"","name":"滑儿凝","str":31,"int":35,"com":78,"img":13,"job":0,"boss":false},{"id":16,"fid":4,"fname":"和矿控股","rid":0,"rname":"","tid":0,"tfid":0,"ftname":"","name":"孙昊智","str":38,"int":32,"com":42,"img":35,"job":0,"boss":false},{"id":17,"fid":5,"fname":"亚光集团","rid":6,"rname":"星乐路通用房","tid":0,"tfid":0,"ftname":"","name":"诸丘","str":27,"int":91,"com":58,"img":19,"job":0,"boss":true},{"id":18,"fid":5,"fname":"亚光集团","rid":6,"rname":"星乐路通用房","tid":0,"tfid":0,"ftname":"","name":"周菱莲","str":6,"int":24,"com":43,"img":32,"job":0,"boss":false},{"id":19,"fid":5,"fname":"亚光集团","rid":6,"rname":"星乐路通用房","tid":0,"tfid":0,"ftname":"","name":"莫宛莫","str":87,"int":15,"com":68,"img":25,"job":0,"boss":false},{"id":20,"fid":5,"fname":"亚光集团","rid":6,"rname":"星乐路通用房","tid":0,"tfid":0,"ftname":"","name":"姚春风","str":15,"int":42,"com":18,"img":49,"job":0,"boss":false},{"id":21,"fid":5,"fname":"亚光集团","rid":7,"rname":"国惠园交易所","tid":0,"tfid":0,"ftname":"","name":"毛硕云","str":41,"int":27,"com":3,"img":34,"job":0,"boss":false},{"id":22,"fid":5,"fname":"亚光集团","rid":7,"rname":"国惠园交易所","tid":0,"tfid":0,"ftname":"","name":"蒋咏亦","str":10,"int":39,"com":4,"img":50,"job":0,"boss":false},{"id":23,"fid":5,"fname":"亚光集团","rid":7,"rname":"国惠园交易所","tid":0,"tfid":0,"ftname":"","name":"刘奕","str":8,"int":12,"com":42,"img":5,"job":0,"boss":false},{"id":24,"fid":5,"fname":"亚光集团","rid":7,"rname":"国惠园交易所","tid":0,"tfid":0,"ftname":"","name":"伏蕊养","str":49,"int":37,"com":50,"img":26,"job":0,"boss":false},{"id":25,"fid":5,"fname":"亚光集团","rid":7,"rname":"国惠园交易所","tid":0,"tfid":0,"ftname":"","name":"王语安","str":15,"int":6,"com":12,"img":62,"job":0,"boss":false},{"id":26,"fid":5,"fname":"亚光集团","rid":8,"rname":"漫宇大厦挖矿厂","tid":0,"tfid":0,"ftname":"","name":"陈藩满","str":48,"int":11,"com":4,"img":59,"job":0,"boss":false},{"id":27,"fid":5,"fname":"亚光集团","rid":8,"rname":"漫宇大厦挖矿厂","tid":0,"tfid":0,"ftname":"","name":"廖蕾","str":11,"int":33,"com":33,"img":59,"job":0,"boss":false},{"id":28,"fid":5,"fname":"亚光集团","rid":8,"rname":"漫宇大厦挖矿厂","tid":0,"tfid":0,"ftname":"","name":"陈衷意","str":12,"int":33,"com":17,"img":2,"job":0,"boss":false},{"id":29,"fid":5,"fname":"亚光集团","rid":8,"rname":"漫宇大厦挖矿厂","tid":0,"tfid":0,"ftname":"","name":"邓美菅","str":20,"int":68,"com":24,"img":12,"job":0,"boss":false},{"id":30,"fid":5,"fname":"亚光集团","rid":8,"rname":"漫宇大厦挖矿厂","tid":0,"tfid":0,"ftname":"","name":"周璇","str":82,"int":2,"com":24,"img":49,"job":0,"boss":false},{"id":31,"fid":5,"fname":"亚光集团","rid":8,"rname":"漫宇大厦挖矿厂","tid":0,"tfid":0,"ftname":"","name":"裴彤敏","str":6,"int":12,"com":22,"img":43,"job":0,"boss":false},{"id":32,"fid":5,"fname":"亚光集团","rid":8,"rname":"漫宇大厦挖矿厂","tid":0,"tfid":0,"ftname":"","name":"欧阳水慧","str":3,"int":48,"com":81,"img":25,"job":0,"boss":false},{"id":33,"fid":6,"fname":"洲复传媒","rid":9,"rname":"柯牛路发电站","tid":0,"tfid":0,"ftname":"","name":"刘才城","str":69,"int":66,"com":76,"img":36,"job":0,"boss":true},{"id":34,"fid":6,"fname":"洲复传媒","rid":9,"rname":"柯牛路发电站","tid":0,"tfid":0,"ftname":"","name":"顾悦蕊","str":22,"int":60,"com":48,"img":5,"job":0,"boss":false},{"id":35,"fid":6,"fname":"洲复传媒","rid":9,"rname":"柯牛路发电站","tid":0,"tfid":0,"ftname":"","name":"祝闻","str":25,"int":73,"com":64,"img":11,"job":0,"boss":false},{"id":36,"fid":6,"fname":"洲复传媒","rid":9,"rname":"柯牛路发电站","tid":0,"tfid":0,"ftname":"","name":"汲佘慕","str":6,"int":40,"com":31,"img":5,"job":0,"boss":false},{"id":37,"fid":6,"fname":"洲复传媒","rid":9,"rname":"柯牛路发电站","tid":0,"tfid":0,"ftname":"","name":"房闾","str":21,"int":44,"com":44,"img":1,"job":0,"boss":false},{"id":38,"fid":6,"fname":"洲复传媒","rid":9,"rname":"柯牛路发电站","tid":0,"tfid":0,"ftname":"","name":"刘兰","str":44,"int":8,"com":14,"img":57,"job":0,"boss":false},{"id":39,"fid":6,"fname":"洲复传媒","rid":9,"rname":"柯牛路发电站","tid":0,"tfid":0,"ftname":"","name":"管涵龙","str":89,"int":32,"com":67,"img":35,"job":0,"boss":false},{"id":40,"fid":6,"fname":"洲复传媒","rid":9,"rname":"柯牛路发电站","tid":0,"tfid":0,"ftname":"","name":"江露盼","str":26,"int":36,"com":15,"img":62,"job":0,"boss":false},{"id":41,"fid":6,"fname":"洲复传媒","rid":10,"rname":"凡财街发电站","tid":0,"tfid":0,"ftname":"","name":"陈蕴","str":30,"int":48,"com":40,"img":29,"job":0,"boss":false},{"id":42,"fid":6,"fname":"洲复传媒","rid":10,"rname":"凡财街发电站","tid":0,"tfid":0,"ftname":"","name":"周叶琦","str":9,"int":11,"com":18,"img":48,"job":0,"boss":false},{"id":43,"fid":6,"fname":"洲复传媒","rid":10,"rname":"凡财街发电站","tid":0,"tfid":0,"ftname":"","name":"陈尔","str":59,"int":14,"com":36,"img":37,"job":0,"boss":false},{"id":44,"fid":6,"fname":"洲复传媒","rid":10,"rname":"凡财街发电站","tid":0,"tfid":0,"ftname":"","name":"江央焦","str":49,"int":50,"com":33,"img":5,"job":0,"boss":false},{"id":45,"fid":6,"fname":"洲复传媒","rid":11,"rname":"亚金镇挖矿厂","tid":0,"tfid":0,"ftname":"","name":"陈越优","str":94,"int":54,"com":86,"img":64,"job":0,"boss":false},{"id":46,"fid":6,"fname":"洲复传媒","rid":11,"rname":"亚金镇挖矿厂","tid":0,"tfid":0,"ftname":"","name":"李泽瑶","str":88,"int":33,"com":11,"img":1,"job":0,"boss":false},{"id":47,"fid":6,"fname":"洲复传媒","rid":11,"rname":"亚金镇挖矿厂","tid":0,"tfid":0,"ftname":"","name":"李懿淑","str":79,"int":29,"com":41,"img":15,"job":0,"boss":false},{"id":48,"fid":6,"fname":"洲复传媒","rid":11,"rname":"亚金镇挖矿厂","tid":0,"tfid":0,"ftname":"","name":"廖海闻","str":59,"int":88,"com":46,"img":34,"job":0,"boss":false},{"id":49,"fid":6,"fname":"洲复传媒","rid":11,"rname":"亚金镇挖矿厂","tid":0,"tfid":0,"ftname":"","name":"宦吉竹","str":23,"int":48,"com":32,"img":47,"job":0,"boss":false},{"id":50,"fid":6,"fname":"洲复传媒","rid":11,"rname":"亚金镇挖矿厂","tid":0,"tfid":0,"ftname":"","name":"龙乐井","str":46,"int":36,"com":31,"img":11,"job":0,"boss":false},{"id":51,"fid":6,"fname":"洲复传媒","rid":11,"rname":"亚金镇挖矿厂","tid":0,"tfid":0,"ftname":"","name":"张明红","str":95,"int":53,"com":25,"img":15,"job":0,"boss":false}],"relationList":[{"id":"10","from":4,"fromName":"和矿控股","to":5,"toName":"亚光集团","invest":0,"support":0,"jointID":0,"jointName":"","spyID":0,"spyName":""},{"id":"20","from":4,"fromName":"和矿控股","to":6,"toName":"洲复传媒","invest":0,"support":0,"jointID":0,"jointName":"","spyID":0,"spyName":""},{"id":"01","from":5,"fromName":"亚光集团","to":4,"toName":"和矿控股","invest":0,"support":0,"jointID":0,"jointName":"","spyID":0,"spyName":""},{"id":"21","from":5,"fromName":"亚光集团","to":6,"toName":"洲复传媒","invest":0,"support":0},{"id":"02","from":6,"fromName":"洲复传媒","to":4,"toName":"和矿控股","invest":0,"support":0},{"id":"12","from":6,"fromName":"洲复传媒","to":5,"toName":"亚光集团","invest":0,"support":0}],"logList":[]},"accFactoryID":7,"accRoomID":12,"accTerminalID":79,"accWorkerID":52,"day":1}');
+            window.GLOBAL = JSON.parse('{"game":{"factoryList":[{"id":4,"name":"和矿控股","money":800000,"image":0,"hrp":0,"rrp":0},{"id":5,"name":"亚光集团","money":38478,"image":483},{"id":6,"name":"洲复传媒","money":8316,"image":629}],"roomList":[{"id":5,"fid":4,"fname":"和矿控股","name":"新汇小区通用房","power":50,"durab":0,"risk":1,"auto":8000,"level":1,"type":0,"basicImage":15},{"id":6,"fid":5,"fname":"亚光集团","name":"星乐路通用房","type":0,"basicImage":0,"power":7615,"durab":8127,"risk":2,"auto":2948,"level":2},{"id":7,"fid":5,"fname":"亚光集团","name":"国惠园交易所","type":3,"basicImage":0,"power":1279,"durab":1292,"risk":2,"auto":3528,"level":1},{"id":8,"fid":5,"fname":"亚光集团","name":"漫宇大厦挖矿厂","type":2,"basicImage":0,"power":4325,"durab":1788,"risk":2,"auto":8668,"level":3},{"id":9,"fid":6,"fname":"洲复传媒","name":"柯牛路发电站","type":1,"basicImage":0,"power":230,"durab":4761,"risk":2,"auto":2589,"level":3},{"id":10,"fid":6,"fname":"洲复传媒","name":"凡财街发电站","type":1,"basicImage":0,"power":7099,"durab":4002,"risk":1,"auto":4416,"level":1},{"id":11,"fid":6,"fname":"洲复传媒","name":"亚金镇挖矿厂","type":2,"basicImage":0,"power":1818,"durab":3997,"risk":2,"auto":2625,"level":2}],"terminalList":[{"id":25,"fid":4,"rid":5,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":26,"fid":4,"rid":5,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":27,"fid":4,"rid":5,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":28,"fid":4,"rid":5,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":29,"fid":4,"rid":5,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":30,"fid":4,"rid":5,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":31,"fid":5,"rid":6,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":32,"fid":5,"rid":6,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":33,"fid":5,"rid":6,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":34,"fid":5,"rid":6,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":35,"fid":5,"rid":6,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":36,"fid":5,"rid":6,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":37,"fid":5,"rid":6,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":38,"fid":5,"rid":6,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":39,"fid":5,"rid":7,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":40,"fid":5,"rid":7,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":41,"fid":5,"rid":7,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":42,"fid":5,"rid":7,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":43,"fid":5,"rid":7,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":44,"fid":5,"rid":7,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":45,"fid":5,"rid":8,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":46,"fid":5,"rid":8,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":47,"fid":5,"rid":8,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":48,"fid":5,"rid":8,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":49,"fid":5,"rid":8,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":50,"fid":5,"rid":8,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":51,"fid":5,"rid":8,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":52,"fid":5,"rid":8,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":53,"fid":5,"rid":8,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":54,"fid":5,"rid":8,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":55,"fid":6,"rid":9,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":56,"fid":6,"rid":9,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":57,"fid":6,"rid":9,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":58,"fid":6,"rid":9,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":59,"fid":6,"rid":9,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":60,"fid":6,"rid":9,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":61,"fid":6,"rid":9,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":62,"fid":6,"rid":9,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":63,"fid":6,"rid":9,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":64,"fid":6,"rid":9,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":65,"fid":6,"rid":10,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":66,"fid":6,"rid":10,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":67,"fid":6,"rid":10,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":68,"fid":6,"rid":10,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":69,"fid":6,"rid":10,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":70,"fid":6,"rid":10,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":71,"fid":6,"rid":11,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":72,"fid":6,"rid":11,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":73,"fid":6,"rid":11,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":74,"fid":6,"rid":11,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":75,"fid":6,"rid":11,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":76,"fid":6,"rid":11,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":77,"fid":6,"rid":11,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":78,"fid":6,"rid":11,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1}],"workerList":[{"id":14,"tid":0,"rid":0,"fid":4,"fname":"和矿控股","rname":"","tfname":"","tfid":0,"name":"王可","str":72,"int":25,"com":11,"img":90,"job":0,"boss":true},{"id":15,"fid":4,"fname":"和矿控股","rid":0,"rname":"","tid":0,"tfid":0,"ftname":"","name":"滑儿凝","str":31,"int":35,"com":78,"img":13,"job":0,"boss":false},{"id":16,"fid":4,"fname":"和矿控股","rid":0,"rname":"","tid":0,"tfid":0,"ftname":"","name":"孙昊智","str":38,"int":32,"com":42,"img":35,"job":0,"boss":false},{"id":17,"fid":5,"fname":"亚光集团","rid":6,"rname":"星乐路通用房","tid":0,"tfid":0,"ftname":"","name":"诸丘","str":27,"int":91,"com":58,"img":19,"job":0,"boss":true},{"id":18,"fid":5,"fname":"亚光集团","rid":6,"rname":"星乐路通用房","tid":0,"tfid":0,"ftname":"","name":"周菱莲","str":6,"int":24,"com":43,"img":32,"job":0,"boss":false},{"id":19,"fid":5,"fname":"亚光集团","rid":6,"rname":"星乐路通用房","tid":0,"tfid":0,"ftname":"","name":"莫宛莫","str":87,"int":15,"com":68,"img":25,"job":0,"boss":false},{"id":20,"fid":5,"fname":"亚光集团","rid":6,"rname":"星乐路通用房","tid":0,"tfid":0,"ftname":"","name":"姚春风","str":15,"int":42,"com":18,"img":49,"job":0,"boss":false},{"id":21,"fid":5,"fname":"亚光集团","rid":7,"rname":"国惠园交易所","tid":0,"tfid":0,"ftname":"","name":"毛硕云","str":41,"int":27,"com":3,"img":34,"job":0,"boss":false},{"id":22,"fid":5,"fname":"亚光集团","rid":7,"rname":"国惠园交易所","tid":0,"tfid":0,"ftname":"","name":"蒋咏亦","str":10,"int":39,"com":4,"img":50,"job":0,"boss":false},{"id":23,"fid":5,"fname":"亚光集团","rid":7,"rname":"国惠园交易所","tid":0,"tfid":0,"ftname":"","name":"刘奕","str":8,"int":12,"com":42,"img":5,"job":0,"boss":false},{"id":24,"fid":5,"fname":"亚光集团","rid":7,"rname":"国惠园交易所","tid":0,"tfid":0,"ftname":"","name":"伏蕊养","str":49,"int":37,"com":50,"img":26,"job":0,"boss":false},{"id":25,"fid":5,"fname":"亚光集团","rid":7,"rname":"国惠园交易所","tid":0,"tfid":0,"ftname":"","name":"王语安","str":15,"int":6,"com":12,"img":62,"job":0,"boss":false},{"id":26,"fid":5,"fname":"亚光集团","rid":8,"rname":"漫宇大厦挖矿厂","tid":0,"tfid":0,"ftname":"","name":"陈藩满","str":48,"int":11,"com":4,"img":59,"job":0,"boss":false},{"id":27,"fid":5,"fname":"亚光集团","rid":8,"rname":"漫宇大厦挖矿厂","tid":0,"tfid":0,"ftname":"","name":"廖蕾","str":11,"int":33,"com":33,"img":59,"job":0,"boss":false},{"id":28,"fid":5,"fname":"亚光集团","rid":8,"rname":"漫宇大厦挖矿厂","tid":0,"tfid":0,"ftname":"","name":"陈衷意","str":12,"int":33,"com":17,"img":2,"job":0,"boss":false},{"id":29,"fid":5,"fname":"亚光集团","rid":8,"rname":"漫宇大厦挖矿厂","tid":0,"tfid":0,"ftname":"","name":"邓美菅","str":20,"int":68,"com":24,"img":12,"job":0,"boss":false},{"id":30,"fid":5,"fname":"亚光集团","rid":8,"rname":"漫宇大厦挖矿厂","tid":0,"tfid":0,"ftname":"","name":"周璇","str":82,"int":2,"com":24,"img":49,"job":0,"boss":false},{"id":31,"fid":5,"fname":"亚光集团","rid":8,"rname":"漫宇大厦挖矿厂","tid":0,"tfid":0,"ftname":"","name":"裴彤敏","str":6,"int":12,"com":22,"img":43,"job":0,"boss":false},{"id":32,"fid":5,"fname":"亚光集团","rid":8,"rname":"漫宇大厦挖矿厂","tid":0,"tfid":0,"ftname":"","name":"欧阳水慧","str":3,"int":48,"com":81,"img":25,"job":0,"boss":false},{"id":33,"fid":6,"fname":"洲复传媒","rid":9,"rname":"柯牛路发电站","tid":0,"tfid":0,"ftname":"","name":"刘才城","str":69,"int":66,"com":76,"img":36,"job":0,"boss":true},{"id":34,"fid":6,"fname":"洲复传媒","rid":9,"rname":"柯牛路发电站","tid":0,"tfid":0,"ftname":"","name":"顾悦蕊","str":22,"int":60,"com":48,"img":5,"job":0,"boss":false},{"id":35,"fid":6,"fname":"洲复传媒","rid":9,"rname":"柯牛路发电站","tid":0,"tfid":0,"ftname":"","name":"祝闻","str":25,"int":73,"com":64,"img":11,"job":0,"boss":false},{"id":36,"fid":6,"fname":"洲复传媒","rid":9,"rname":"柯牛路发电站","tid":0,"tfid":0,"ftname":"","name":"汲佘慕","str":6,"int":40,"com":31,"img":5,"job":0,"boss":false},{"id":37,"fid":6,"fname":"洲复传媒","rid":9,"rname":"柯牛路发电站","tid":0,"tfid":0,"ftname":"","name":"房闾","str":21,"int":44,"com":44,"img":1,"job":0,"boss":false},{"id":38,"fid":6,"fname":"洲复传媒","rid":9,"rname":"柯牛路发电站","tid":0,"tfid":0,"ftname":"","name":"刘兰","str":44,"int":8,"com":14,"img":57,"job":0,"boss":false},{"id":39,"fid":6,"fname":"洲复传媒","rid":9,"rname":"柯牛路发电站","tid":0,"tfid":0,"ftname":"","name":"管涵龙","str":89,"int":32,"com":67,"img":35,"job":0,"boss":false},{"id":40,"fid":6,"fname":"洲复传媒","rid":9,"rname":"柯牛路发电站","tid":0,"tfid":0,"ftname":"","name":"江露盼","str":26,"int":36,"com":15,"img":62,"job":0,"boss":false},{"id":41,"fid":6,"fname":"洲复传媒","rid":10,"rname":"凡财街发电站","tid":0,"tfid":0,"ftname":"","name":"陈蕴","str":30,"int":48,"com":40,"img":29,"job":0,"boss":false},{"id":42,"fid":6,"fname":"洲复传媒","rid":10,"rname":"凡财街发电站","tid":0,"tfid":0,"ftname":"","name":"周叶琦","str":9,"int":11,"com":18,"img":48,"job":0,"boss":false},{"id":43,"fid":6,"fname":"洲复传媒","rid":10,"rname":"凡财街发电站","tid":0,"tfid":0,"ftname":"","name":"陈尔","str":59,"int":14,"com":36,"img":37,"job":0,"boss":false},{"id":44,"fid":6,"fname":"洲复传媒","rid":10,"rname":"凡财街发电站","tid":0,"tfid":0,"ftname":"","name":"江央焦","str":49,"int":50,"com":33,"img":5,"job":0,"boss":false},{"id":45,"fid":6,"fname":"洲复传媒","rid":11,"rname":"亚金镇挖矿厂","tid":0,"tfid":0,"ftname":"","name":"陈越优","str":94,"int":54,"com":86,"img":64,"job":0,"boss":false},{"id":46,"fid":6,"fname":"洲复传媒","rid":11,"rname":"亚金镇挖矿厂","tid":0,"tfid":0,"ftname":"","name":"李泽瑶","str":88,"int":33,"com":11,"img":1,"job":0,"boss":false},{"id":47,"fid":6,"fname":"洲复传媒","rid":11,"rname":"亚金镇挖矿厂","tid":0,"tfid":0,"ftname":"","name":"李懿淑","str":79,"int":29,"com":41,"img":15,"job":0,"boss":false},{"id":48,"fid":6,"fname":"洲复传媒","rid":11,"rname":"亚金镇挖矿厂","tid":0,"tfid":0,"ftname":"","name":"廖海闻","str":59,"int":88,"com":46,"img":34,"job":0,"boss":false},{"id":49,"fid":6,"fname":"洲复传媒","rid":11,"rname":"亚金镇挖矿厂","tid":0,"tfid":0,"ftname":"","name":"宦吉竹","str":23,"int":48,"com":32,"img":47,"job":0,"boss":false},{"id":50,"fid":6,"fname":"洲复传媒","rid":11,"rname":"亚金镇挖矿厂","tid":0,"tfid":0,"ftname":"","name":"龙乐井","str":46,"int":36,"com":31,"img":11,"job":0,"boss":false},{"id":51,"fid":6,"fname":"洲复传媒","rid":11,"rname":"亚金镇挖矿厂","tid":0,"tfid":0,"ftname":"","name":"张明红","str":95,"int":53,"com":25,"img":15,"job":0,"boss":false}],"relationList":[{"id":"10","from":4,"fromName":"和矿控股","to":5,"toName":"亚光集团","invest":0,"support":0,"jointID":0,"jointName":"","spyID":0,"spyName":""},{"id":"20","from":4,"fromName":"和矿控股","to":6,"toName":"洲复传媒","invest":0,"support":0,"jointID":0,"jointName":"","spyID":0,"spyName":""},{"id":"01","from":5,"fromName":"亚光集团","to":4,"toName":"和矿控股","invest":0,"support":0,"jointID":0,"jointName":"","spyID":0,"spyName":""},{"id":"21","from":5,"fromName":"亚光集团","to":6,"toName":"洲复传媒","invest":0,"support":0},{"id":"02","from":6,"fromName":"洲复传媒","to":4,"toName":"和矿控股","invest":0,"support":0},{"id":"12","from":6,"fromName":"洲复传媒","to":5,"toName":"亚光集团","invest":0,"support":0}],"logList":[]},"accFactoryID":7,"accRoomID":12,"accTerminalID":79,"accWorkerID":52,"day":1}');
         }
-        /*{"title":"第2周","id":2,"content":"总收入增加：44&nbsp;&nbsp;&nbsp;&nbsp;总形象增加：5<br/><hr/><br/>春熙路：<br/>收入增加：24&nbsp;&nbsp;&nbsp;&nbsp;形象增加：0<br/><hr/><br/>杰宝路：<br/>收入增加：20&nbsp;&nbsp;&nbsp;&nbsp;形象增加：5"},{"title":"第1周","id":1,"content":"<b>总收入增加</b>：31&nbsp;&nbsp;&nbsp;&nbsp;<b>总形象增加</b>：6<br/><hr/><br/>春熙路：<br/>收入增加 19&nbsp;&nbsp;&nbsp;&nbsp;形象增加：1<br/><hr/><br/>杰宝路：<br/>收入增加：12&nbsp;&nbsp;&nbsp;&nbsp;形象增加：5"}*/
         if(window.GLOBAL&&window.GLOBAL.game){
             this.game = window.GLOBAL.game;
             this.day = window.GLOBAL.day;
@@ -730,7 +791,7 @@ export default {
                 balance = 100;
             }
             else if(manager&&myWorkerList.length>1){
-                balance = avg([manager.com,manager.com,manager.com,manager.img,manager.img,manager.int]); // 3点交流，2点形象，1点智力
+                balance = manager.com;
             }
             else if(myWorkerList.length>1){
                 balance = avg(myWorkerList,'com');
@@ -741,13 +802,49 @@ export default {
             return percent(val,max);
         },
         calcRoomValue(room){ // 计算房间价格
-            return 350;
+            let terminalList = getListByID(room.id,'rid',this.game.terminalList),
+                terminalLevelValueMap = [500,2500,3000],
+                roomLevelValueMap = [10000,20000,25000],
+                sum = 5000;
+            for(let terminal of terminalList){
+                sum += terminalLevelValueMap[terminal.powerLevel-1];
+                sum += terminalLevelValueMap[terminal.digLevel-1];
+                sum += terminalLevelValueMap[terminal.tradeLevel-1];
+                sum -= 300*terminal.durab/CONFIG.max_durab;
+            }
+            sum += roomLevelValueMap[room.level-1];
+            sum -= 1200*room.durab/CONFIG.max_durab;
+            sum += 5*room.basicImage;
+            sum += 50*room.auto/CONFIG.max_auto;
+            sum += .2*room.power;
+            return Math.round(Math.round(sum/100)*100);
         },
         calcWorkerValue(worker){ // 计算人员价格
-            return 50;
+            let sum = 100;
+            sum += worker.str*13+48;
+            sum += worker.int*13+49;
+            sum += worker.com*13+50;
+            sum += worker.img*17;
+            return Math.round(Math.round(sum/100)*100);
         },
         calcFactoryValue(factory){ // 计算工厂价格
-            return 1200;
+            let workerList = getListByID(factory.id,'fid',this.game.workerList),
+                roomList = getListByID(factory.id,'fid',this.game.roomList),
+                relation = getListByID(factory.id,'to',this.game.relationList)[0],
+                sum = 10000;
+            for(let worker of workerList){
+                sum += this.calcWorkerValue(worker);
+            }
+            for(let room of roomList){
+                sum += this.calcRoomValue(room);
+            }
+            if(factory.money>0)
+                sum += factory.money;
+            if(factory.image>0)
+                sum += factory.image*5;
+            if(relation.invest>0)
+            sum += relation.invest/5;
+            return Math.round(sum);
         },
         acquireRoom(room){ // 收纳房间
             let myFactory = this.game.factoryList[0],
@@ -779,6 +876,18 @@ export default {
             tworker.job = 0;
             tworker.boss = false;
         },
+        randomAssignToRoom(){ // 分配空闲人员到随机房间
+            let myFactory = this.game.factoryList[0],
+                myWorkerList = getListByID(myFactory.id,'fid',this.game.workerList),
+                myFreeWorkerList = getMatchList(myWorkerList,[['job',0],['rid',0]]),
+                myRoomList = getListByID(myFactory.id,'fid',this.game.roomList);
+            for(let worker of myFreeWorkerList){
+                let rand = r(0,myRoomList.length-1),
+                    targetRoom = myRoomList[rand];
+                worker.rid = targetRoom.id;
+                worker.rname = targetRoom.name;
+            }
+        },
 
         onTapDrag(index){ // 点击【悬浮拖拽】按钮
             if(this.loading) return;
@@ -795,7 +904,367 @@ export default {
             }
         },
         onTapGo(){ // 点击【结束】按钮
-            console.log('进入下一周');
+            let myWorkerList = getListByID(this.game.factoryList[0].id,'fid',this.game.workerList),
+                hasLazyWorker = false;
+            for(let worker of myWorkerList){
+                if(!worker.boss&&worker.job==0){
+                    hasLazyWorker = true;
+                    break;
+                }
+            }
+            this.tipList = [];
+            if(this.day%4==0)
+                this.tipList.push('下周市场资源将清空');
+            if(hasLazyWorker)
+                this.tipList.push('有空闲的员工');
+            this.showConfirmGo = true;
+        },
+        onTapConfirmGo(){ // 点击【确认结束】按钮 @MODIFY
+            this.showConfirmGo = false;
+            let logContent = {},
+                logSuffix = '',
+                logRoomList = [],
+                logInvestList = [],
+
+                moneyIncome = 0,
+                imageIncome = 0,
+                rrpIncome = 0,
+                hrpIncome = 0,
+                supportIncome = 0,
+                myFactory = this.game.factoryList[0],
+                myRoomList = getListByID(myFactory.id,'fid',this.game.roomList),
+                relationList = getListByID(myFactory.id,'from',this.game.relationList),
+                workerList = getListByID(myFactory.id,'fid',this.game.workerList),
+                imageAgent = getListByID(11,'job',workerList)[0],
+                calcRoomIncome = (room,income,riskImpact,roomWorkerList,abi) =>{
+                    let balance = this.calcBalance(roomWorkerList),durabImpact = 1;
+                    if(room.durab>CONFIG.room.durab_threshold){
+                        durabImpact = 1-room.durab/CONFIG.max_durab;
+                    }
+                    if(abi){ // 重新计算 riskImpact
+                        roomRiskImpact = 1;
+                        if(room.risk==2){ // 常规
+                            roomRiskImpact += abi/CONFIG.max_worker_ablity;
+                        }
+                        else if(room.risk==3){ // 冒险
+                            roomRiskImpact += 2*abi/CONFIG.max_worker_ablity;
+                        }
+                    }
+                    return Math.round(income*durabImpact*(balance/100)*riskImpact);
+                };
+            for(let room of myRoomList){ // 演算每个房间
+                let myTerminalList = getListByID(room.id,'rid',this.game.terminalList),
+                    roomWorkerList = getListByID(room.id,'rid',this.game.workerList),
+                    manager = getListByID(7,'job',roomWorkerList)[0],
+                    maintainer = getListByID(6,'job',roomWorkerList)[0],
+                    autoWorker = getListByID(5,'job',roomWorkerList)[0],
+                    roomImageAgent = getListByID(8,'job',roomWorkerList)[0],
+                    roomPowerIncome = 0,
+                    roomMoneyIncome = 0,
+                    roomImageIncome = 0,
+                    roomSupportIncome = 0,
+                    roomAutoIncome = 0,
+                    roomDurabReduce = 0,
+                    roomDurabIncrease = 0,
+                    roomPowerConsume = 0,
+                    roomMoneyConsume = 0,
+                    roomLog = {};
+                roomLog.name = room.name;
+                roomLog.terminalList = [];
+                for(let terminal of myTerminalList){ // 演算每个终端
+                    let myWorker = getListByID(terminal.id,'tid',this.game.workerList)[0],
+                        terminalPowerIncome = 0,
+                        terminalMoneyIncome = 0,
+                        terminalDurabReduce = 0,
+                        terminalDurabIncrese = 0,
+                        terminalSupportIncome = 0,
+                        terminalPowerConsume = 0,
+                        terminalMoneyConsume = 0;
+                    if(myWorker&&myWorker.job){ // 如果该终端有工人
+                        let durabImpact = 1, roomLevelImpact = room.level+CONFIG.room.base, typeImpact = CONFIG.room.type_normal_factor;
+                        if(terminal.durab>CONFIG.terminal.durab_threshold){
+                            durabImpact = 1-terminal.durab/CONFIG.max_durab;
+                        }
+                        switch(myWorker.job){
+                            case 1: // 发电
+                                if(room.type==1)
+                                    typeImpact = CONFIG.room.type_increase_factor;
+                                else if(room.type!=0)
+                                    typeImpact = CONFIG.room.type_decrease_factor;
+                                terminalPowerIncome = Math.round(myWorker.str*(CONFIG.terminal.base+terminal.powerLevel)*roomLevelImpact*durabImpact*CONFIG.terminal.power_factor*typeImpact);
+                                terminalDurabIncrese = CONFIG.terminal.durab_increase*(1-room.auto/CONFIG.max_auto);
+                            break;
+                            case 2: // 挖矿
+                                if(room.power>0){
+                                    if(room.type==2)
+                                        typeImpact = CONFIG.room.type_increase_factor;
+                                    else if(room.type!=0)
+                                        typeImpact = CONFIG.room.type_decrease_factor;
+                                    terminalMoneyIncome = Math.round(myWorker.int*(CONFIG.terminal.base+terminal.digLevel)*roomLevelImpact*durabImpact*CONFIG.terminal.dig_factor*typeImpact);
+                                    terminalPowerConsume = CONFIG.terminal.dig_power_consume_base+terminal.digLevel*CONFIG.terminal.dig_power_consume_factor;
+                                    terminalDurabIncrese = CONFIG.terminal.durab_increase*(1-room.auto/CONFIG.max_auto);
+                                }
+                            break;
+                            case 3: // 交易
+                                if(room.power>0){
+                                    if(room.type==3)
+                                        typeImpact = CONFIG.room.type_increase_factor;
+                                    else if(room.type!=0)
+                                        typeImpact = CONFIG.room.type_decrease_factor;
+                                    terminalMoneyIncome = Math.round(myWorker.com*(CONFIG.terminal.base+terminal.digLevel)*roomLevelImpact*durabImpact*CONFIG.terminal.trade_money_factor*typeImpact);
+                                    terminalSupportIncome = Math.round(myWorker.com*(CONFIG.terminal.base+terminal.tradeLevel)*roomLevelImpact*durabImpact*CONFIG.terminal.trade_support_factor*typeImpact);
+                                    terminalPowerConsume = CONFIG.terminal.trade_power_consume_base+terminal.tradeLevel*CONFIG.terminal.trade_power_consume_factor;
+                                    terminalDurabIncrese = CONFIG.terminal.durab_increase*(1-room.auto/CONFIG.max_auto);
+                                }
+                            break;
+                            case 4: // 终端维护
+                                if(myFactory.money>0){
+                                    terminalDurabReduce = Math.round(myWorker.str*CONFIG.terminal.durab_factor);
+                                    terminalMoneyConsume = terminalDurabReduce*CONFIG.terminal.durab_consume_factor;
+                                }
+                            break;
+                        }
+                    }
+                    // 终端数据赋值
+                    terminal.durab += terminalDurabIncrese-terminalDurabReduce;
+                    if(terminal.durab<0)
+                        terminal.durab = 0;
+                    else if(terminal.durab>CONFIG.max_durab)
+                        terminal.durab = CONFIG.max_durab;
+                    // 计算房间数据
+                    roomDurabIncrease += terminalDurabIncrese*CONFIG.room.durab_increase_factor;
+                    roomPowerIncome += terminalPowerIncome;
+                    roomMoneyIncome += terminalMoneyIncome;
+                    roomSupportIncome += terminalSupportIncome;
+                    roomPowerConsume += terminalPowerConsume;
+                    roomMoneyConsume += terminalMoneyConsume;
+                }
+
+                // 计算房间数据
+                let roomRiskImpact = 1, durabImpact = 1;
+                if(room.risk==2){ // 常规
+                    durabImpact = 1.5;
+                    roomRiskImpact = r(100,200)/100;
+                }
+                else if(room.risk==3){ // 冒险
+                    durabImpact = 2.5;
+                    roomRiskImpact += r(50,300)/100;
+                }
+                roomPowerIncome = calcRoomIncome(room,roomPowerIncome,roomRiskImpact,roomWorkerList,(manager&&room.type==1)?manager.str:0);
+                roomMoneyIncome = calcRoomIncome(room,roomMoneyIncome,roomRiskImpact,roomWorkerList,(manager&&room.type==2)?manager.int:0);
+                roomSupportIncome = calcRoomIncome(room,roomSupportIncome,roomRiskImpact,roomWorkerList,(manager&&room.type==3)?manager.com:0);
+                if(manager){ // 房间管理员
+
+                }
+                if(roomImageAgent){ // 房间门面
+                    roomImageIncome = Math.round(roomImageAgent.img*CONFIG.room.image_factor+room.basicImage);
+                }
+                if(myFactory.money>0&&maintainer){ // 房间维护
+                    roomDurabReduce = Math.round(maintainer.str*CONFIG.room.durab_factor);
+                    roomMoneyConsume += Math.round(roomDurabReduce*CONFIG.room.durab_consume_factor);
+                    for(let terminal of myTerminalList){ // 演算每个终端
+                        terminal.durab -= Math.round(roomDurabReduce*CONFIG.room.durab_terminal_factor);
+                        if(terminal.durab<0)
+                            terminal.durab = 0;
+                        else if(terminal.durab>CONFIG.max_durab)
+                            terminal.durab = CONFIG.max_durab;
+                    }
+                }
+                if(myFactory.money>0&&room.power>0&&autoWorker){ // 房间自动化
+                    roomAutoIncome = Math.round(autoWorker.int*CONFIG.room.auto_factor);
+                    roomMoneyConsume += CONFIG.room.auto_money_consume;
+                    roomPowerConsume += CONFIG.room.auto_power_consume;
+                }
+
+                // 房间数据赋值
+                room.power += roomPowerIncome-roomPowerConsume;
+                roomDurabIncrease = Math.round(roomDurabIncrease*durabImpact+CONFIG.room.durab_fix*(1-room.auto/CONFIG.max_auto));
+                room.durab += roomDurabIncrease-roomDurabReduce;
+                if(room.durab<0)
+                    room.durab = 0;
+                else if(room.durab>CONFIG.max_durab)
+                    room.durab = CONFIG.max_durab;
+                room.auto += roomAutoIncome;
+
+                // 累加工厂数据
+                moneyIncome += roomMoneyIncome-roomMoneyConsume;
+                supportIncome += roomSupportIncome;
+                imageIncome += roomImageIncome;
+
+                // 生成房间报表
+                roomLog = {
+                    name: room.name,
+                    powerIncome: roomPowerIncome,
+                    moneyIncome: roomMoneyIncome,
+                    imageIncome: roomImageIncome,
+                    supporrtIncome: roomSupportIncome,
+                    powerConsume: roomPowerConsume,
+                    moneyConsume: roomMoneyConsume,
+                }
+                logRoomList.push(roomLog);
+            }
+
+            // 计算我的工厂数据
+            if(imageAgent){
+                imageIncome = Math.round(imageAgent.img*CONFIG.factory.image_increse_factor)+CONFIG.factory.image_increse_base;
+            }
+            let searchRoomWorkerList = getListByID(10,'job',workerList),
+                searchWorkerWorkerList = getListByID(9,'job',workerList);
+            for(let worker of searchRoomWorkerList){
+                rrpIncome += Math.round((worker.str+worker.int)*CONFIG.factory.rrp_factor)+CONFIG.factory.hrp_fix;
+            }
+            if(myFactory.image>0){
+                for(let worker of searchWorkerWorkerList){
+                    hrpIncome += Math.round(myFactory.image*(worker.com+worker.img)*CONFIG.factory.hrp_factor+CONFIG.factory.hrp_fix);
+                }
+            }
+
+            // 我的工厂数据赋值 1
+            myFactory.rrp += rrpIncome;
+            myFactory.hrp += hrpIncome;
+
+            // 计算外交数据&赋值
+            for(let relation of relationList){
+                let youFactory = getListByID(relation.to,'id',this.game.factoryList)[0],
+                    joint = getMatchList(workerList,[['tfid',relation.to],['job',12]])[0],
+                    spy = getMatchList(workerList,[['tfid',relation.to],['job',13]])[0];
+                // 外交员
+                if(joint&&myFactory.image>=CONFIG.relation.joint_image_threshold){
+                    let supportIncrease = Math.round(CONFIG.relation.support_increase_fix+CONFIG.relation.support_joint_increase_factor*joint.com)+Math.round(supportIncome*CONFIG.relation.support_trade_increase_factor);
+                    relation.support += supportIncrease;
+                    logSuffix += `<p>我厂对${youFactory.name}的支持率提升了</p>`;
+                }
+                else{
+                    relation.support -= CONFIG.relation.support_decrease_fix;
+                }
+                if(relation.support<0)
+                    relation.support = 0;
+                else if(relation.support>CONFIG.max_support)
+                    relation.support = CONFIG.max_support;
+                // 间谍
+                if(spy&&myFactory.money>0){
+                    let intImpactIndex = 0;
+                    if(spy.int>=50){
+                        intImpactIndex = 1;
+                    }
+                    if(spy.int>=60){
+                        intImpactIndex = 2;
+                    }
+                    if(spy.int>=70){
+                        intImpactIndex = 3;
+                    }
+                    if(spy.int>=80){
+                        intImpactIndex = 4;
+                    }
+                    if(spy.int>=90){
+                        intImpactIndex = 5;
+                    }
+                    if(spy.int>=95){
+                        intImpactIndex = 6;
+                    }
+                    let imageDamage = Math.round(CONFIG.relation.image_decrease_fix+spy.int*CONFIG.relation.image_decrease_factor_range[intImpactIndex]),
+                        spyConsume = CONFIG.relation.image_decrease_consume;
+                    youFactory.image -= imageDamage;
+                    youFactory.imageDamaged = true; // 标记
+                    moneyIncome -= spyConsume;
+                    logSuffix += `<p>${spy.name}的间谍工作对${youFactory.name}造成了 <b>${imageDamage}</b> 的形象损失（-<b>${spyConsume}</b> $）</p>`;
+                }
+            }
+
+            // 其他工厂行动（AI）
+            let totalMoney = 0, // 其他工厂的资金总和
+                totalImage = 0; // 其他工厂的形象总和
+            for(let youFactory of this.game.factoryList){
+                if(youFactory.id!=myFactory.id){
+                    totalMoney += youFactory.money;
+                    totalImage += youFactory.image;
+                }
+            }
+            for(let youFactory of this.game.factoryList){
+                if(youFactory.id!=myFactory.id){
+                    let youMoneyIncome = 0,
+                        youMoneyIncomeImpact = 0,
+                        youImageIncome = 0,
+                        youImageIncomeImpact = 0,
+                        youWorkerList = getListByID(youFactory.id,'fid',this.game.workerList),
+                        youRoomList = getListByID(youFactory.id,'fid',this.game.roomList),
+                        commonRoomList = getListByID(0,'type',youRoomList),
+                        powerRoomList = getListByID(1,'type',youRoomList),
+                        digRoomList = getListByID(2,'type',youRoomList),
+                        tradeRoomList = getListByID(3,'type',youRoomList),
+                        relation = getListByID(youFactory.id,'to',this.game.relationList)[0],
+                        rand = 0;
+                    for(let worker of youWorkerList){
+                        let moneyImp = worker.str*powerRoomList.length+worker.int*digRoomList.length+worker.com*tradeRoomList.length,
+                            imageImp = worker.img;
+                        youMoneyIncomeImpact += moneyImp;
+                        youImageIncomeImpact += imageImp;
+                    }
+                    youMoneyIncomeImpact = Math.floor(youMoneyIncomeImpact*.5);
+                    youImageIncomeImpact = Math.floor(youImageIncomeImpact*.2);
+                    youMoneyIncome = r(Math.floor(youMoneyIncomeImpact/3),youMoneyIncomeImpact);
+                    if(!youFactory.imageDamaged){
+                        youImageIncome = r(Math.floor(youImageIncomeImpact/4),youImageIncomeImpact);
+                    }
+                    youMoneyIncome += Math.floor(youImageIncome*1.2);
+                    if(relation.invest>0){
+                        let supportPct = relation.support/CONFIG.max_support,
+                            investIncome = Math.round(youMoneyIncome*supportPct+relation.invest*supportPct*.02);
+                        logInvestList.push({
+                            name: youFactory.name,
+                            income: investIncome,
+                        });
+                        moneyIncome += investIncome;
+                        youMoneyIncome += Math.round(investIncome*.15);
+                    }
+                    youFactory.money += youMoneyIncome;
+                    youFactory.image += youImageIncome;
+                    // 随机添加房间
+                    rand = r(0,totalMoney*20);
+                    if(rand<youFactory.money){
+                        this.game.roomList.push(genRandomRoom(window.GLOBAL.accRoomID++,{fid:youFactory.id,fname:youFactory.name,}));
+                    }
+                    // 随机添加人员
+                    rand = r(0,totalImage*5);
+                    if(rand<youFactory.image){
+                        this.game.workerList.push(genRandomWorker(window.GLOBAL.accWorkerID++,{
+                            fid: youFactory.id,
+                            fname: youFactory.name,
+                            boss: false,
+                        }));
+                    }
+                }
+            }
+
+            // 我的工厂数据赋值 2
+            myFactory.image += imageIncome;
+            myFactory.money += moneyIncome;
+
+            // 其他
+            for(let factory of this.game.factoryList){
+                factory.damaged = false;
+                factory.imageDamaged = false;
+            }
+            if(this.day!=1&&this.day%4==0){ // 每隔 4 周
+                this.game.roomList = removeFromList(0,'fid',this.game.roomList);
+                this.game.workerList = removeFromList(0,'fid',this.game.workerList);
+                logSuffix += `<p>搜索资源已清空！</p>`;
+            }
+            // 生产工厂报表
+            logContent = {
+                moneyIncome,
+                imageIncome,
+                rrpIncome,
+                hrpIncome,
+                roomList: logRoomList,
+                investList: logInvestList,
+                suffix: logSuffix,
+            }
+            this.game.logList.unshift({ title: `第 ${this.day} 周`, id: this.day, content: logContent, subTitle: `收入 ${moneyIncome} $，形象提升 ${imageIncome}` });
+            this.day += 1;
+            this.tipList = [];
+            this.jump(8);
+            this.onTapLog(this.day-1);
         },
 
         onTapTab(index){ // 点击【标签页码】
@@ -845,7 +1314,7 @@ export default {
                     this.asynAllPages();
                 }
                 else{
-                    this.$toast.text('资金不够');
+                    this.$toast.text('资金不足');
                 }
             }
         },
@@ -863,7 +1332,7 @@ export default {
                         this.asynAllPages();
                     }
                     else{
-                        this.$toast.text('资金不够');
+                        this.$toast.text('资金不足');
                     }
                 }
             }
@@ -890,7 +1359,7 @@ export default {
             }
             switch(mode){
                 case 1: // 形象总代言
-                    releaseAllByJob(11,getListByID(1,'fid',this.game.workerList));
+                    releaseAllByJob(11,getListByID(this.game.factoryList[0].id,'fid',this.game.workerList));
                 break;
                 case 2: // 房间-管理员
                     releaseAllByJob(7,roomWorkerList);
@@ -940,18 +1409,23 @@ export default {
             this.showJobPop = true;
         },
         onTapSellRoom(){ // 点击【出售房间】按钮
-            this.tempData.room.sell = this.calcRoomValue(this.tempData.room)*CONFIG.sell_factor;
+            this.tempData.room.sell = Math.round(this.calcRoomValue(this.tempData.room)*CONFIG.sell_factor);
             this.showConfirmSellRoom = true;
         },
         onTapSellWorker(){ // 点击【出售人员】按钮
-            this.tempData.myWorker.sell = this.calcWorkerValue(this.tempData.myWorker)*CONFIG.sell_factor;
+            this.tempData.myWorker.sell = Math.round(this.calcWorkerValue(this.tempData.myWorker)*CONFIG.sell_factor);
             this.showConfirmSellWorker = true;
         },
         onTapConfirmSellRoom(){ // 点击【确认出售房间】按钮
             let room = getListByID(this.tempData.room.id,'id',this.game.roomList)[0],
+                terminalList = getListByID(room.id,'rid',this.game.terminalList),
                 workerList = getListByID(room.id,'rid',this.game.workerList);
             room.fid = 0;
             room.fname = '';
+            for(let i=0;i<terminalList.length;i++){ // 解除该房间内所有终端
+                let terminal = terminalList[i];
+                terminal.fid = 0;
+            }
             for(let i=0;i<workerList.length;i++){ // 解除该房间内所有员工的职务
                 let worker = workerList[i];
                 this.releaseWorker(worker);
@@ -980,7 +1454,16 @@ export default {
             let tid = (this.tempData.terminal||{}).id,
                 worker = getListByID(tid,'tid',this.game.workerList)[0];
             if(worker){
+                let myFactory = this.game.factoryList[0];
                 worker.job = index;
+                if(this.tempData.room&&this.tempData.room.power<=0){
+                    if(worker.job==2||worker.job==3){
+                        this.$toast.text('房间电力不足，职能将无法产生收益',{duration:3000});
+                    }
+                }
+                if(myFactory.money<=0&&worker.job==4){
+                    this.$toast.text('资金不足，职能将无法产生收益',{duration:3000});
+                }
             }
             this.asynAllPages();
             this.showJobPop = false;
@@ -1073,20 +1556,30 @@ export default {
         onTapBuyRoom(){ // 点击【购买房间】按钮
             let factory = this.game.factoryList[0],
                 buyRoom = getListByID(this.tempData.buyRoom.id,'id',this.game.roomList)[0];
-            buyRoom.fid = factory.id;
-            buyRoom.fname = factory.name;
-            this.game.factoryList[0].money -= this.tempData.buyRoom.price;
-            this.showConfirmBuyRoom = false;
-            this.asynAllPages();
+            if(factory.money>=this.tempData.buyRoom.price){
+                buyRoom.fid = factory.id;
+                buyRoom.fname = factory.name;
+                this.game.factoryList[0].money -= this.tempData.buyRoom.price;
+                this.showConfirmBuyRoom = false;
+                this.asynAllPages();
+            }
+            else{
+                this.$toast.text('资金不足');
+            }
         },
         onTapBuyWorker(){ // 点击【购买人员】按钮
             let factory = this.game.factoryList[0],
                 buyWorker = getListByID(this.tempData.buyWorker.id,'id',this.game.workerList)[0];
-            buyWorker.fid = factory.id;
-            buyWorker.fname = factory.name;
-            this.game.factoryList[0].money -= this.tempData.buyWorker.price;
-            this.showConfirmBuyWorker = false;
-            this.asynAllPages();
+            if(factory.money>=this.tempData.buyWorker.price){
+                buyWorker.fid = factory.id;
+                buyWorker.fname = factory.name;
+                this.game.factoryList[0].money -= this.tempData.buyWorker.price;
+                this.showConfirmBuyWorker = false;
+                this.asynAllPages();
+            }
+            else{
+                this.$toast.text('资金不足');
+            }
         },
         onTapLog(id){ // 点击【报表】按钮
             this.tempData.log = getListByID(id,'id',this.game.logList)[0];
@@ -1119,7 +1612,7 @@ export default {
             this.asynAllPages();
         },
         onTapEditFactory(){ // 点击【操作】按钮
-            this.tempData.factory.sell = this.calcFactoryValue(this.tempData.factory)*CONFIG.sell_factor;
+            this.tempData.factory.sell = Math.round(this.calcFactoryValue(this.tempData.factory)*CONFIG.sell_factor);
             this.showEditFactory = true;
         },
         onTapStealRoom(){ // 点击【偷取房间】按钮
@@ -1127,7 +1620,7 @@ export default {
                 this.$toast.text(`偷取房间需要至少 ${Math.floor(CONFIG.steal_room_support_threshold*100/CONFIG.max_support)}% 的支持率`);
                 return ;
             }
-            let value = this.calcRoomValue(this.stealRoom),
+            let value = this.calcRoomValue(this.tempData.stealRoom),
                 imageCost = CONFIG.steal_room_image_cost+CONFIG.image_price_factor*value,
                 supportCost = CONFIG.steal_room_support_cost,
                 myFactory = this.game.factoryList[0],
@@ -1144,7 +1637,7 @@ export default {
                 this.$toast.text(`偷取人员需要至少 ${Math.floor(CONFIG.steal_worker_support_threshold*100/CONFIG.max_support)}% 的支持率`);
                 return ;
             }
-            let value = this.calcWorkerValue(this.stealWorker),
+            let value = this.calcWorkerValue(this.tempData.stealWorker),
                 imageCost = CONFIG.steal_worker_image_cost+CONFIG.image_price_factor*value,
                 supportCost = CONFIG.steal_worker_support_cost,
                 myFactory = this.game.factoryList[0],
@@ -1164,7 +1657,7 @@ export default {
             this.showEditFactory = false;
             this.showInvest = true;
         },
-        onTapDamageFactory(){ // 点击【打压】按钮
+        onTapConfirmDamage(){ // 点击【确认打压】按钮
             let factory = getListByID(this.tempData.factory.id,'id',this.game.factoryList)[0],
                 myFactory = this.game.factoryList[0];
             if(myFactory.money<CONFIG.damage_money_cost){
@@ -1179,12 +1672,19 @@ export default {
             myFactory.money -= CONFIG.damage_money_cost;
             myFactory.image -= factory.image;
             factory.money -= damage;
-            console.log(factory.image);
             factory.damaged = true;
             this.asynAllPages();
-            this.showEditFactory = false;
+            this.showConfirmDamage = false;
+            this.tempData.factory.sell = Math.round(this.calcFactoryValue(this.tempData.factory)*CONFIG.sell_factor);
+            this.$dialog({
+                title: '结果报告',
+                textAlign: 'left',
+                content: `${factory.name}的总资金减少了<b>${damage} $</b><br/>我厂共花费 <b>${CONFIG.damage_money_cost} $</b><br/>我厂形象下降了 <b>${factory.image}</b>`,
+                noCancelBtn: true,
+                noOkBtn: true,
+            });
         },
-        onTapBuyFactory(){ // 点击【收购工厂】按钮
+        onTapConfirmBuyFactory(){ // 点击【确认收购工厂】按钮
             if(this.tempData.relation.support<CONFIG.buy_factory_support_threshold){
                 this.$toast.text(`收购工厂需要 ${Math.floor(CONFIG.buy_factory_support_threshold*100/CONFIG.max_support)}% 的支持率`);
                 return ;
@@ -1206,7 +1706,16 @@ export default {
             this.game.relationList = removeFromList(this.tempData.factory.id,'to',this.game.relationList);
             this.game.factoryList = removeFromList(this.tempData.factory.id,'id',this.game.factoryList);
             this.showEditFactory = false;
+            this.showConfirmBuyFactory = false;
             this.searchingFactoryID = 0;
+            myFactory.money -= this.tempData.factory.sell;
+            this.$dialog({
+                title: '结果报告',
+                textAlign: 'left',
+                content: `我厂共花费 <b>${this.tempData.factory.sell} $</b> 收购了${this.tempData.factory.name}<br/>共 ${roomList.length} 个房间， ${workerList.length} 个人员`,
+                noCancelBtn: true,
+                noOkBtn: true,
+            });
             this.jump(1);
         },
         onTapConfirmInvest(){ // 点击【确认投资】按钮
@@ -1225,6 +1734,55 @@ export default {
             else{
                 this.$toast.text(`资金不足`);
             }
+        },
+        onTapReleaseAll(){ // 点击【全体待命】按钮
+            let myFactory = this.game.factoryList[0],
+                myWorkerList = getListByID(myFactory.id,'fid',this.game.workerList);
+            for(let worker of myWorkerList){
+                this.releaseWorker(worker);
+            }
+            this.asynAllPages();
+        },
+        onTapAutoAssign(){ // 点击【自动安排空闲人员】按钮
+            let myFactory = this.game.factoryList[0],
+                myWorkerList = getListByID(myFactory.id,'fid',this.game.workerList),
+                myFreeWorkerList = getListByID(0,'job',myWorkerList),
+                myRoomList = getListByID(myFactory.id,'fid',this.game.roomList);
+            let arrangeRoom = room =>{
+                let _roomWorkerList = [...getListByID(room.id,'rid',this.game.workerList)];
+                let manager = bulbsort(_roomWorkerList,'com')[0];
+                _roomWorkerList = removeFromList(manager.id,'id',_roomWorkerList);
+                let imageAgent = bulbsort(_roomWorkerList,'img')[0];
+                _roomWorkerList = removeFromList(imageAgent.id,'id',_roomWorkerList);
+                if(room.auto<CONFIG.max_auto){
+
+                }
+            }
+            let assignPowerTask = () =>{
+                // let _myTerminalList = bulbsort(myTerminalList,'powerLevel'),
+                //     _myFreeWorkerList = bulbsort(myFreeWorkerList,'str');
+                // for(let i=0;i<_myTerminalList.length;i++){
+                //     let t = _myTerminalList[i],
+                //         r = getListByID(t.rid,'id',myRoomList)[0],
+                //         w = _myFreeWorkerList[i];
+                //     if(w){
+                //         let worker = getListByID(_myFreeWorkerList[i].id,'id',this.game.workerList)[0];
+                //         worker.job = 1;
+                //         worker.tid = t.id;
+                //         worker.rid = r.id;
+                //         worker.rname = r.name;
+                //     }
+                //     else{
+                //         i = _myTerminalList.length;
+                //     }
+                // }
+            }
+            this.randomAssignToRoom();
+            for(let room of myRoomList){
+                arrangeRoom(room);
+            }
+            this.asynAllPages();
+            this.showEditWorkerPage = false;
         },
 
         onDoubleTapRoom(id){ // 双击【房间】按钮
@@ -1251,6 +1809,7 @@ export default {
             let worker = getListByID(id,'id',this.game.workerList)[0],
                 rid = (this.tempData.room||{}).id,
                 tid = (this.tempData.terminal||{}).id,
+                myFactory = this.game.factoryList[0],
                 roomWorkerList = [];
             if(rid){
                 roomWorkerList = getListByID(rid,'rid',this.game.workerList);
@@ -1259,7 +1818,7 @@ export default {
             this.releaseWorker(worker);
             switch(this.tempData.workListPopMode){
                 case 1: // 形象总代言
-                    releaseAllByJob(11,getListByID(1,'fid',this.game.workerList));
+                    releaseAllByJob(11,getListByID(myFactory.id,'fid',this.game.workerList));
                     worker.job = 11;
                 break;
                 case 2: // 房间-管理员
@@ -1273,6 +1832,9 @@ export default {
                     worker.job = 6;
                     worker.rid = rid||0;
                     worker.rname = this.tempData.room.name||'';
+                    if(myFactory.money<=0){
+                        this.$toast.text(`资金不足，职能将无法产生收益`);
+                    }
                 break;
                 case 4: // 房间-公关
                     releaseAllByJob(8,roomWorkerList);
@@ -1285,6 +1847,12 @@ export default {
                     worker.job = 5;
                     worker.rid = rid||0;
                     worker.rname = this.tempData.room.name||'';
+                    if(myFactory.money<=0){
+                        this.$toast.text(`资金不足，职能将无法产生收益`);
+                    }
+                    else if(this.tempData.room.power<=0){
+                        this.$toast.text(`房间电力不足，职能将无法产生收益`);
+                    }
                 break;
                 case 6: // 终端-操作员
                     let oworker = getListByID(tid,'tid',this.game.workerList)[0]; // 该终端原来的操作员
@@ -1303,10 +1871,13 @@ export default {
                 break;
                 case 8: // 首页-人力资源搜索
                     worker.job = 9;
+                    if(myFactory.image<=0){
+                        this.$toast.text(`工厂形象不足，职能将无法产生收益`);
+                    }
                 break;
                 case 9: // 工厂页-外交
                     if(this.tempData.factory){
-                        let oworker = getMatchList(this.game.workerList,[['tfid',this.tempData.factory.id],['job',12],['fid',this.game.factoryList[0].id]])[0];
+                        let oworker = getMatchList(this.game.workerList,[['tfid',this.tempData.factory.id],['job',12],['fid',myFactory.id]])[0];
                         if(oworker){
                             oworker.job = 0;
                             oworker.tfid = 0;
@@ -1315,11 +1886,14 @@ export default {
                         worker.job = 12;
                         worker.tfid = this.tempData.factory.id;
                         worker.tfname = this.tempData.factory.name;
+                        if(myFactory.image<CONFIG.relation.joint_image_threshold){
+                            this.$toast.text(`工厂形象不足，职能将无法产生收益（需${CONFIG.relation.joint_image_threshold}）`,{duration:3000});
+                        }
                     }
                 break;
                 case 10: // 工厂页-间谍
                     if(this.tempData.factory){
-                        let oworker = getMatchList(this.game.workerList,[['tfid',this.tempData.factory.id],['job',13],['fid',this.game.factoryList[0].id]])[0];
+                        let oworker = getMatchList(this.game.workerList,[['tfid',this.tempData.factory.id],['job',13],['fid',myFactory.id]])[0];
                         if(oworker){
                             oworker.job = 0;
                             oworker.tfid = 0;
@@ -1328,6 +1902,9 @@ export default {
                         worker.job = 13;
                         worker.tfid = this.tempData.factory.id;
                         worker.tfname = this.tempData.factory.name;
+                        if(myFactory.money<=0){
+                            this.$toast.text(`资金不足，职能将无法产生收益`);
+                        }
                     }
                 break;
             }
@@ -1527,13 +2104,13 @@ export default {
                 myMarketWorketList = [...marketWorkerList];
             this.tempData.marketRoomList = Array.from(myMarketRoomList,room=>{
                 return {
-                    price: this.calcRoomValue(room)+'$',
+                    price: this.calcRoomValue(room),
                     ...room,
                 }
             });
             this.tempData.marketWorkerList = Array.from(myMarketWorketList,worker=>{
                 return {
-                    price: this.calcWorkerValue(worker)+'$',
+                    price: this.calcWorkerValue(worker),
                     ...worker,
                 }
             });
@@ -1598,6 +2175,9 @@ export default {
         height: 100%;
         color: #4a4a4a;
         font-size: .24rem;
+    }
+    .orange{
+        color: #ff4f18;
     }
     .panel{
         position: relative;
@@ -1671,6 +2251,10 @@ export default {
     .btn-small{
         margin-left: .2rem;
         font-size: .26rem;
+    }
+    .small{
+        font-size: .2rem;
+        font-weight: normal;
     }
     .touch-dom{
         display: block;
@@ -1832,20 +2416,20 @@ export default {
     }
     .footer .fact{
         padding: 0 .23rem;
-        width: 4.8rem;
+        width: 4.2rem;
         text-align: center;
         height: 1.2rem;
         border-top: .01rem solid #ccc;
     }
     .footer .fact .fact-item{
-        width: 4.8rem;
+        width: 4.2rem;
         height: .6rem;
         line-height: .6rem;
         text-align: left;
         font-size: .34rem;
     }
     .footer .btn{
-        width: 2.7rem;
+        width: 3.3rem;
         height: 1.2rem;
         font-size: .32rem;
     }
@@ -1853,6 +2437,11 @@ export default {
     .room-board{
         width: 6rem;
         padding: 0 .5rem;
+    }
+    .room-board .btn{
+        text-align: center;
+        font-size: .24rem;
+        font-weight: bold;
     }
     .room-board .row{
         padding: .3rem 0;
@@ -1981,11 +2570,14 @@ export default {
     }
     .log-board .title{
         font-size: .4rem;
-        margin-bottom: .2rem;
         border-bottom: .01rem solid #ccc;
     }
     .para{
         font-size: .26rem;
         line-height: .5rem;
+    }
+    .para .p1{
+        padding: .16rem 0;
+        border-bottom: .01rem solid #ccc;
     }
 </style>
