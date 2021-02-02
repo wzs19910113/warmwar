@@ -1,19 +1,19 @@
 module.exports = {
-	DEBUG: true,
+	DEBUG: false,
 	CONFIG:{
         init:{
             money: 0, // 初始资金
             image: 0, // 初始形象值
 			workerCount: 2, // 初始工人数量
-			humanResourcePoint: 1600, // 初始人力资源点数
-			roomResourcePoint: 2350, // 初始房间资源点数
+			humanResourcePoint: 0, // 初始人力资源点数
+			roomResourcePoint: 0, // 初始房间资源点数
 			roomType: 0, // 初始房间类型
 			roomBasicImage: 15, // 初始房间基础形象
 			randomOtherMoney: [5000,50000], // 其他公司初始资金随机范围
 			randomOtherImage: [100,1000], // 其他公司初始形象随机范围
 			roomPower: 50, // 第一个房间的初始电力
 			roomDurab: 0, // 第一个房间的初始耐久
-			roomRisk: 1, // 第一个房间的初始风险等级
+			roomRisk: 2, // 第一个房间的初始风险等级
 			roomAuto: 0, // 第一个房间的初始自动化程度
 			roomLevel: 1, // 第一个房间的初始等级
 			randomOtherRoomRange: [1,5], // 其他公司初始房间数量随机范围
@@ -49,15 +49,15 @@ module.exports = {
         max_dig_level: 3, // 终端最高挖矿等级
         max_trade_level: 3, // 终端最高交易等级
         room_levelup_cost: [10000,15000], // 房间升级费用
-        power_levelup_cost: [2000,3000], // 供电等级升级费用
-        dig_levelup_cost: [2000,3000], // 挖矿等级升级费用
-        trade_levelup_cost: [2000,3000], // 交易等级升级费用
+        power_levelup_cost: [1000,1500], // 供电等级升级费用
+        dig_levelup_cost: [1000,1500], // 挖矿等级升级费用
+        trade_levelup_cost: [1000,1500], // 交易等级升级费用
 		sell_factor: .5, // 贩卖系数
 		randmNewRoomDurabRange: [0,6000], // 新生成房间老化化随机范围
 		randmNewRoomAutoRange: [0,0], // 新生成房间自动化随机范围
 
-		searchRoomPointCost: 100, // 一个房间的搜索点数花费
-		searchWorkerPointCost: 100, // 一个人员的搜索点数花费
+		searchRoomPointCost: 1000, // 一个房间的搜索点数花费
+		searchWorkerPointCost: 1000, // 一个人员的搜索点数花费
 
 		max_support: 10000, // 最大支持点数
 		invest_support_threshold: 3000, // 投资支持率阈值
@@ -91,13 +91,13 @@ module.exports = {
 
 		room: {
 			base: 1.5,
-			image_factor: .5,
+			image_factor: .4,
 			durab_fix: 25,
 			durab_factor: 2,
 			durab_consume_factor: 2,
 			auto_factor: .25,
-			auto_power_consume: 50,
-			auto_money_consume: 50,
+			auto_power_consume: 100,
+			auto_money_consume: 100,
 			durab_threshold: 5000,
 			durab_increase_factor: .2,
 			durab_terminal_factor: .5,
@@ -108,8 +108,8 @@ module.exports = {
 		},
 
 		factory: {
-			image_increse_base: 40,
-			image_increse_factor: .12,
+			image_increse_base: 20,
+			image_increse_factor: .5,
 			rrp_factor: .1,
 			rrp_fix: 100,
 			hrp_factor: .001,
@@ -124,10 +124,11 @@ module.exports = {
 			image_decrease_fix: 50,
 			image_decrease_factor_range: [.2,.8,1,1.5,2,2.5,3],
 			image_decrease_consume: 500,
-			joint_image_threshold: 5000,
+			joint_image_threshold: 3000,
 		},
 
         max_worker_ablity: 100, // 人员最高能力值
+		period: 10, // 市场清空周期
     }
 }
 /*

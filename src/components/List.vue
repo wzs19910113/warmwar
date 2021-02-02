@@ -4,7 +4,7 @@
             <div class="list-title-head left">{{title}}</div>
             <div class="list-title-count left" v-if="!simple">共 {{localData.length}} 条</div>
             <a class="btn btn-asyn right" v-if="!simple" @click="asyn">刷新</a>
-            <a class="btn btn-option left" v-if="option" @click="onTapOption_">{{option}}</a>
+            <a class="btn btn-option right mg-r" :class="{'large-text mg-l':largeOption}" v-if="option" @click="onTapOption_">{{option}}</a>
         </div>
         <div class="list-content" :class="{'large':large}">
             <div class="list-header">
@@ -14,6 +14,9 @@
                 <a class="list-item" :class="{'select':item.select}" :data-id="item.id" v-for="(item,index) in localData" @click="onTapListItem($event)">
                     <div class="list-cell" v-for="(column,index) in localColumns" v-if="column.width!=0" :style="{width:column.width}">{{column.format?column.format(item[column.name],item):item[column.name]}}</div>
                 </a>
+            </div>
+            <div class="list" v-else>
+                -
             </div>
         </div>
     </div>
@@ -30,6 +33,7 @@ export default {
         large: Boolean, // 放大模式
         onDoubleTap: Function, // 双击事件
         option: String, // 其他操作按钮文字
+        largeOption: Boolean, // 操作按钮大字体
         onTapOption: Function, // 点击其他操作事件
     },
     data() {
@@ -169,8 +173,17 @@ export default {
         color: #ff4f18;
     }
     .btn-option{
+    }
+    .mg-r{
+        margin-left: 0;
+        margin-right: .2rem;
+    }
+    .mg-l{
         margin-left: .2rem;
-        font-size: .26rem;
+        margin-right: 0;
+    }
+    .large-text{
+        font-size: .3rem;
         font-weight: bold;
     }
     .no-border{

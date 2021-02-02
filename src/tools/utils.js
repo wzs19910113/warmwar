@@ -207,7 +207,7 @@ export function genRandomWorker(id,{fid,fname,rid,rname,tid,initJob,boss}={}){ /
         rname: rname||'',
         tid: tid||0,
         tfid: 0,
-        ftname: '',
+        tfname: '',
         name: genRandomWorkerName(),
         str: rate(),
         int: rate(),

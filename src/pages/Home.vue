@@ -25,8 +25,11 @@
                             </b></div>
                         </div>
                     </div>
-                    <div class="row">
-                        <List title="房间列表" ref="roomList" :data="tempData.myRoomList" :columns="ROOM_LIST_COLUMN" @onDoubleTap="onDoubleTapRoom" />
+                    <div class="row" v-show="tempData.viewType==0">
+                        <List title="房间列表" ref="roomList" option="工位情况" @onTapOption="tempData.viewType=1" :data="tempData.myRoomList" :columns="ROOM_LIST_COLUMN" @onDoubleTap="onDoubleTapRoom" />
+                    </div>
+                    <div class="row" v-show="tempData.viewType==1">
+                        <List title="房间列表" ref="roomList2" option="基本情况" @onTapOption="tempData.viewType=0" :data="tempData.myRoomList2" :columns="ROOM_LIST_5_COLUMN" @onDoubleTap="onDoubleTapRoom" />
                     </div>
                 </div>
                 <!--房间-->
@@ -134,10 +137,10 @@
                     </div>
                     <div class="row flex">
                         <div class="row-column">
-                            <List title="房间搜索人员" ref="rrList" :simple="true" option="+" :data="tempData.myRRList" :columns="WORKER_LIST_4_COLUMN" @onDoubleTap="onDoubleTapWorker" @onTapOption="onTapAddWorker(7)" />
+                            <List title="房间搜索人员" ref="rrList" :simple="true" option="+" :largeOption="true" :data="tempData.myRRList" :columns="WORKER_LIST_4_COLUMN" @onDoubleTap="onDoubleTapWorker" @onTapOption="onTapAddWorker(7)" />
                         </div>
                         <div class="row-column">
-                            <List title="人力搜索人员" ref="hrList" :simple="true" option="+" :data="tempData.myHRList" :columns="WORKER_LIST_5_COLUMN" @onDoubleTap="onDoubleTapWorker" @onTapOption="onTapAddWorker(8)" />
+                            <List title="人力搜索人员" ref="hrList" :simple="true" option="+" :largeOption="true" :data="tempData.myHRList" :columns="WORKER_LIST_5_COLUMN" @onDoubleTap="onDoubleTapWorker" @onTapOption="onTapAddWorker(8)" />
                         </div>
                     </div>
                     <div class="no-margin">
@@ -225,7 +228,7 @@
                 <div class="fact-item">工厂形象：{{numFormat(game.factoryList[0].image)}}</div>
             </div>
             <!-- <nut-button class="btn btn-save" @click="save">存档</nut-button> -->
-            <nut-button class="btn btn-go" @click="onTapGo">第 {{day}} 周<br/>结束</nut-button>
+            <nut-button class="btn btn-go" @click="onTapGo">第 {{day}} 天<br/>结束</nut-button>
         </div>
         <!--弹出层-->
         <nut-popup class="pop pop-system-menu" :round="true" v-model="showSystemMenu">
@@ -248,6 +251,9 @@
                 <div class="row risk">
                     <h3>全体命令:</h3>
                     <a class="risk-item" v-for="index in [0,1,2,3,4]" @click="onTapEntireOrder(index)">{{['待命','发电','挖矿','交易','维护'][index]}}</a>
+                </div>
+                <div class="row">
+                    <a class="risk-item btn" @click="onTapAutoAssignRoom">自动安排空闲人员</a>
                 </div>
                 <div class="row sell">
                     <a class="risk-item" @click="onTapSellRoom">出售</a>
@@ -463,7 +469,7 @@
         <nut-popup v-model="showLog">
             <div class="row log-board" v-if="tempData.log&&tempData.log.content">
                 <div class="title">
-                    <h3>周报表：{{tempData.log.title}}</h3>
+                    <h3>日报表：{{tempData.log.title}}</h3>
                 </div>
                 <div class="para">
                     <div class="p1">
@@ -497,7 +503,7 @@
                     <span class="board-tip">提示：{{tipList[tipList.length-1]}}</span>
                 </div>
                 <div class="row">
-                    <a class="btn" @click="onTapConfirmGo">结束本周</a>
+                    <a class="btn" @click="onTapConfirmGo">结束本日</a>
                 </div>
             </div>
         </nut-popup>
@@ -534,7 +540,9 @@ export default {
                 myFactoryList: [],
                 // 首页
                 myRoomList: [],
+                myRoomList2: [],
                 imageAgent: {},
+                viewType: 0,
 
                 // 房间页
                 room: null,
@@ -615,7 +623,7 @@ export default {
             showEditWorkerPage: false,
 
             // const
-            ROOM_LIST_COLUMN: [ // 房间页房间列表
+            ROOM_LIST_COLUMN: [ // 首页房间列表基本情况
                 {name:'id',title:'ID',width:'10%',},
                 {name:'name',title:'房间名',width:'25%',},
                 {name:'power',title:'电力',width:'12%',},
@@ -645,6 +653,13 @@ export default {
                 {name:'basicImage',title:'基门',width:'15%',},
                 {name:'level',title:'等级',width:'10%',format:v=>`LV.${v}`,},
             ],
+            ROOM_LIST_5_COLUMN: [ // 首页页房间列表工位情况
+                {name:'id',title:'ID',width:'10%',},
+                {name:'name',title:'房间名',width:'25%',},
+                {name:'managerName',title:'管理员',width:'25%',},
+                {name:'freeTerminalCount',title:'空置终端',width:'20%',},
+                {name:'freeWorkerCount',title:'空闲人员',width:'20%',},
+            ],
             TERMINAL_LIST_COLUMN: [
                 {name:'id',title:'ID',width:'.7rem',},
                 {name:'powerLevel',title:'供电Lv',width:'1.2rem',format:v=>`LV.${v}`,},
@@ -659,13 +674,14 @@ export default {
                 {name:'workerImg',title:'形象',width:'.9rem',format:v=>`${v||'-'}`},
             ],
             WORKER_LIST_COLUMN: [ // 弹窗人员列表
-                {name:'id',title:'ID',width:'10%',},
-                {name:'name',title:'名字',width:'17%',},
-                {name:'str',title:'体力',width:'12%',},
-                {name:'int',title:'智力',width:'12%',},
-                {name:'com',title:'交流',width:'12%',},
-                {name:'img',title:'形象',width:'12%',},
-                {name:'job',title:'职能',width:'25%',format:v=>`${CONFIG.job_name_map[v]}`,},
+                {name:'id',title:'ID',width:'8%',},
+                {name:'name',title:'名字',width:'15%',},
+                {name:'str',title:'体力',width:'8%',},
+                {name:'int',title:'智力',width:'8%',},
+                {name:'com',title:'交流',width:'8%',},
+                {name:'img',title:'形象',width:'8%',},
+                {name:'rname',title:'房间',width:'30%',format:v=>`${v||'-'}`,},
+                {name:'job',title:'职能',width:'11%',format:v=>`${CONFIG.job_name_map[v]}`,},
             ],
             WORKER_LIST_2_COLUMN: [ // 人员列表
                 {name:'id',title:'ID',width:'8%',},
@@ -729,7 +745,6 @@ export default {
             this.game = window.GLOBAL.game;
             this.day = window.GLOBAL.day;
             this.asynHomePage();
-            console.log(window.GLOBAL);
         }
         else{
             this.$router.push('/');
@@ -803,8 +818,8 @@ export default {
         },
         calcRoomValue(room){ // 计算房间价格
             let terminalList = getListByID(room.id,'rid',this.game.terminalList),
-                terminalLevelValueMap = [500,2500,3000],
-                roomLevelValueMap = [10000,20000,25000],
+                terminalLevelValueMap = [500,CONFIG.power_levelup_cost[0]+500,CONFIG.power_levelup_cost[1]+500],
+                roomLevelValueMap = [10000,CONFIG.room_levelup_cost[0]+10000,CONFIG.room_levelup_cost[1]+10000],
                 sum = 5000;
             for(let terminal of terminalList){
                 sum += terminalLevelValueMap[terminal.powerLevel-1];
@@ -881,11 +896,131 @@ export default {
                 myWorkerList = getListByID(myFactory.id,'fid',this.game.workerList),
                 myFreeWorkerList = getMatchList(myWorkerList,[['job',0],['rid',0]]),
                 myRoomList = getListByID(myFactory.id,'fid',this.game.roomList);
+            // let calcFreeTerminalCount = room =>{ // 计算一个房间内的空置终端数量
+            //     let terminalList = getListByID(room.id,'rid',this.game.terminalList),
+            //         workerList = getListByID(room.id,'rid',this.game.workerList),
+            //         freeTerminalCount = 0;
+            //     for(let terminal of terminalList){
+            //         let worker = getListByID(terminal.id,'tid',this.game.workerList)[0];
+            //         if(!worker)
+            //             freeTerminalCount += 1;
+            //     }
+            //     return freeTerminalCount;
+            // }
+            // while(_myFreeWorkerList.length>0&&!roomfull&&wc<10000){
+            //     let worker = _myFreeWorkerList[r(0,_myFreeWorkerList.length-1)],
+            //         targetRoom = myRoomList[r(0,myRoomList.length-1)];
+            //     if(worker&&targetRoom&&calcFreeTerminalCount(targetRoom)>0){
+            //         worker.rid = targetRoom.id;
+            //         worker.rname = targetRoom.name;
+            //         _myFreeWorkerList = removeFromList(worker.id,'id',_myFreeWorkerList);
+            //     }
+            //     let roomsAreFull = true;
+            //     for(let room of myRoomList){
+            //         if(calcFreeTerminalCount(room)>0){
+            //             roomsAreFull = false;
+            //             break;
+            //         }
+            //     }
+            //     roomfull = roomsAreFull;
+            //     wc++;
+            //     console.log(wc,_myFreeWorkerList.length,roomsAreFull);
+            // }
             for(let worker of myFreeWorkerList){
                 let rand = r(0,myRoomList.length-1),
                     targetRoom = myRoomList[rand];
                 worker.rid = targetRoom.id;
                 worker.rname = targetRoom.name;
+            }
+        },
+        calcFreeTerminalCount(room){ // 计算一个房间内的空置终端数量
+            let terminalList = getListByID(room.id,'rid',this.game.terminalList),
+                workerList = getListByID(room.id,'rid',this.game.workerList),
+                count = 0;
+            for(let terminal of terminalList){
+                let worker = getListByID(terminal.id,'tid',workerList)[0];
+                if(!worker||worker.job==0)
+                    count += 1;
+            }
+            return count;
+        },
+        calcFreeWorkerCount(room){ // 计算一个房间内的空置人员数量
+            let workerList = getListByID(room.id,'rid',this.game.workerList),
+                count = 0;
+            for(let worker of workerList){
+                if(worker.job==0)
+                    count += 1;
+            }
+            return count;
+        },
+        arrangeRoom(room){ // 自动安排房间内部人员工位
+            let factory = getListByID(room.fid,'id',this.game.factoryList),
+                _roomFreeWorkerList = [...getMatchList(this.game.workerList,[['rid',room.id],['job',0]])],
+                _roomTerminalList = [...getListByID(room.id,'rid',this.game.terminalList)],
+                _roomWorkerList = getListByID(room.id,'rid',this.game.workerList),
+                omanager = getListByID(7,'job',_roomWorkerList)[0],
+                oimageAgent = getListByID(8,'job',_roomWorkerList)[0],
+                omaintainer = getListByID(6,'job',_roomWorkerList)[0],
+                oautoWorker = getListByID(5,'job',_roomWorkerList)[0],
+                manager,imageAgent,maintainer,autoWorker;
+            if(!omanager&&_roomFreeWorkerList.length>1){
+                manager = bulbsort(_roomFreeWorkerList,'com')[0];
+                if(manager)
+                    _roomFreeWorkerList = removeFromList(manager.id,'id',_roomFreeWorkerList);
+            }
+            if(!oimageAgent&&room.level>=2&&(_roomFreeWorkerList.length>2||room.basicImage>0)){
+                imageAgent = bulbsort(_roomFreeWorkerList,'img')[0];
+                if(imageAgent)
+                    _roomFreeWorkerList = removeFromList(imageAgent.id,'id',_roomFreeWorkerList);
+            }
+            if(!omaintainer&&room.level>=3&&room.auto<CONFIG.max_auto&&factory.money>CONFIG.room.auto_money_consume&&room.power>CONFIG.room.auto_power_consume){
+                autoWorker = bulbsort(_roomFreeWorkerList,'int')[0];
+                if(autoWorker)
+                    _roomFreeWorkerList = removeFromList(autoWorker.id,'id',_roomFreeWorkerList);
+            }
+            if(!omaintainer&&room.durab>=CONFIG.room.durab_threshold&&factory.money>0){
+                maintainer = bulbsort(_roomFreeWorkerList,'str')[0];
+                if(maintainer)
+                    _roomFreeWorkerList = removeFromList(maintainer.id,'id',_roomFreeWorkerList);
+            }
+            _roomTerminalList = bulbsort(_roomTerminalList,['powerLevel','powerLevel','digLevel','tradeLevel'][room.type]);
+            for(let ti=0;ti<_roomTerminalList.length;ti++){
+                let terminal = _roomTerminalList[ti],
+                    oworker = getListByID(terminal.id,'tid',_roomWorkerList)[0],
+                    worker = _roomFreeWorkerList[r(0,_roomFreeWorkerList.length-1)];
+                if(worker&&!oworker){
+                    if(terminal.durab>=CONFIG.terminal.durab_threshold){ // 维护
+                        worker.job = 4;
+                    }
+                    else{ // 发电|挖矿|交易
+                        if(worker.str>=worker.int&&worker.str>=worker.com){
+                            worker.job = 1;
+                        }
+                        else if(worker.int>worker.str&&worker.int>worker.com){
+                            worker.job = 2;
+                        }
+                        else if(worker.com>worker.str&&worker.com>worker.int){
+                            worker.job = 3;
+                        }
+                        else{
+                            worker.job = r(1,3);
+                        }
+                    }
+                    worker.tid = terminal.id;
+                    _roomFreeWorkerList = removeFromList(worker.id,'id',_roomFreeWorkerList);
+                }
+            }
+            if(manager){
+                manager.job = 7;
+            }
+            if(imageAgent){
+                imageAgent.job = 8;
+            }
+            if(autoWorker){
+                autoWorker.job = 5;
+            }
+            if(maintainer){
+                maintainer.job = 6;
             }
         },
 
@@ -913,8 +1048,8 @@ export default {
                 }
             }
             this.tipList = [];
-            if(this.day%4==0)
-                this.tipList.push('下周市场资源将清空');
+            if(this.day%CONFIG.period==0)
+                this.tipList.push('明日市场资源将清空');
             if(hasLazyWorker)
                 this.tipList.push('有空闲的员工');
             this.showConfirmGo = true;
@@ -942,12 +1077,9 @@ export default {
                         durabImpact = 1-room.durab/CONFIG.max_durab;
                     }
                     if(abi){ // 重新计算 riskImpact
-                        roomRiskImpact = 1;
-                        if(room.risk==2){ // 常规
-                            roomRiskImpact += abi/CONFIG.max_worker_ablity;
-                        }
-                        else if(room.risk==3){ // 冒险
-                            roomRiskImpact += 2*abi/CONFIG.max_worker_ablity;
+                        riskImpact = 1;
+                        if(room.risk==3){ // 冒险
+                            riskImpact += 3*abi/CONFIG.max_worker_ablity;
                         }
                     }
                     return Math.round(income*durabImpact*(balance/100)*riskImpact);
@@ -1042,13 +1174,13 @@ export default {
 
                 // 计算房间数据
                 let roomRiskImpact = 1, durabImpact = 1;
-                if(room.risk==2){ // 常规
-                    durabImpact = 1.5;
-                    roomRiskImpact = r(100,200)/100;
+                if(room.risk==1){ // 平稳
+                    durabImpact = .25;
+                    roomRiskImpact = .5;
                 }
                 else if(room.risk==3){ // 冒险
-                    durabImpact = 2.5;
-                    roomRiskImpact += r(50,300)/100;
+                    durabImpact = 4;
+                    roomRiskImpact = r(50,300)/100;
                 }
                 roomPowerIncome = calcRoomIncome(room,roomPowerIncome,roomRiskImpact,roomWorkerList,(manager&&room.type==1)?manager.str:0);
                 roomMoneyIncome = calcRoomIncome(room,roomMoneyIncome,roomRiskImpact,roomWorkerList,(manager&&room.type==2)?manager.int:0);
@@ -1105,8 +1237,11 @@ export default {
             }
 
             // 计算我的工厂数据
+            let calcFade = x =>{
+                return 2-(2*x/(x+1));
+            }
             if(imageAgent){
-                imageIncome = Math.round(imageAgent.img*CONFIG.factory.image_increse_factor)+CONFIG.factory.image_increse_base;
+                imageIncome += Math.round(imageAgent.img*CONFIG.factory.image_increse_factor)+CONFIG.factory.image_increse_base;
             }
             let searchRoomWorkerList = getListByID(10,'job',workerList),
                 searchWorkerWorkerList = getListByID(9,'job',workerList);
@@ -1118,6 +1253,9 @@ export default {
                     hrpIncome += Math.round(myFactory.image*(worker.com+worker.img)*CONFIG.factory.hrp_factor+CONFIG.factory.hrp_fix);
                 }
             }
+
+            rrpIncome = Math.round(rrpIncome*calcFade(searchRoomWorkerList.length));
+            hrpIncome = Math.round(hrpIncome*calcFade(searchWorkerWorkerList.length));
 
             // 我的工厂数据赋值 1
             myFactory.rrp += rrpIncome;
@@ -1245,7 +1383,7 @@ export default {
                 factory.damaged = false;
                 factory.imageDamaged = false;
             }
-            if(this.day!=1&&this.day%4==0){ // 每隔 4 周
+            if(this.day!=1&&this.day%CONFIG.period==0){ // 每隔 period 日
                 this.game.roomList = removeFromList(0,'fid',this.game.roomList);
                 this.game.workerList = removeFromList(0,'fid',this.game.workerList);
                 logSuffix += `<p>搜索资源已清空！</p>`;
@@ -1260,7 +1398,7 @@ export default {
                 investList: logInvestList,
                 suffix: logSuffix,
             }
-            this.game.logList.unshift({ title: `第 ${this.day} 周`, id: this.day, content: logContent, subTitle: `收入 ${moneyIncome} $，形象提升 ${imageIncome}` });
+            this.game.logList.unshift({ title: `第 ${this.day} 天`, id: this.day, content: logContent, subTitle: `收入 ${moneyIncome} $，形象提升 ${imageIncome}` });
             this.day += 1;
             this.tipList = [];
             this.jump(8);
@@ -1665,7 +1803,7 @@ export default {
                 return ;
             }
             if(factory.damaged){
-                this.$toast.text(`本周已经打压过了`);
+                this.$toast.text(`今天已经打压过了`);
                 return ;
             }
             let damage = CONFIG.damage_money_cost*CONFIG.damage_money_cost_factor;
@@ -1745,44 +1883,27 @@ export default {
         },
         onTapAutoAssign(){ // 点击【自动安排空闲人员】按钮
             let myFactory = this.game.factoryList[0],
-                myWorkerList = getListByID(myFactory.id,'fid',this.game.workerList),
-                myFreeWorkerList = getListByID(0,'job',myWorkerList),
                 myRoomList = getListByID(myFactory.id,'fid',this.game.roomList);
-            let arrangeRoom = room =>{
-                let _roomWorkerList = [...getListByID(room.id,'rid',this.game.workerList)];
-                let manager = bulbsort(_roomWorkerList,'com')[0];
-                _roomWorkerList = removeFromList(manager.id,'id',_roomWorkerList);
-                let imageAgent = bulbsort(_roomWorkerList,'img')[0];
-                _roomWorkerList = removeFromList(imageAgent.id,'id',_roomWorkerList);
-                if(room.auto<CONFIG.max_auto){
-
-                }
-            }
-            let assignPowerTask = () =>{
-                // let _myTerminalList = bulbsort(myTerminalList,'powerLevel'),
-                //     _myFreeWorkerList = bulbsort(myFreeWorkerList,'str');
-                // for(let i=0;i<_myTerminalList.length;i++){
-                //     let t = _myTerminalList[i],
-                //         r = getListByID(t.rid,'id',myRoomList)[0],
-                //         w = _myFreeWorkerList[i];
-                //     if(w){
-                //         let worker = getListByID(_myFreeWorkerList[i].id,'id',this.game.workerList)[0];
-                //         worker.job = 1;
-                //         worker.tid = t.id;
-                //         worker.rid = r.id;
-                //         worker.rname = r.name;
-                //     }
-                //     else{
-                //         i = _myTerminalList.length;
-                //     }
-                // }
-            }
             this.randomAssignToRoom();
             for(let room of myRoomList){
-                arrangeRoom(room);
+                this.arrangeRoom(room);
             }
             this.asynAllPages();
             this.showEditWorkerPage = false;
+        },
+        onTapAutoAssignRoom(){ // 点击【房间的自动安排空闲人员】按钮
+            let room = getListByID(this.tempData.room.id,'id',this.game.roomList)[0],
+                roomWorkerList = getListByID(room.id,'rid',this.game.workerList);
+            // 让所有无职能员工离开终端
+            for(let worker of roomWorkerList){
+                if(worker.job==0){
+                    worker.tid = 0;
+                }
+            }
+            // 重新安排房间工位配置
+            this.arrangeRoom(this.tempData.room);
+            this.asynAllPages();
+            this.showEditRoom = false;
         },
 
         onDoubleTapRoom(id){ // 双击【房间】按钮
@@ -1948,7 +2069,7 @@ export default {
         },
 
         jump(state,id=0){ // 点击【跳转】按钮
-            console.log(`跳转至${['首页','房间','终端','人员','市场','外交','工厂','报表'][state-1]} ID=${id}`);
+            // console.log(`跳转至${['首页','房间','终端','人员','市场','外交','工厂','报表'][state-1]} ID=${id}`);
             switch(state){
                 case 1: // 首页
                 break;
@@ -1980,6 +2101,7 @@ export default {
             this.asynFactoryPage();
             setTimeout(e=>{
                 this.$refs.roomList&&this.$refs.roomList.asyn();
+                this.$refs.roomList2&&this.$refs.roomList2.asyn();
                 this.$refs.terminalList&&this.$refs.terminalList.asyn();
                 this.$refs.workerListPop&&this.$refs.workerListPop.asyn();
                 this.$refs.roomListPop&&this.$refs.roomListPop.asyn();
@@ -2008,15 +2130,21 @@ export default {
             this.tempData.myWorkerList = myWorkerList;
             this.tempData.myRRList = myRRList;
             this.tempData.myHRList = myHRList;
-            // for(let i=0;i<23;i++){ // @TEST
-            //     let a = genRandomRoom(window.GLOBAL.accRoomID++,{fid:this.game.factoryList[0].id});
-            //     this.tempData.myRoomList.push(a);
-            // }
             this.tempData.imageAgent = {};
             for(let worker of myWorkerList){
                 if(worker.job==11){
                     this.tempData.imageAgent = worker;
                 }
+            }
+            // 工位情况列表
+            let myRoomList2 = [...roomList];
+            this.tempData.myRoomList2 = myRoomList2;
+            for(let room of myRoomList2){
+                let roomWorkerList = getListByID(room.id,'rid',this.game.workerList),
+                    manager = getListByID(7,'job',roomWorkerList)[0];
+                room.freeTerminalCount = this.calcFreeTerminalCount(room);
+                room.freeWorkerCount = this.calcFreeWorkerCount(room);
+                room.managerName = manager?manager.name:'-';
             }
         },
         asynRoomPage(){ // 刷新房间页temp数据
@@ -2242,8 +2370,8 @@ export default {
         display: inline-block;
         color: #ff4f18;
         text-align: center;
-        font-size: .3rem;
-        width: .22rem;
+        font-size: .33rem;
+        width: .26rem;
     }
     .btn-go{
         color: #fff;
@@ -2351,6 +2479,8 @@ export default {
         font-size: .26rem;
         display: inline-block;
         width: 100%;
+        white-space: nowrap;
+        word-break: keep-all;
     }
     .pct-wrap b{
         width: 35%;
@@ -2361,6 +2491,7 @@ export default {
         margin-left: .12rem;
     }
     .index-cell b{
+        width: 100%;
         padding-left: .1rem;
         border-left: .04rem solid #ff4f18;
     }
