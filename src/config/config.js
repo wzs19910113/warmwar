@@ -49,9 +49,9 @@ module.exports = {
         max_dig_level: 3, // 终端最高挖矿等级
         max_trade_level: 3, // 终端最高交易等级
         room_levelup_cost: [10000,15000], // 房间升级费用
-        power_levelup_cost: [1000,1500], // 供电等级升级费用
-        dig_levelup_cost: [1000,1500], // 挖矿等级升级费用
-        trade_levelup_cost: [1000,1500], // 交易等级升级费用
+        power_levelup_cost: [3500,4500], // 供电等级升级费用
+        dig_levelup_cost: [3500,4500], // 挖矿等级升级费用
+        trade_levelup_cost: [3500,4500], // 交易等级升级费用
 		sell_factor: .5, // 贩卖系数
 		randmNewRoomDurabRange: [0,6000], // 新生成房间老化化随机范围
 		randmNewRoomAutoRange: [0,0], // 新生成房间自动化随机范围
@@ -71,22 +71,25 @@ module.exports = {
 		image_price_factor: .2, // 形象/价值系数
 
 		damage_money_cost: 10000, // 一次打压资金消耗
-		damage_money_cost_factor: .5, // 打压效果系数
+		max_damage: 30000, // 一次打压最大伤害
+		min_damage: 20, // 一次打压最大伤害
 
 		terminal: {
 			base: 1.5,
-			power_factor: .4,
+			power_factor: .3,
 			durab_increase: 75,
 			dig_factor: .6,
 			dig_power_consume_base: 30,
-			dig_power_consume_factor: 15,
-			trade_money_factor: .3,
-			trade_support_factor: .15,
+			dig_power_consume_factor: 10,
+			trade_money_factor: .5,
+			trade_support_factor: .04,
 			trade_power_consume_base: 30,
-			trade_power_consume_factor: 15,
+			trade_power_consume_factor: 10,
 			durab_threshold: 5000,
 			durab_factor: 1.8,
-			durab_consume_factor: 1,
+			durab_consume_factor: .5,
+			room_risk_addition_durab: 100,
+			room_risk_durab_factor: 1,
 		},
 
 		room: {
@@ -101,6 +104,7 @@ module.exports = {
 			durab_threshold: 5000,
 			durab_increase_factor: .2,
 			durab_terminal_factor: .5,
+			room_risk_durab_factor: 1,
 
 			type_increase_factor: 1.1,
 			type_normal_factor: 1,
@@ -123,7 +127,7 @@ module.exports = {
 			support_trade_increase_factor: .5,
 			image_decrease_fix: 50,
 			image_decrease_factor_range: [.2,.8,1,1.5,2,2.5,3],
-			image_decrease_consume: 500,
+			image_decrease_consume: 1000,
 			joint_image_threshold: 3000,
 		},
 

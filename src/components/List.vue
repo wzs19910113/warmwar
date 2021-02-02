@@ -6,7 +6,7 @@
             <a class="btn btn-asyn right" v-if="!simple" @click="asyn">刷新</a>
             <a class="btn btn-option right mg-r" :class="{'large-text mg-l':largeOption}" v-if="option" @click="onTapOption_">{{option}}</a>
         </div>
-        <div class="list-content" :class="{'large':large}">
+        <div class="list-content" :class="{'large':large,'v-scroll':vScroll}">
             <div class="list-header">
                 <a class="list-cell" v-for="(column,index) in localColumns" v-if="column.width!=0" :style="{width:column.width}" @click="onTapHead(index)">{{column.title}}</a>
             </div>
@@ -34,6 +34,7 @@ export default {
         onDoubleTap: Function, // 双击事件
         option: String, // 其他操作按钮文字
         largeOption: Boolean, // 操作按钮大字体
+        vScroll: Boolean, // 允许横向滑动
         onTapOption: Function, // 点击其他操作事件
     },
     data() {
@@ -112,6 +113,8 @@ export default {
     .list-content{
         width: 100%;
         padding-bottom: 8px;
+    }
+    .v-scroll{
         overflow-x: scroll;
     }
     .list-item,.list-header{

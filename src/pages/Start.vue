@@ -118,7 +118,7 @@ export default {
             this.loading = this.$toast.loading();
             window.GLOBAL.game = game;
             window.GLOBAL.day = 1;
-            query('http://darkmirror.cn/api/monopoly_new.php',rdata=>{ // 新建存档
+            query('../../api/monopoly_new.php',rdata=>{ // 新建存档
                 this.loading.hide();
                 this.loading = null;
                 localStorage.setItem('CODE',this.newcode);
@@ -153,10 +153,11 @@ export default {
             if(this.loadcode.length<=0) return;
             this.loading = true;
             this.loading = this.$toast.loading();
-            query('http://darkmirror.cn/api/monopoly_load.php',rdata=>{ // 读取存档
+            query('../../api/monopoly_load.php',rdata=>{ // 读取存档
                 this.loading.hide();
                 this.loading = null;
                 window.GLOBAL = JSON.parse(rdata.data.data);
+                localStorage.setItem('CODE',this.loadcode);
                 this.$router.push('home');
             },edata=>{
                 this.loading.hide();
