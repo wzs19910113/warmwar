@@ -82,7 +82,7 @@ module.exports = {
 		terminal: {
 			base: 1.5,
 			power_factor: .3,
-			durab_increase: 75,
+			durab_increase: 25,
 			dig_factor: .24,
 			dig_power_consume_base: 40,
 			dig_power_consume_factor: 40,
@@ -99,7 +99,7 @@ module.exports = {
 		room: {
 			base: 1.5,
 			image_factor: .25,
-			durab_fix: 25,
+			durab_fix: 10,
 			durab_factor: 2,
 			durab_consume_factor: 2,
 			auto_factor: 2,

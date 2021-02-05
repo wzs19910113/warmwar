@@ -251,17 +251,25 @@
                 <div class="row level">
                     <h3>等级 {{tempData.room.level}}</h3><a class="btn" v-if="tempData.room.level<config.max_room_level" @click="onTapRoomLevelUp">提升等级（{{config.room_levelup_cost[tempData.room.level-1]}} $）</a>
                 </div>
+                <div class="row all-level risk" v-if="tempData.powerLevelUpCost>0||tempData.digLevelUpCost>0||tempData.tradeLevelUpCost>0">
+                    <h3>全部终端：</h3>
+                    <div>
+                        <a class="risk-item btn-small" @click="onTapAllTerminalLevelUp(1)" v-if="tempData.powerLevelUpCost>0">提升发电等级（{{tempData.powerLevelUpCost}} $）</a>
+                        <a class="risk-item btn-small btn-small" @click="onTapAllTerminalLevelUp(2)" v-if="tempData.digLevelUpCost>0">提升挖矿等级（{{tempData.digLevelUpCost}} $）</a>
+                        <a class="risk-item btn-small" @click="onTapAllTerminalLevelUp(3)" v-if="tempData.tradeLevelUpCost>0">提升交易等级（{{tempData.tradeLevelUpCost}} $）</a>
+                    </div>
+                </div>
                 <div class="row risk">
                     <h3>策略:</h3>
                     <a class="risk-item" :class="{'select':tempData.room.risk==index}" v-for="index in [1,2,3]" @click="onTapRiskLevel(index)">{{config.risk_name_map[index-1]}}</a>
                     <p class="tip">{{[`收益减少，老化速度大幅下降`,`收益和消耗正常`,`收益提升（每日随机），老化速度大幅提升；若房间有管理员，收益会根据房间类型和管理员能力值固定大幅提升`][tempData.room.risk-1]}}</p>
                 </div>
                 <div class="row risk">
-                    <h3>全体命令:</h3>
-                    <a class="risk-item" v-for="index in [0,1,2,3,4]" @click="onTapEntireOrder(index)">{{['待命','发电','挖矿','交易','维护'][index]}}</a>
+                    <h3>全体终端人员命令:</h3>
+                    <a class="risk-item" v-for="index in [0,1,2,3,4,5,6]" @click="onTapEntireOrder(index)">{{['待命','发电','挖矿','交易','维护','离开终端','离开房间'][index]}}</a>
                 </div>
                 <div class="row">
-                    <a class="risk-item btn" @click="onTapAutoAssignRoom">自动安排空闲人员</a>
+                    <a class="risk-item btn" @click="onTapAutoAssignTaskInRoom">自动安排空闲人员任务</a>
                 </div>
                 <div class="row sell">
                     <a class="risk-item" @click="onTapSellRoom">出售</a>
@@ -328,6 +336,7 @@
                 </div>
                 <div class="item sell">
                     <a class="risk-item" v-if="tempData.myWorker.fid==game.factoryList[0].id&&tempData.myWorker.job!=0" @click="onTapRelease">解除职务</a>
+                    <a class="risk-item" v-if="tempData.myWorker.rid!=0" @click="onTapLeaveRoom">撤出房间</a>
                     <a class="risk-item" v-if="tempData.myWorker.id!=game.workerList[0].id&&tempData.myWorker.fid==game.factoryList[0].id" @click="onTapSellWorker">出售</a>
                 </div>
             </div>
@@ -478,7 +487,7 @@
         <nut-popup v-model="showProp">
             <div class="row room-board">
                 <div class="row level">
-                    <h3><p>投入资金</p><p>{{Math.floor(config.max_image_prop_money*tempData.propMoneyPct/100)}} $（{{tempData.propMoneyPct}}%）</p></h3>
+                    <h3><p>投入资金</p><p>{{Math.floor(config.max_image_prop_money*tempData.propMoneyPct/100)}} $</p><p>（{{tempData.propMoneyPct}}%）</p></h3>
                     <nut-slider class="input" v-model="tempData.propMoneyPct" :range="[0,100]" :showLabel="true" :stage="100" ></nut-slider>
                 </div>
                 <div class="row sell">
@@ -536,7 +545,10 @@
                     <a class="risk-item btn" @click="onTapReleaseAll">全体待命</a>
                 </div>
                 <div class="row">
-                    <a class="risk-item btn" @click="onTapAutoAssign">自动安排空闲人员</a>
+                    <a class="risk-item btn" @click="onTapRandomAssignToRoom">随机派发空闲人员至房间</a>
+                </div>
+                <div class="row">
+                    <a class="risk-item btn" @click="onTapAutoAssignTask">自动安排空闲人员任务</a>
                 </div>
             </div>
         </nut-popup>
@@ -652,10 +664,10 @@
                 </div>
                 <div class="row">
                     <h3><label>协调</label></h3>
-                    <p>房间最终收益为其终端收益总和的协调值百分比，因此协调值越高越好；<br/>当只有一个人员工作时，协调值为 100%；当有多个人员工作时，协调值为其交流能力值的平均值。</p>
+                    <p>房间最终收益为其终端收益总和的协调值百分比，因此协调值越高越好；<br/>当只有一个人员工作时，协调值为 100%；当有多个人员工作时，协调值为其「交流」能力值的平均值。</p>
                     <div class="sub-row">
                         <h3><label>管理员</label></h3>
-                        <p>如果安排了管理员，不论房间内有多少人员工作，房间的协调值固定为管理员的交流能力值；<br/><br/>如果安排了管理员，在冒险模式下，房间的总收益将不再随机，而是取决于管理员对应不同房间类型的能力值（体力-发电站，智力-挖矿厂，交流-交易所，平均值-通用房）；<br/><br/>比如当房间类型为挖矿厂，管理员的智力为 100 时，房间的总收益将固定为随机范围的最大值，即 500%。</p>
+                        <p>如果安排了管理员，不论房间内有多少人员工作，房间的协调值固定为管理员的「交流」能力值；<br/><br/>如果安排了管理员，在冒险模式下，房间的总收益将不再随机，而是取决于管理员对应不同房间类型的能力值（体力-发电站，智力-挖矿厂，交流-交易所，平均值-通用房）；<br/><br/>比如当房间类型为挖矿厂，管理员的智力为 100 时，房间的总收益将固定为随机范围的最大值，即 500%。</p>
                     </div>
                 </div>
                 <div class="row">
@@ -677,6 +689,10 @@
                 <div class="row">
                     <h3><label>门面（2级房间解锁）</label></h3>
                     <p>安排门面工作人员可以提高工厂形象；<br/>收益取决于门面人员的「形象」值。</p>
+                    <div class="sub-row">
+                        <h3><label>基础门面</label></h3>
+                        <p>有的房间拥有基础门面，只要安排了人员负责门面就能额外固定增加形象收益</p>
+                    </div>
                 </div>
                 <div class="row">
                     <h3><label>自动化（3级房间解锁）</label></h3>
@@ -815,6 +831,9 @@ export default {
                 assignPowerPct: 0,
                 myTerminalList: [],
                 myRoomWorkerList: [],
+                powerLevelUpCost: 0,
+                digLevelUpCost: 0,
+                tradeLevelUpCost: 0,
 
                 // 终端页
                 terminal: null,
@@ -1013,7 +1032,7 @@ export default {
     },
     mounted(){
         if(DEBUG){
-            window.GLOBAL = JSON.parse('{"game":{"factoryList":[{"id":4,"name":"和矿控股","money":260000,"image":5000,"hrp":0,"rrp":0},{"id":5,"name":"亚光集团","money":38478,"image":483},{"id":6,"name":"洲复传媒","money":8316,"image":629}],"roomList":[{"id":5,"fid":4,"fname":"和矿控股","name":"新汇小区通用房","power":500000,"durab":0,"risk":2,"auto":0,"level":1,"type":0,"basicImage":15},{"id":6,"fid":5,"fname":"亚光集团","name":"星乐路通用房","type":0,"basicImage":0,"power":7615,"durab":8127,"risk":2,"auto":2948,"level":2},{"id":7,"fid":5,"fname":"亚光集团","name":"国惠园交易所","type":3,"basicImage":0,"power":1279,"durab":1292,"risk":2,"auto":3528,"level":1},{"id":8,"fid":5,"fname":"亚光集团","name":"漫宇大厦挖矿厂","type":2,"basicImage":0,"power":4325,"durab":1788,"risk":2,"auto":8668,"level":3},{"id":9,"fid":6,"fname":"洲复传媒","name":"柯牛路发电站","type":1,"basicImage":0,"power":230,"durab":4761,"risk":2,"auto":2589,"level":3},{"id":10,"fid":6,"fname":"洲复传媒","name":"凡财街发电站","type":1,"basicImage":0,"power":7099,"durab":4002,"risk":1,"auto":4416,"level":1},{"id":11,"fid":6,"fname":"洲复传媒","name":"亚金镇挖矿厂","type":2,"basicImage":0,"power":1818,"durab":3997,"risk":2,"auto":2625,"level":2}],"terminalList":[{"id":25,"fid":4,"rid":5,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":26,"fid":4,"rid":5,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":27,"fid":4,"rid":5,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":28,"fid":4,"rid":5,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":29,"fid":4,"rid":5,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":30,"fid":4,"rid":5,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":31,"fid":5,"rid":6,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":32,"fid":5,"rid":6,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":33,"fid":5,"rid":6,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":34,"fid":5,"rid":6,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":35,"fid":5,"rid":6,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":36,"fid":5,"rid":6,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":37,"fid":5,"rid":6,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":38,"fid":5,"rid":6,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":39,"fid":5,"rid":7,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":40,"fid":5,"rid":7,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":41,"fid":5,"rid":7,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":42,"fid":5,"rid":7,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":43,"fid":5,"rid":7,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":44,"fid":5,"rid":7,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":45,"fid":5,"rid":8,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":46,"fid":5,"rid":8,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":47,"fid":5,"rid":8,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":48,"fid":5,"rid":8,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":49,"fid":5,"rid":8,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":50,"fid":5,"rid":8,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":51,"fid":5,"rid":8,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":52,"fid":5,"rid":8,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":53,"fid":5,"rid":8,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":54,"fid":5,"rid":8,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":55,"fid":6,"rid":9,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":56,"fid":6,"rid":9,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":57,"fid":6,"rid":9,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":58,"fid":6,"rid":9,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":59,"fid":6,"rid":9,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":60,"fid":6,"rid":9,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":61,"fid":6,"rid":9,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":62,"fid":6,"rid":9,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":63,"fid":6,"rid":9,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":64,"fid":6,"rid":9,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":65,"fid":6,"rid":10,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":66,"fid":6,"rid":10,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":67,"fid":6,"rid":10,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":68,"fid":6,"rid":10,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":69,"fid":6,"rid":10,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":70,"fid":6,"rid":10,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":71,"fid":6,"rid":11,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":72,"fid":6,"rid":11,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":73,"fid":6,"rid":11,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":74,"fid":6,"rid":11,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":75,"fid":6,"rid":11,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":76,"fid":6,"rid":11,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":77,"fid":6,"rid":11,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":78,"fid":6,"rid":11,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1}],"workerList":[{"id":14,"tid":0,"rid":0,"fid":4,"fname":"和矿控股","rname":"","tfname":"","tfid":0,"name":"王可","str":50,"int":50,"com":50,"img":94,"job":0,"boss":true},{"id":15,"fid":4,"fname":"和矿控股","rid":0,"rname":"","tid":0,"tfid":0,"ftname":"","name":"滑儿凝","str":5,"int":5,"com":5,"img":5,"job":0,"boss":false},{"id":16,"fid":4,"fname":"和矿控股","rid":0,"rname":"","tid":0,"tfid":0,"ftname":"","name":"孙昊智","str":50,"int":50,"com":50,"img":50,"job":0,"boss":false},{"id":17,"fid":5,"fname":"亚光集团","rid":6,"rname":"星乐路通用房","tid":0,"tfid":0,"ftname":"","name":"诸丘","str":27,"int":91,"com":58,"img":19,"job":0,"boss":true},{"id":18,"fid":4,"fname":"和矿控股","rid":0,"rname":"","tid":0,"tfid":0,"ftname":"","name":"周菱莲","str":50,"int":50,"com":50,"img":50,"job":0,"boss":false},{"id":19,"fid":5,"fname":"亚光集团","rid":6,"rname":"星乐路通用房","tid":0,"tfid":0,"ftname":"","name":"莫宛莫","str":87,"int":15,"com":68,"img":25,"job":0,"boss":false},{"id":20,"fid":5,"fname":"亚光集团","rid":6,"rname":"星乐路通用房","tid":0,"tfid":0,"ftname":"","name":"姚春风","str":15,"int":42,"com":18,"img":49,"job":0,"boss":false},{"id":21,"fid":5,"fname":"亚光集团","rid":7,"rname":"国惠园交易所","tid":0,"tfid":0,"ftname":"","name":"毛硕云","str":41,"int":27,"com":3,"img":34,"job":0,"boss":false},{"id":22,"fid":5,"fname":"亚光集团","rid":7,"rname":"国惠园交易所","tid":0,"tfid":0,"ftname":"","name":"蒋咏亦","str":10,"int":39,"com":4,"img":50,"job":0,"boss":false},{"id":23,"fid":5,"fname":"亚光集团","rid":7,"rname":"国惠园交易所","tid":0,"tfid":0,"ftname":"","name":"刘奕","str":8,"int":12,"com":42,"img":5,"job":0,"boss":false},{"id":24,"fid":5,"fname":"亚光集团","rid":7,"rname":"国惠园交易所","tid":0,"tfid":0,"ftname":"","name":"伏蕊养","str":49,"int":37,"com":50,"img":26,"job":0,"boss":false},{"id":25,"fid":5,"fname":"亚光集团","rid":7,"rname":"国惠园交易所","tid":0,"tfid":0,"ftname":"","name":"王语安","str":15,"int":6,"com":12,"img":62,"job":0,"boss":false},{"id":26,"fid":5,"fname":"亚光集团","rid":8,"rname":"漫宇大厦挖矿厂","tid":0,"tfid":0,"ftname":"","name":"陈藩满","str":48,"int":11,"com":4,"img":59,"job":0,"boss":false},{"id":27,"fid":5,"fname":"亚光集团","rid":8,"rname":"漫宇大厦挖矿厂","tid":0,"tfid":0,"ftname":"","name":"廖蕾","str":11,"int":33,"com":33,"img":59,"job":0,"boss":false},{"id":28,"fid":5,"fname":"亚光集团","rid":8,"rname":"漫宇大厦挖矿厂","tid":0,"tfid":0,"ftname":"","name":"陈衷意","str":12,"int":33,"com":17,"img":2,"job":0,"boss":false},{"id":29,"fid":5,"fname":"亚光集团","rid":8,"rname":"漫宇大厦挖矿厂","tid":0,"tfid":0,"ftname":"","name":"邓美菅","str":20,"int":68,"com":24,"img":12,"job":0,"boss":false},{"id":30,"fid":5,"fname":"亚光集团","rid":8,"rname":"漫宇大厦挖矿厂","tid":0,"tfid":0,"ftname":"","name":"周璇","str":82,"int":2,"com":24,"img":49,"job":0,"boss":false},{"id":31,"fid":5,"fname":"亚光集团","rid":8,"rname":"漫宇大厦挖矿厂","tid":0,"tfid":0,"ftname":"","name":"裴彤敏","str":6,"int":12,"com":22,"img":43,"job":0,"boss":false},{"id":32,"fid":5,"fname":"亚光集团","rid":8,"rname":"漫宇大厦挖矿厂","tid":0,"tfid":0,"ftname":"","name":"欧阳水慧","str":3,"int":48,"com":81,"img":25,"job":0,"boss":false},{"id":33,"fid":6,"fname":"洲复传媒","rid":9,"rname":"柯牛路发电站","tid":0,"tfid":0,"ftname":"","name":"刘才城","str":69,"int":66,"com":76,"img":36,"job":0,"boss":true},{"id":34,"fid":6,"fname":"洲复传媒","rid":9,"rname":"柯牛路发电站","tid":0,"tfid":0,"ftname":"","name":"顾悦蕊","str":22,"int":60,"com":48,"img":5,"job":0,"boss":false},{"id":35,"fid":6,"fname":"洲复传媒","rid":9,"rname":"柯牛路发电站","tid":0,"tfid":0,"ftname":"","name":"祝闻","str":25,"int":73,"com":64,"img":11,"job":0,"boss":false},{"id":36,"fid":6,"fname":"洲复传媒","rid":9,"rname":"柯牛路发电站","tid":0,"tfid":0,"ftname":"","name":"汲佘慕","str":6,"int":40,"com":31,"img":5,"job":0,"boss":false},{"id":37,"fid":6,"fname":"洲复传媒","rid":9,"rname":"柯牛路发电站","tid":0,"tfid":0,"ftname":"","name":"房闾","str":21,"int":44,"com":44,"img":1,"job":0,"boss":false},{"id":38,"fid":6,"fname":"洲复传媒","rid":9,"rname":"柯牛路发电站","tid":0,"tfid":0,"ftname":"","name":"刘兰","str":44,"int":8,"com":14,"img":57,"job":0,"boss":false},{"id":39,"fid":6,"fname":"洲复传媒","rid":9,"rname":"柯牛路发电站","tid":0,"tfid":0,"ftname":"","name":"管涵龙","str":89,"int":32,"com":67,"img":35,"job":0,"boss":false},{"id":40,"fid":6,"fname":"洲复传媒","rid":9,"rname":"柯牛路发电站","tid":0,"tfid":0,"ftname":"","name":"江露盼","str":26,"int":36,"com":15,"img":62,"job":0,"boss":false},{"id":41,"fid":6,"fname":"洲复传媒","rid":10,"rname":"凡财街发电站","tid":0,"tfid":0,"ftname":"","name":"陈蕴","str":30,"int":48,"com":40,"img":29,"job":0,"boss":false},{"id":42,"fid":6,"fname":"洲复传媒","rid":10,"rname":"凡财街发电站","tid":0,"tfid":0,"ftname":"","name":"周叶琦","str":9,"int":11,"com":18,"img":48,"job":0,"boss":false},{"id":43,"fid":6,"fname":"洲复传媒","rid":10,"rname":"凡财街发电站","tid":0,"tfid":0,"ftname":"","name":"陈尔","str":59,"int":14,"com":36,"img":37,"job":0,"boss":false},{"id":44,"fid":6,"fname":"洲复传媒","rid":10,"rname":"凡财街发电站","tid":0,"tfid":0,"ftname":"","name":"江央焦","str":49,"int":50,"com":33,"img":5,"job":0,"boss":false},{"id":45,"fid":6,"fname":"洲复传媒","rid":11,"rname":"亚金镇挖矿厂","tid":0,"tfid":0,"ftname":"","name":"陈越优","str":94,"int":54,"com":86,"img":64,"job":0,"boss":false},{"id":46,"fid":6,"fname":"洲复传媒","rid":11,"rname":"亚金镇挖矿厂","tid":0,"tfid":0,"ftname":"","name":"李泽瑶","str":88,"int":33,"com":11,"img":1,"job":0,"boss":false},{"id":47,"fid":6,"fname":"洲复传媒","rid":11,"rname":"亚金镇挖矿厂","tid":0,"tfid":0,"ftname":"","name":"李懿淑","str":79,"int":29,"com":41,"img":15,"job":0,"boss":false},{"id":48,"fid":6,"fname":"洲复传媒","rid":11,"rname":"亚金镇挖矿厂","tid":0,"tfid":0,"ftname":"","name":"廖海闻","str":59,"int":88,"com":46,"img":34,"job":0,"boss":false},{"id":49,"fid":6,"fname":"洲复传媒","rid":11,"rname":"亚金镇挖矿厂","tid":0,"tfid":0,"ftname":"","name":"宦吉竹","str":23,"int":48,"com":32,"img":47,"job":0,"boss":false},{"id":50,"fid":6,"fname":"洲复传媒","rid":11,"rname":"亚金镇挖矿厂","tid":0,"tfid":0,"ftname":"","name":"龙乐井","str":46,"int":36,"com":31,"img":11,"job":0,"boss":false},{"id":51,"fid":6,"fname":"洲复传媒","rid":11,"rname":"亚金镇挖矿厂","tid":0,"tfid":0,"ftname":"","name":"张明红","str":95,"int":53,"com":25,"img":15,"job":0,"boss":false}],"relationList":[{"id":"10","from":4,"fromName":"和矿控股","to":5,"toName":"亚光集团","invest":0,"support":0,"jointID":0,"jointName":"","spyID":0,"spyName":""},{"id":"20","from":4,"fromName":"和矿控股","to":6,"toName":"洲复传媒","invest":0,"support":0,"jointID":0,"jointName":"","spyID":0,"spyName":""},{"id":"01","from":5,"fromName":"亚光集团","to":4,"toName":"和矿控股","invest":0,"support":0,"jointID":0,"jointName":"","spyID":0,"spyName":""},{"id":"21","from":5,"fromName":"亚光集团","to":6,"toName":"洲复传媒","invest":0,"support":0},{"id":"02","from":6,"fromName":"洲复传媒","to":4,"toName":"和矿控股","invest":0,"support":0},{"id":"12","from":6,"fromName":"洲复传媒","to":5,"toName":"亚光集团","invest":0,"support":0}],"logList":[]},"accFactoryID":7,"accRoomID":12,"accTerminalID":79,"accWorkerID":52,"day":1}');
+            window.GLOBAL = JSON.parse('{"game":{"factoryList":[{"id":4,"name":"和矿控股","money":260000,"image":50000,"hrp":0,"rrp":0},{"id":5,"name":"亚光集团","money":38478,"image":483},{"id":6,"name":"洲复传媒","money":8316,"image":629}],"roomList":[{"id":5,"fid":4,"fname":"和矿控股","name":"新汇小区通用房","power":500000,"durab":0,"risk":2,"auto":0,"level":1,"type":0,"basicImage":15},{"id":6,"fid":5,"fname":"亚光集团","name":"星乐路通用房","type":0,"basicImage":0,"power":7615,"durab":8127,"risk":2,"auto":2948,"level":2},{"id":7,"fid":5,"fname":"亚光集团","name":"国惠园交易所","type":3,"basicImage":0,"power":1279,"durab":1292,"risk":2,"auto":3528,"level":1},{"id":8,"fid":5,"fname":"亚光集团","name":"漫宇大厦挖矿厂","type":2,"basicImage":0,"power":4325,"durab":1788,"risk":2,"auto":8668,"level":3},{"id":9,"fid":6,"fname":"洲复传媒","name":"柯牛路发电站","type":1,"basicImage":0,"power":230,"durab":4761,"risk":2,"auto":2589,"level":3},{"id":10,"fid":6,"fname":"洲复传媒","name":"凡财街发电站","type":1,"basicImage":0,"power":7099,"durab":4002,"risk":1,"auto":4416,"level":1},{"id":11,"fid":6,"fname":"洲复传媒","name":"亚金镇挖矿厂","type":2,"basicImage":0,"power":1818,"durab":3997,"risk":2,"auto":2625,"level":2}],"terminalList":[{"id":25,"fid":4,"rid":5,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":26,"fid":4,"rid":5,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":27,"fid":4,"rid":5,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":28,"fid":4,"rid":5,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":29,"fid":4,"rid":5,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":30,"fid":4,"rid":5,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":31,"fid":5,"rid":6,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":32,"fid":5,"rid":6,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":33,"fid":5,"rid":6,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":34,"fid":5,"rid":6,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":35,"fid":5,"rid":6,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":36,"fid":5,"rid":6,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":37,"fid":5,"rid":6,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":38,"fid":5,"rid":6,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":39,"fid":5,"rid":7,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":40,"fid":5,"rid":7,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":41,"fid":5,"rid":7,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":42,"fid":5,"rid":7,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":43,"fid":5,"rid":7,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":44,"fid":5,"rid":7,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":45,"fid":5,"rid":8,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":46,"fid":5,"rid":8,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":47,"fid":5,"rid":8,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":48,"fid":5,"rid":8,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":49,"fid":5,"rid":8,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":50,"fid":5,"rid":8,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":51,"fid":5,"rid":8,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":52,"fid":5,"rid":8,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":53,"fid":5,"rid":8,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":54,"fid":5,"rid":8,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":55,"fid":6,"rid":9,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":56,"fid":6,"rid":9,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":57,"fid":6,"rid":9,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":58,"fid":6,"rid":9,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":59,"fid":6,"rid":9,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":60,"fid":6,"rid":9,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":61,"fid":6,"rid":9,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":62,"fid":6,"rid":9,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":63,"fid":6,"rid":9,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":64,"fid":6,"rid":9,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":65,"fid":6,"rid":10,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":66,"fid":6,"rid":10,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":67,"fid":6,"rid":10,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":68,"fid":6,"rid":10,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":69,"fid":6,"rid":10,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":70,"fid":6,"rid":10,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":71,"fid":6,"rid":11,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":72,"fid":6,"rid":11,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":73,"fid":6,"rid":11,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":74,"fid":6,"rid":11,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":75,"fid":6,"rid":11,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":76,"fid":6,"rid":11,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":77,"fid":6,"rid":11,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":78,"fid":6,"rid":11,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1}],"workerList":[{"id":14,"tid":0,"rid":0,"fid":4,"fname":"和矿控股","rname":"","tfname":"","tfid":0,"name":"王可","str":50,"int":50,"com":50,"img":94,"job":0,"boss":true},{"id":15,"fid":4,"fname":"和矿控股","rid":0,"rname":"","tid":0,"tfid":0,"ftname":"","name":"滑儿凝","str":5,"int":5,"com":5,"img":5,"job":0,"boss":false},{"id":16,"fid":4,"fname":"和矿控股","rid":0,"rname":"","tid":0,"tfid":0,"ftname":"","name":"孙昊智","str":50,"int":50,"com":50,"img":50,"job":0,"boss":false},{"id":17,"fid":5,"fname":"亚光集团","rid":6,"rname":"星乐路通用房","tid":0,"tfid":0,"ftname":"","name":"诸丘","str":27,"int":91,"com":58,"img":19,"job":0,"boss":true},{"id":18,"fid":4,"fname":"和矿控股","rid":0,"rname":"","tid":0,"tfid":0,"ftname":"","name":"周菱莲","str":50,"int":50,"com":50,"img":50,"job":0,"boss":false},{"id":19,"fid":5,"fname":"亚光集团","rid":6,"rname":"星乐路通用房","tid":0,"tfid":0,"ftname":"","name":"莫宛莫","str":87,"int":15,"com":68,"img":25,"job":0,"boss":false},{"id":20,"fid":5,"fname":"亚光集团","rid":6,"rname":"星乐路通用房","tid":0,"tfid":0,"ftname":"","name":"姚春风","str":15,"int":42,"com":18,"img":49,"job":0,"boss":false},{"id":21,"fid":5,"fname":"亚光集团","rid":7,"rname":"国惠园交易所","tid":0,"tfid":0,"ftname":"","name":"毛硕云","str":41,"int":27,"com":3,"img":34,"job":0,"boss":false},{"id":22,"fid":5,"fname":"亚光集团","rid":7,"rname":"国惠园交易所","tid":0,"tfid":0,"ftname":"","name":"蒋咏亦","str":10,"int":39,"com":4,"img":50,"job":0,"boss":false},{"id":23,"fid":5,"fname":"亚光集团","rid":7,"rname":"国惠园交易所","tid":0,"tfid":0,"ftname":"","name":"刘奕","str":8,"int":12,"com":42,"img":5,"job":0,"boss":false},{"id":24,"fid":5,"fname":"亚光集团","rid":7,"rname":"国惠园交易所","tid":0,"tfid":0,"ftname":"","name":"伏蕊养","str":49,"int":37,"com":50,"img":26,"job":0,"boss":false},{"id":25,"fid":5,"fname":"亚光集团","rid":7,"rname":"国惠园交易所","tid":0,"tfid":0,"ftname":"","name":"王语安","str":15,"int":6,"com":12,"img":62,"job":0,"boss":false},{"id":26,"fid":5,"fname":"亚光集团","rid":8,"rname":"漫宇大厦挖矿厂","tid":0,"tfid":0,"ftname":"","name":"陈藩满","str":48,"int":11,"com":4,"img":59,"job":0,"boss":false},{"id":27,"fid":5,"fname":"亚光集团","rid":8,"rname":"漫宇大厦挖矿厂","tid":0,"tfid":0,"ftname":"","name":"廖蕾","str":11,"int":33,"com":33,"img":59,"job":0,"boss":false},{"id":28,"fid":5,"fname":"亚光集团","rid":8,"rname":"漫宇大厦挖矿厂","tid":0,"tfid":0,"ftname":"","name":"陈衷意","str":12,"int":33,"com":17,"img":2,"job":0,"boss":false},{"id":29,"fid":5,"fname":"亚光集团","rid":8,"rname":"漫宇大厦挖矿厂","tid":0,"tfid":0,"ftname":"","name":"邓美菅","str":20,"int":68,"com":24,"img":12,"job":0,"boss":false},{"id":30,"fid":5,"fname":"亚光集团","rid":8,"rname":"漫宇大厦挖矿厂","tid":0,"tfid":0,"ftname":"","name":"周璇","str":82,"int":2,"com":24,"img":49,"job":0,"boss":false},{"id":31,"fid":5,"fname":"亚光集团","rid":8,"rname":"漫宇大厦挖矿厂","tid":0,"tfid":0,"ftname":"","name":"裴彤敏","str":6,"int":12,"com":22,"img":43,"job":0,"boss":false},{"id":32,"fid":5,"fname":"亚光集团","rid":8,"rname":"漫宇大厦挖矿厂","tid":0,"tfid":0,"ftname":"","name":"欧阳水慧","str":3,"int":48,"com":81,"img":25,"job":0,"boss":false},{"id":33,"fid":6,"fname":"洲复传媒","rid":9,"rname":"柯牛路发电站","tid":0,"tfid":0,"ftname":"","name":"刘才城","str":69,"int":66,"com":76,"img":36,"job":0,"boss":true},{"id":34,"fid":6,"fname":"洲复传媒","rid":9,"rname":"柯牛路发电站","tid":0,"tfid":0,"ftname":"","name":"顾悦蕊","str":22,"int":60,"com":48,"img":5,"job":0,"boss":false},{"id":35,"fid":6,"fname":"洲复传媒","rid":9,"rname":"柯牛路发电站","tid":0,"tfid":0,"ftname":"","name":"祝闻","str":25,"int":73,"com":64,"img":11,"job":0,"boss":false},{"id":36,"fid":6,"fname":"洲复传媒","rid":9,"rname":"柯牛路发电站","tid":0,"tfid":0,"ftname":"","name":"汲佘慕","str":6,"int":40,"com":31,"img":5,"job":0,"boss":false},{"id":37,"fid":6,"fname":"洲复传媒","rid":9,"rname":"柯牛路发电站","tid":0,"tfid":0,"ftname":"","name":"房闾","str":21,"int":44,"com":44,"img":1,"job":0,"boss":false},{"id":38,"fid":6,"fname":"洲复传媒","rid":9,"rname":"柯牛路发电站","tid":0,"tfid":0,"ftname":"","name":"刘兰","str":44,"int":8,"com":14,"img":57,"job":0,"boss":false},{"id":39,"fid":6,"fname":"洲复传媒","rid":9,"rname":"柯牛路发电站","tid":0,"tfid":0,"ftname":"","name":"管涵龙","str":89,"int":32,"com":67,"img":35,"job":0,"boss":false},{"id":40,"fid":6,"fname":"洲复传媒","rid":9,"rname":"柯牛路发电站","tid":0,"tfid":0,"ftname":"","name":"江露盼","str":26,"int":36,"com":15,"img":62,"job":0,"boss":false},{"id":41,"fid":6,"fname":"洲复传媒","rid":10,"rname":"凡财街发电站","tid":0,"tfid":0,"ftname":"","name":"陈蕴","str":30,"int":48,"com":40,"img":29,"job":0,"boss":false},{"id":42,"fid":6,"fname":"洲复传媒","rid":10,"rname":"凡财街发电站","tid":0,"tfid":0,"ftname":"","name":"周叶琦","str":9,"int":11,"com":18,"img":48,"job":0,"boss":false},{"id":43,"fid":6,"fname":"洲复传媒","rid":10,"rname":"凡财街发电站","tid":0,"tfid":0,"ftname":"","name":"陈尔","str":59,"int":14,"com":36,"img":37,"job":0,"boss":false},{"id":44,"fid":6,"fname":"洲复传媒","rid":10,"rname":"凡财街发电站","tid":0,"tfid":0,"ftname":"","name":"江央焦","str":49,"int":50,"com":33,"img":5,"job":0,"boss":false},{"id":45,"fid":6,"fname":"洲复传媒","rid":11,"rname":"亚金镇挖矿厂","tid":0,"tfid":0,"ftname":"","name":"陈越优","str":94,"int":54,"com":86,"img":64,"job":0,"boss":false},{"id":46,"fid":6,"fname":"洲复传媒","rid":11,"rname":"亚金镇挖矿厂","tid":0,"tfid":0,"ftname":"","name":"李泽瑶","str":88,"int":33,"com":11,"img":1,"job":0,"boss":false},{"id":47,"fid":6,"fname":"洲复传媒","rid":11,"rname":"亚金镇挖矿厂","tid":0,"tfid":0,"ftname":"","name":"李懿淑","str":79,"int":29,"com":41,"img":15,"job":0,"boss":false},{"id":48,"fid":6,"fname":"洲复传媒","rid":11,"rname":"亚金镇挖矿厂","tid":0,"tfid":0,"ftname":"","name":"廖海闻","str":59,"int":88,"com":46,"img":34,"job":0,"boss":false},{"id":49,"fid":6,"fname":"洲复传媒","rid":11,"rname":"亚金镇挖矿厂","tid":0,"tfid":0,"ftname":"","name":"宦吉竹","str":23,"int":48,"com":32,"img":47,"job":0,"boss":false},{"id":50,"fid":6,"fname":"洲复传媒","rid":11,"rname":"亚金镇挖矿厂","tid":0,"tfid":0,"ftname":"","name":"龙乐井","str":46,"int":36,"com":31,"img":11,"job":0,"boss":false},{"id":51,"fid":6,"fname":"洲复传媒","rid":11,"rname":"亚金镇挖矿厂","tid":0,"tfid":0,"ftname":"","name":"张明红","str":95,"int":53,"com":25,"img":15,"job":0,"boss":false}],"relationList":[{"id":"10","from":4,"fromName":"和矿控股","to":5,"toName":"亚光集团","invest":0,"support":0,"jointID":0,"jointName":"","spyID":0,"spyName":""},{"id":"20","from":4,"fromName":"和矿控股","to":6,"toName":"洲复传媒","invest":0,"support":0,"jointID":0,"jointName":"","spyID":0,"spyName":""},{"id":"01","from":5,"fromName":"亚光集团","to":4,"toName":"和矿控股","invest":0,"support":0,"jointID":0,"jointName":"","spyID":0,"spyName":""},{"id":"21","from":5,"fromName":"亚光集团","to":6,"toName":"洲复传媒","invest":0,"support":0},{"id":"02","from":6,"fromName":"洲复传媒","to":4,"toName":"和矿控股","invest":0,"support":0},{"id":"12","from":6,"fromName":"洲复传媒","to":5,"toName":"亚光集团","invest":0,"support":0}],"logList":[]},"accFactoryID":7,"accRoomID":12,"accTerminalID":79,"accWorkerID":52,"day":1}');
         }
         if(window.GLOBAL&&window.GLOBAL.game){
             this.game = window.GLOBAL.game;
@@ -1297,27 +1316,41 @@ export default {
                 if(maintainer)
                     _roomFreeWorkerList = removeFromList(maintainer.id,'id',_roomFreeWorkerList);
             }
-            _roomTerminalList = bulbsort(_roomTerminalList,['powerLevel','powerLevel','digLevel','tradeLevel'][room.type]);
+            if(room.type>=1){
+                _roomTerminalList = bulbsort(_roomTerminalList,['powerLevel','digLevel','tradeLevel'][room.type-1]);
+                _roomFreeWorkerList = bulbsort(_roomFreeWorkerList,['str','int','com'][room.type-1]);
+            }
             for(let ti=0;ti<_roomTerminalList.length;ti++){
                 let terminal = _roomTerminalList[ti],
                     oworker = getListByID(terminal.id,'tid',_roomWorkerList)[0],
+                    worker;
+                if(room.type==0){
                     worker = _roomFreeWorkerList[r(0,_roomFreeWorkerList.length-1)];
+                }
+                else{
+                    worker = _roomFreeWorkerList[0];
+                }
                 if(worker&&!oworker){
                     if(terminal.durab>=CONFIG.terminal.durab_threshold){ // 维护
                         worker.job = 4;
                     }
                     else{ // 发电|挖矿|交易
-                        if(worker.str>=worker.int&&worker.str>=worker.com){
-                            worker.job = 1;
-                        }
-                        else if(worker.int>worker.str&&worker.int>worker.com){
-                            worker.job = 2;
-                        }
-                        else if(worker.com>worker.str&&worker.com>worker.int){
-                            worker.job = 3;
+                        if(room.type>=1&&worker[['str','int','com'][room.type-1]]>=40){ // 特殊房间且人员相关能力值>50
+                            worker.job = room.type;
                         }
                         else{
-                            worker.job = r(1,3);
+                            if(worker.str>=worker.int&&worker.str>=worker.com){
+                                worker.job = 1;
+                            }
+                            else if(worker.int>worker.str&&worker.int>worker.com){
+                                worker.job = 2;
+                            }
+                            else if(worker.com>worker.str&&worker.com>worker.int){
+                                worker.job = 3;
+                            }
+                            else{
+                                worker.job = r(1,3);
+                            }
                         }
                     }
                     worker.tid = terminal.id;
@@ -1353,6 +1386,9 @@ export default {
                 relationList = getListByID(myFactory.id,'from',this.game.relationList),
                 workerList = getListByID(myFactory.id,'fid',this.game.workerList),
                 imageAgent = getListByID(11,'job',workerList)[0],
+                calcFade = x =>{
+                    return 2-(2*x/(x+1));
+                },
                 calcRoomIncome = (room,income,riskImpact,roomWorkerList,abi) =>{
                     let balance = this.calcBalance(roomWorkerList),durabImpact = 1;
                     if(room.durab>CONFIG.room.durab_threshold){
@@ -1382,7 +1418,8 @@ export default {
                     roomDurabIncrease = 0,
                     roomPowerConsume = 0,
                     roomMoneyConsume = 0,
-                    roomLog = {};
+                    roomLog = {},
+                    workingWorkerCount = 0; // 房间内正在终端工作（发电、挖矿和交易）的人员数
                 roomLog.name = room.name;
                 roomLog.terminalList = [];
                 for(let terminal of myTerminalList){ // 演算每个终端
@@ -1407,6 +1444,7 @@ export default {
                                     typeImpact = CONFIG.room.type_decrease_factor;
                                 terminalPowerIncome = Math.round(myWorker.str*(CONFIG.terminal.base+terminal.powerLevel)*roomLevelImpact*durabImpact*CONFIG.terminal.power_factor*typeImpact);
                                 terminalDurabIncrese = CONFIG.terminal.durab_increase*(1-room.auto/CONFIG.max_auto);
+                                workingWorkerCount += 1;
                             break;
                             case 2: // 挖矿
                                 if(room.power>0){
@@ -1417,6 +1455,7 @@ export default {
                                     terminalMoneyIncome = Math.round(myWorker.int*(CONFIG.terminal.base+terminal.digLevel)*roomLevelImpact*durabImpact*CONFIG.terminal.dig_factor*typeImpact);
                                     terminalPowerConsume = CONFIG.terminal.dig_power_consume_base+terminal.digLevel*CONFIG.terminal.dig_power_consume_factor;
                                     terminalDurabIncrese = CONFIG.terminal.durab_increase*(1-room.auto/CONFIG.max_auto);
+                                    workingWorkerCount += 1;
                                 }
                             break;
                             case 3: // 交易
@@ -1429,6 +1468,7 @@ export default {
                                     terminalSupportIncome = Math.round(myWorker.com*(CONFIG.terminal.base+terminal.tradeLevel)*roomLevelImpact*durabImpact*CONFIG.terminal.trade_support_factor*typeImpact);
                                     terminalPowerConsume = CONFIG.terminal.trade_power_consume_base+terminal.tradeLevel*CONFIG.terminal.trade_power_consume_factor;
                                     terminalDurabIncrese = CONFIG.terminal.durab_increase*(1-room.auto/CONFIG.max_auto);
+                                    workingWorkerCount += 1;
                                 }
                             break;
                             case 4: // 终端维护
@@ -1508,6 +1548,7 @@ export default {
 
                 // 房间数据赋值
                 room.power += roomPowerIncome-roomPowerConsume;
+                roomDurabIncrease = roomDurabIncrease*calcFade(workingWorkerCount);
                 roomDurabIncrease = Math.round((roomDurabIncrease+CONFIG.room.durab_fix)*durabImpact*(1-room.auto/CONFIG.max_auto));
                 room.durab += roomDurabIncrease-roomDurabReduce;
                 if(room.durab<0)
@@ -1515,6 +1556,8 @@ export default {
                 else if(room.durab>CONFIG.max_durab)
                     room.durab = CONFIG.max_durab;
                 room.auto += roomAutoIncome;
+                if(room.auto>CONFIG.max_auto)
+                    room.auto = CONFIG.max_auto;
 
                 // 累加工厂数据
                 moneyIncome += roomMoneyIncome-roomMoneyConsume;
@@ -1535,9 +1578,6 @@ export default {
             }
 
             // 计算我的工厂数据
-            let calcFade = x =>{
-                return 2-(2*x/(x+1));
-            }
             if(imageAgent){
                 imageIncome += Math.round(imageAgent.img*CONFIG.factory.image_increse_factor)+CONFIG.factory.image_increse_base;
             }
@@ -1896,22 +1936,22 @@ export default {
             this.showWorkerList = true;
             switch(mode){
                 case 1: // 形象代言人
-                    this.popTip = `选择形象高的人，持续提升工厂形象`;
+                    this.popTip = `选择「形象」高的人，持续提升工厂形象`;
                 break;
                 case 2: // 房间管理员
-                    this.popTip = `选择交流能力高的人来固定房间的协调值`;
+                    this.popTip = `选择「交流」能力高的人来固定房间的协调值`;
                 break;
                 case 3: // 房间维护工人
-                    this.popTip = `选择体力高的人，大幅降低房间老化，同时小幅降低每个终端的老化，会持续消耗资金`;
+                    this.popTip = `选择「体力」高的人，大幅降低房间老化，同时小幅降低每个终端的老化，会持续消耗资金`;
                 break;
                 case 4: // 房间门面
-                    this.popTip = `选择形象高的人，持续提升工厂形象`;
+                    this.popTip = `选择「形象」高的人，持续提升工厂形象`;
                 break;
                 case 5: // 房间自动化工人
-                    this.popTip = `消耗电力和资金以提升房间的自动化程度`;
+                    this.popTip = `选择「智力」高的人，消耗电力和资金以提升房间的自动化程度`;
                 break;
                 case 6: // 终端工人
-                    this.popTip = `发电和维护需要体力，挖矿需要智力，交易需要交流能力`;
+                    this.popTip = `发电和维护需要「体力」，挖矿需要「智力」，交易需要「交流」能力`;
                 break;
                 case 7: // 房间搜索点数
                     this.popTip = `房间搜索点数的增量取决于搜索人员的「体力」和「智力」中最高的一项，可任命多人`;
@@ -1920,10 +1960,10 @@ export default {
                     this.popTip = `人力搜索点数的增量取决于搜索人员的「交流」和「形象」中最高的一项，可任命多人`;
                 break;
                 case 9: // 外交员
-                    this.popTip = `派选交流能力高的人来持续提升对此工厂的支持率`;
+                    this.popTip = `派选「交流」能力高的人来持续提升对此工厂的支持率`;
                 break;
                 case 10: // 间谍
-                    this.popTip = `派选智力高的人对此工厂的形象造成持续的损耗，会大量消耗我厂资金`;
+                    this.popTip = `派选「智力」高的人对此工厂的形象造成持续的损耗，会大量消耗我厂资金`;
                 break;
                 default:
                     this.popTip = '';
@@ -2049,21 +2089,41 @@ export default {
             this.showJobPop = false;
         },
         onTapEntireOrder(index){ // 点击【房间全体命令】按钮
-            let targetJob = [0,1,2,3,4][index]||0,
+            let target = [0,1,2,3,4,5,6][index]||0,
                 rid = (this.tempData.room||{}).id,
                 tid = (this.tempData.terminal||{}).id,
                 roomWorkerList = getListByID(rid,'rid',this.game.workerList),
                 myRoomWorkerList = [...roomWorkerList];
-            for(let worker of myRoomWorkerList){
-                if(worker.tid!=0)
-                    worker.job = targetJob;
+            if(target<=4){
+                for(let worker of myRoomWorkerList){
+                    if(worker.tid!=0)
+                        worker.job = target;
+                }
+            }
+            else if(target==5){ // 离开终端
+                for(let worker of myRoomWorkerList){
+                    if(worker.job<5){
+                        worker.tid = 0;
+                        worker.job = 0;
+                    }
+                }
+            }
+            else if(target==6){ // 离开房间
+                for(let worker of myRoomWorkerList){
+                    if(worker.job<5){
+                        worker.rid = 0;
+                        worker.rname = '';
+                        worker.tid = 0;
+                        worker.job = 0;
+                    }
+                }
             }
             this.showEditRoom = false;
             this.asynAllPages();
         },
         onTapRelease(){ // 点击【解除职务】按钮
             let worker = getListByID(this.tempData.myWorker.id,'id',this.game.workerList)[0];
-            this.releaseWorker(worker);
+            this.releaseWorker(worker,1);
             this.asynAllPages();
             this.showWorkerPop = false;
         },
@@ -2211,6 +2271,13 @@ export default {
             this.acquireRoom(this.tempData.stealRoom);
             this.asynAllPages();
             this.showStealRoom = false;
+            this.$dialog({
+                title: '结果报告',
+                textAlign: 'left',
+                content: `偷取到了 ${this.tempData.stealRoom.name}<br/>损失了 ${Math.round(supportCost*100/CONFIG.max_support)}% 的支持率和 ${imageCost} 的形象。`,
+                noCancelBtn: true,
+                noOkBtn: true,
+            });
         },
         onTapStealWorker(){ // 点击【偷取人员】按钮
             if(this.tempData.relation.support<CONFIG.steal_worker_support_threshold){
@@ -2228,6 +2295,13 @@ export default {
             this.acquireWorker(this.tempData.stealWorker);
             this.asynAllPages();
             this.showStealWorker = false;
+            this.$dialog({
+                title: '结果报告',
+                textAlign: 'left',
+                content: `偷取到了 ${this.tempData.stealWorker.name}<br/>损失了 ${Math.round(supportCost*100/CONFIG.max_support)}% 的支持率和 ${imageCost} 的形象。`,
+                noCancelBtn: true,
+                noOkBtn: true,
+            });
         },
         onTapInvest(){ // 点击【投资】按钮
             if(this.tempData.relation.support<CONFIG.invest_support_threshold){
@@ -2358,7 +2432,7 @@ export default {
             this.asynAllPages();
             this.showEditWorkerPage = false;
         },
-        onTapAutoAssign(){ // 点击【自动安排空闲人员】按钮
+        onTapAutoAssignTask(){ // 点击【自动安排空闲人员】按钮
             let myFactory = this.game.factoryList[0],
                 myRoomList = getListByID(myFactory.id,'fid',this.game.roomList);
             this.randomAssignToRoom();
@@ -2368,7 +2442,12 @@ export default {
             this.asynAllPages();
             this.showEditWorkerPage = false;
         },
-        onTapAutoAssignRoom(){ // 点击【房间的自动安排空闲人员】按钮
+        onTapRandomAssignToRoom(){ // 点击【随机派发空闲人员至各房间】按钮
+            this.randomAssignToRoom();
+            this.asynAllPages();
+            this.showEditWorkerPage = false;
+        },
+        onTapAutoAssignTaskInRoom(){ // 点击【房间的自动安排空闲人员】按钮
             let room = getListByID(this.tempData.room.id,'id',this.game.roomList)[0],
                 roomWorkerList = getListByID(room.id,'rid',this.game.workerList);
             // 让所有无职能员工离开终端
@@ -2409,6 +2488,31 @@ export default {
                 this.showProp = false;
             }
         },
+        onTapAllTerminalLevelUp(type){ // 点击【所有终端全部升级】按钮
+            let myFactory = this.game.factoryList[0],
+                room = getListByID(this.tempData.room.id,'id',this.game.roomList)[0],
+                terminalList = getListByID(room.id,'rid',this.game.terminalList),
+                targetValueName = ['power','dig','trade'][type-1];
+            if(room&&targetValueName){
+                for(let terminal of terminalList){
+                    let level = terminal[`${targetValueName}Level`];
+                    if(level<3){
+                        let cost = CONFIG[`${targetValueName}_levelup_cost`][level-1];
+                        if(myFactory.money>=cost){
+                            myFactory.money -= cost;
+                            terminal[`${targetValueName}Level`] += 1;
+                        }
+                    }
+                }
+            }
+            this.asynAllPages();
+        },
+        onTapLeaveRoom(){ // 点击【撤出房间】按钮
+            let worker = getListByID(this.tempData.myWorker.id,'id',this.game.workerList)[0];
+            this.releaseWorker(worker);
+            this.asynAllPages();
+            this.showWorkerPop = false;
+        },
 
         onDoubleTapRoom(id){ // 双击【房间】按钮
             localStorage.setItem('NTIP1',1);
@@ -2416,7 +2520,10 @@ export default {
             this.jump(2,id);
         },
         onDoubleTapRoomWorker(id){ // 双击【房间员工】按钮
-            this.jump(4,id);
+            let worker = getListByID(id,'id',this.game.workerList)[0];
+            if(worker)
+                this.tempData.myWorker = {...worker};
+            this.showWorkerPop = true;
         },
         onDoubleTapPopRoom(id){ // 双击【弹窗房间】按钮
             let assignPowerPct = this.tempData.assignPowerPct,
@@ -2580,6 +2687,7 @@ export default {
 
         jump(state,id=0){ // 点击【跳转】按钮
             // console.log(`跳转至${['首页','房间','终端','人员','市场','外交','工厂','报表'][state-1]} ID=${id}`);
+            let canJump = true;
             switch(state){
                 case 1: // 首页
                 break;
@@ -2592,13 +2700,21 @@ export default {
                 case 4: // 人员
                     this.searchingWorkerID = id||0;
                 break;
+                case 6: // 外交
+                    if(this.game.factoryList[0].image<CONFIG.relation.joint_image_threshold){
+                        this.$toast.text(`工厂形象达到 ${CONFIG.relation.joint_image_threshold} 解锁外交系统`);
+                        canJump = false;
+                    }
+                break;
                 case 7: // 工厂
                     this.searchingFactoryID = id||0;
                 break;
             }
-            this.asynAllPages();
-            this.filter = 1;
-            this.state = state;
+            if(canJump){
+                this.asynAllPages();
+                this.filter = 1;
+                this.state = state;
+            }
         },
 
         asynAllPages(){ // 刷新所有页面temp数据
@@ -2682,7 +2798,10 @@ export default {
                 manager = getWorkerByJob(7),
                 maintainer = getWorkerByJob(6),
                 imageAgent = getWorkerByJob(8),
-                autoWorker = getWorkerByJob(5);
+                autoWorker = getWorkerByJob(5),
+                powerLevelUpCost = 0,
+                digLevelUpCost = 0,
+                tradeLevelUpCost = 0;
             for(let terminal of myTerminalList){
                 let worker = getListByID(terminal.id,'tid',this.game.workerList)[0],
                     myWorker = {...worker};
@@ -2694,12 +2813,24 @@ export default {
                     terminal.workerImg = myWorker.img;
                     terminal.job = ['发电','挖矿','交易','维护'][myWorker.job-1]||'-';
                 }
+                if(terminal.powerLevel<=2){
+                    powerLevelUpCost += CONFIG.power_levelup_cost[terminal.powerLevel-1];
+                }
+                if(terminal.digLevel<=2){
+                    digLevelUpCost += CONFIG.dig_levelup_cost[terminal.digLevel-1];
+                }
+                if(terminal.tradeLevel<=2){
+                    tradeLevelUpCost += CONFIG.trade_levelup_cost[terminal.tradeLevel-1];
+                }
             }
             myRoom.balance = this.calcBalance(myRoomWorkerList);
             this.tempData.room = {
                 manager,maintainer,imageAgent,autoWorker,
                 ...myRoom,
             }
+            this.tempData.powerLevelUpCost = powerLevelUpCost;
+            this.tempData.digLevelUpCost = digLevelUpCost;
+            this.tempData.tradeLevelUpCost = tradeLevelUpCost;
             this.tempData.myPopRoomList = myRoomList;
             this.tempData.myTerminalList = myTerminalList;
             this.tempData.myRoomWorkerList = myRoomWorkerList;
@@ -2924,7 +3055,7 @@ export default {
     }
     .btn-small{
         margin-left: .2rem;
-        font-size: .26rem;
+        font-size: .22rem;
     }
     .small{
         font-size: .2rem;
@@ -3125,13 +3256,25 @@ export default {
     }
     .room-board .level{
         display: flex;
-        justify-content: space-between;
+        justify-content: space-around;
         align-items: center;
         height: 1.5rem;
     }
-    .room-board .level a{
+    .room-board .level .btn{
         font-weight: bold;
         font-size: .3rem;
+    }
+    .room-board .all-level{
+        height: 1.5rem;
+    }
+    .room-board .all-level h3{
+        text-align: left;
+    }
+    .room-board .all-level .btn-small{
+        height: .4rem;
+        line-height: .4rem;
+        font-size: .22rem;
+        color: #ff4f18;
     }
     .room-board .risk{
         text-align: left;

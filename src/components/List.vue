@@ -12,7 +12,7 @@
             </div>
             <div class="list" v-if="localData.length>0">
                 <a class="list-item" :class="{'select':item.select}" :data-id="item.id" v-for="(item,index) in localData" @click="onTapListItem($event)">
-                    <a class="tip" v-if="index==0&&showTip">双击查看</a>
+                    <a class="tip" v-if="index==0&&showTip">双击可查看</a>
                     <div class="list-cell" v-for="(column,index) in localColumns" v-if="column.width!=0" :style="{width:column.width}">{{column.format?column.format(item[column.name],item):item[column.name]}}</div>
                 </a>
             </div>
