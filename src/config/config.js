@@ -2,16 +2,16 @@ module.exports = {
 	DEBUG: false,
 	CONFIG:{
         init:{
-            money: 0, // 初始资金
+            money: 5000, // 初始资金
             image: 0, // 初始形象值
 			workerCount: 2, // 初始工人数量
-			humanResourcePoint: 0, // 初始人力资源点数
+			humanResourcePoint: 2000, // 初始人力资源点数
 			roomResourcePoint: 0, // 初始房间资源点数
 			roomType: 0, // 初始房间类型
-			roomBasicImage: 15, // 初始房间基础形象
+			roomBasicImage: 0, // 初始房间基础形象
 			randomOtherMoney: [5000,50000], // 其他公司初始资金随机范围
-			randomOtherImage: [100,1000], // 其他公司初始形象随机范围
-			roomPower: 50, // 第一个房间的初始电力
+			randomOtherImage: [100,3000], // 其他公司初始形象随机范围
+			roomPower: 100, // 第一个房间的初始电力
 			roomDurab: 0, // 第一个房间的初始耐久
 			roomRisk: 2, // 第一个房间的初始风险等级
 			roomAuto: 0, // 第一个房间的初始自动化程度
@@ -57,7 +57,9 @@ module.exports = {
 		randmNewRoomAutoRange: [0,0], // 新生成房间自动化随机范围
 
 		searchRoomPointCost: 1000, // 一个房间的搜索点数花费
+		seachRoomPointAcc: 10, // 房间搜索花费累加值
 		searchWorkerPointCost: 1000, // 一个人员的搜索点数花费
+		seachWorkerPointAcc: 10, // 人员搜索花费累加值
 
 		max_support: 10000, // 最大支持点数
 		invest_support_threshold: 3000, // 投资支持率阈值
@@ -74,50 +76,52 @@ module.exports = {
 		max_damage: 30000, // 一次打压最大伤害
 		min_damage: 20, // 一次打压最大伤害
 
+		max_image_prop_money: 10000, // 形象宣传投入资金最大值
+		image_prop_factor: .002, // 形象宣传提升形象系数
+
 		terminal: {
 			base: 1.5,
 			power_factor: .3,
 			durab_increase: 75,
-			dig_factor: .6,
-			dig_power_consume_base: 30,
-			dig_power_consume_factor: 10,
-			trade_money_factor: .5,
+			dig_factor: .24,
+			dig_power_consume_base: 40,
+			dig_power_consume_factor: 40,
+			trade_money_factor: .2,
 			trade_support_factor: .04,
-			trade_power_consume_base: 30,
-			trade_power_consume_factor: 10,
+			trade_power_consume_base: 40,
+			trade_power_consume_factor: 40,
 			durab_threshold: 5000,
 			durab_factor: 1.8,
 			durab_consume_factor: .5,
 			room_risk_addition_durab: 100,
-			room_risk_durab_factor: 1,
 		},
 
 		room: {
 			base: 1.5,
-			image_factor: .4,
+			image_factor: .25,
 			durab_fix: 25,
 			durab_factor: 2,
 			durab_consume_factor: 2,
-			auto_factor: .25,
+			auto_factor: 2,
 			auto_power_consume: 100,
 			auto_money_consume: 100,
 			durab_threshold: 5000,
 			durab_increase_factor: .2,
 			durab_terminal_factor: .5,
-			room_risk_durab_factor: 1,
 
-			type_increase_factor: 1.1,
+			type_increase_factor: 2,
 			type_normal_factor: 1,
-			type_decrease_factor: .8,
+			type_decrease_factor: .5,
 		},
 
 		factory: {
-			image_increse_base: 20,
-			image_increse_factor: .5,
-			rrp_factor: .1,
+			image_increse_base: 10,
+			image_increse_factor: .33,
+			rrp_factor: .2,
 			rrp_fix: 100,
-			hrp_factor: .001,
-			hrp_fix: 50,
+			image_hrp_factor: 8,
+			hrp_factor: .2,
+			hrp_fix: 20,
 		},
 
 		relation: {
@@ -131,7 +135,7 @@ module.exports = {
 			joint_image_threshold: 3000,
 		},
 
-        max_worker_ablity: 100, // 人员最高能力值
+        max_worker_ability: 100, // 人员最高能力值
 		period: 10, // 市场清空周期
     }
 }

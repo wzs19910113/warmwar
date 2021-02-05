@@ -30,7 +30,7 @@
                 <div class="label">世界工厂数量</div>
                 <nut-slider class="input" v-model="factoryCount" :range="[3,8]" :showLabel="true" :showLabelAlways="true" :showRangeTxt="true" ></nut-slider>
             </div>
-            <nut-textinput class="row code" v-model="newcode" label="" placeholder="输入新的存档代码" :disabled="false"/>
+            <nut-textinput class="row code" v-model="newcode" label="" placeholder="输入新的存档代码，用于存档" :disabled="false"/>
             <nut-button class="btn btn-start" @click="start">开始游戏</nut-button>
             <nut-button class="btn btn-back" @click="back">返回</nut-button>
         </div>
@@ -83,8 +83,22 @@ export default {
     methods: {
         start(){
             if(this.loading) return;
-            if(this.myname.length<=0) return;
-            if(this.newcode.length<=0) return;
+            if(this.myname.length<=0){
+                this.$toast.text('输入角色名字');
+                return;
+            }
+            if(this.myname.length>6){
+                this.$toast.text('角色名字过长');
+                return;
+            }
+            if(this.newcode.length<=0){
+                this.$toast.text('输入一个代码');
+                return;
+            }
+            if(this.newcode.length>10){
+                this.$toast.text('代码过长');
+                return;
+            }
             let initConfig = {
                     myname: this.myname,
                     mystrength: this.mystrength,
@@ -118,7 +132,7 @@ export default {
             this.loading = this.$toast.loading();
             window.GLOBAL.game = game;
             window.GLOBAL.day = 1;
-            query('../../api/monopoly_new.php',rdata=>{ // 新建存档
+            query(DEBUG?'http://darkmirror.cn/api/monopoly_new.php':'../../api/monopoly_new.php',rdata=>{ // 新建存档
                 this.loading.hide();
                 this.loading = null;
                 localStorage.setItem('CODE',this.newcode);
@@ -153,7 +167,7 @@ export default {
             if(this.loadcode.length<=0) return;
             this.loading = true;
             this.loading = this.$toast.loading();
-            query('../../api/monopoly_load.php',rdata=>{ // 读取存档
+            query(DEBUG?'http://darkmirror.cn/api/monopoly_load.php':'../../api/monopoly_load.php',rdata=>{ // 读取存档
                 this.loading.hide();
                 this.loading = null;
                 window.GLOBAL = JSON.parse(rdata.data.data);

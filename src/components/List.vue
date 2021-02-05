@@ -1,7 +1,7 @@
 <template>
     <div class="list-container list-container-room">
         <div class="list-title">
-            <div class="list-title-head left">{{title}}</div>
+            <div class="list-title-head left">{{title}}<span class="remark" v-if="remark">（{{remark}}）</span></div>
             <div class="list-title-count left" v-if="!simple">共 {{localData.length}} 条</div>
             <a class="btn btn-asyn right" v-if="!simple" @click="asyn">刷新</a>
             <a class="btn btn-option right mg-r" :class="{'large-text mg-l':largeOption}" v-if="option" @click="onTapOption_">{{option}}</a>
@@ -12,6 +12,7 @@
             </div>
             <div class="list" v-if="localData.length>0">
                 <a class="list-item" :class="{'select':item.select}" :data-id="item.id" v-for="(item,index) in localData" @click="onTapListItem($event)">
+                    <a class="tip" v-if="index==0&&showTip">双击查看</a>
                     <div class="list-cell" v-for="(column,index) in localColumns" v-if="column.width!=0" :style="{width:column.width}">{{column.format?column.format(item[column.name],item):item[column.name]}}</div>
                 </a>
             </div>
@@ -36,6 +37,8 @@ export default {
         largeOption: Boolean, // 操作按钮大字体
         vScroll: Boolean, // 允许横向滑动
         onTapOption: Function, // 点击其他操作事件
+        showTip: Boolean, // 显示提示
+        remark: String, // 标题备注
     },
     data() {
         return {
@@ -118,6 +121,7 @@ export default {
         overflow-x: scroll;
     }
     .list-item,.list-header{
+        position: relative;
         display: inline-block;
         min-width: 100%;
         white-space: nowrap;
@@ -125,6 +129,43 @@ export default {
         height: .6rem;
         line-height: .3rem;
         border-bottom: .01rem solid #ccc;
+    }
+    .list-item .tip{
+        position: absolute;
+        top: -.45rem;
+        left: 10%;
+        height: .5rem;
+        line-height: .5rem;
+        width: 1.2rem;
+        font-size: .2rem;
+        color: #fff;
+        background-color: black;
+        text-align: center;
+        white-space: nowrap;
+        word-break: keep-all;
+        opacity: .6;
+        animation: flt 1s ease-in-out alternate infinite;
+    }
+    @keyframes flt {
+        to{
+            top: -.6rem;
+        }
+    }
+    .remark{
+        font-size: .2rem;
+        font-weight: normal;
+    }
+    .list-item .tip::after{
+        content: '';
+        position: absolute;
+        bottom: -.16rem;
+        right: 66.66%;
+        margin: 0 auto;
+        width: 0;
+        height: 0;
+        border-left: .08rem solid transparent;
+        border-right: .08rem solid transparent;
+        border-top: .16rem solid black;
     }
     .large .list-item,.large .list-header{
         height: .8rem;
@@ -151,7 +192,7 @@ export default {
         text-align: left;
         padding: 0 .2rem;
         padding-left: .1rem;
-        border-left: .04rem solid #ff4f18;
+        border-left: .06rem solid #ff4f18;
     }
     .list-title::after{
         content: '';
