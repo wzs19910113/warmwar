@@ -13,7 +13,7 @@
             <div class="list" v-if="localData.length>0">
                 <a class="list-item" :class="{'select':item.select}" :data-id="item.id" v-for="(item,index) in localData" @click="onTapListItem($event)">
                     <a class="tip" v-if="index==0&&showTip">双击可查看</a>
-                    <div class="list-cell" v-for="(column,index) in localColumns" v-if="column.width!=0" :style="{width:column.width}">{{column.format?column.format(item[column.name],item):item[column.name]}}</div>
+                    <div class="list-cell" :class="{'warm':(column.isDurab&&item[column.name]>=5000),'lv1':(column.isLevel&&item[column.name]==1),'lv2':(column.isLevel&&item[column.name]==2),'lv3':(column.isLevel&&item[column.name]==3)}" v-for="(column,index) in localColumns" v-if="column.width!=0" :style="{width:column.width}">{{column.format?column.format(item[column.name],item):item[column.name]}}</div>
                 </a>
             </div>
             <div class="list" v-else>
@@ -182,6 +182,19 @@ export default {
         line-height: .6rem;
         display: inline-block;
         text-align: center;
+    }
+    .warm{
+        color: red;
+    }
+    .lv1{
+
+    }
+    .lv2{
+        font-weight: bold;
+    }
+    .lv3{
+        color: #8A2BE2;
+        font-weight: bold;
     }
     .list .select{
         background-color: #dcdcdc;

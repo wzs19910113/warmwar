@@ -11,7 +11,7 @@ module.exports = {
 			roomBasicImage: 0, // 初始房间基础形象
 			randomOtherMoney: [5000,50000], // 其他公司初始资金随机范围
 			randomOtherImage: [100,3000], // 其他公司初始形象随机范围
-			roomPower: 100, // 第一个房间的初始电力
+			roomPower: 1000, // 第一个房间的初始电力
 			roomDurab: 0, // 第一个房间的初始耐久
 			roomRisk: 2, // 第一个房间的初始风险等级
 			roomAuto: 0, // 第一个房间的初始自动化程度
@@ -64,12 +64,10 @@ module.exports = {
 		max_support: 10000, // 最大支持点数
 		invest_support_threshold: 3000, // 投资支持率阈值
 		steal_worker_support_threshold: 5000, // 偷取人员支持率阈值
-		steal_worker_support_cost: 500, // 偷取人员支持率消耗
+		steal_worker_support_cost: 5000, // 偷取人员支持率消耗
 		steal_room_support_threshold: 7000, // 偷取房间支持率阈值
-		steal_room_support_cost: 2000, // 偷取房间支持率消耗
+		steal_room_support_cost: 7000, // 偷取房间支持率消耗
 		buy_factory_support_threshold: 0, // 收购工厂支持率阈值
-		steal_worker_image_cost: 250, // 偷取人员形象消耗
-		steal_room_image_cost: 1000, // 偷取房间形象消耗
 		image_price_factor: .2, // 形象/价值系数
 
 		damage_money_cost: 10000, // 一次打压资金消耗
@@ -125,13 +123,13 @@ module.exports = {
 		},
 
 		relation: {
-			support_decrease_fix: 100,
-			support_increase_fix: 25,
+			support_decrease_fix: 250,
+			support_increase_fix: 15,
 			support_joint_increase_factor: .5,
-			support_trade_increase_factor: .5,
+			support_trade_increase_factor: .4,
 			image_decrease_fix: 50,
 			image_decrease_factor_range: [.2,.8,1,1.5,2,2.5,3],
-			image_decrease_consume: 1000,
+			image_decrease_consume_fix: 1000,
 			joint_image_threshold: 3000,
 		},
 
