@@ -119,6 +119,8 @@
                             <a class="btn" :class="{'select':filter==5&&searchingWorkerID==0}" @click="onTapWorkerListFilter(5)">终端维护</a><br/>
                             <a class="btn" :class="{'select':filter==6&&searchingWorkerID==0}" @click="onTapWorkerListFilter(6)">房间搜索</a>
                             <a class="btn" :class="{'select':filter==7&&searchingWorkerID==0}" @click="onTapWorkerListFilter(7)">人力搜索</a>
+                            <a class="btn" :class="{'select':filter==9&&searchingWorkerID==0}" @click="onTapWorkerListFilter(9)">外交员</a>
+                            <a class="btn" :class="{'select':filter==10&&searchingWorkerID==0}" @click="onTapWorkerListFilter(10)">间谍</a>
                         </div>
                     </div>
                     <div class="row">
@@ -646,15 +648,15 @@
                     </div>
                     <div class="sub-row">
                         <h3><label>发电站</label></h3>
-                        <p>发电收益多，挖矿和交易收益少。</p>
+                        <p>发电收益提升一倍，挖矿和交易收益减少一半。</p>
                     </div>
                     <div class="sub-row">
                         <h3><label>挖矿厂</label></h3>
-                        <p>挖矿收益多，发电和交易收益少。</p>
+                        <p>挖矿收益提升一倍，发电和交易收益减少一半。</p>
                     </div>
                     <div class="sub-row">
                         <h3><label>交易所</label></h3>
-                        <p>交易收益多，发电和挖矿收益少。</p>
+                        <p>交易收益提升一倍，发电和挖矿收益减少一半。</p>
                     </div>
                 </div>
                 <div class="row">
@@ -788,7 +790,7 @@
                 </div>
                 <div class="row">
                     <h3><label>间谍</label></h3>
-                    <p>安排间谍可以持续对此工厂的形象造成随机的破坏；<br/>效果取决于每个间谍的「智力」和对方工厂人员的的「智力」；<br/>每个间谍每天都会消耗大量的资金。</p>
+                    <p>安排间谍可以持续对此工厂的形象造成随机的破坏；<br/>效果取决于每个间谍的「智力」和对方工厂人员的「智力」；<br/>每个间谍每天都会消耗大量的资金。</p>
                 </div>
                 <div class="row">
                     <h3><label>投资</label></h3>
@@ -1200,6 +1202,9 @@ export default {
             sum += 5*room.basicImage;
             sum += 50*room.auto/CONFIG.max_auto;
             sum += .2*room.power;
+            if(room.type==0){
+                sum = Math.round(sum/3);
+            }
             return Math.round(Math.round(sum/100)*100);
         },
         calcWorkerValue(worker){ // 计算人员价格
@@ -1360,7 +1365,7 @@ export default {
                         worker.job = 4;
                     }
                     else{ // 发电|挖矿|交易
-                        if(room.type>=1&&worker[['str','int','com'][room.type-1]]>=40){ // 特殊房间且人员相关能力值>50
+                        if(room.type>=1&&worker[['str','int','com'][room.type-1]]>=10){ // 特殊房间且人员相关能力值>=10
                             worker.job = room.type;
                         }
                         else{
@@ -1576,6 +1581,7 @@ export default {
                 roomDurabIncrease = roomDurabIncrease*calcFade(workingWorkerCount);
                 roomDurabIncrease = Math.round((roomDurabIncrease+CONFIG.room.durab_fix)*durabImpact*(1-room.auto/CONFIG.max_auto));
                 room.durab += roomDurabIncrease-roomDurabReduce;
+                console.log(roomDurabIncrease,roomDurabReduce);
                 if(room.durab<0)
                     room.durab = 0;
                 else if(room.durab>CONFIG.max_durab)
@@ -1585,9 +1591,9 @@ export default {
                     room.auto = CONFIG.max_auto;
 
                 // 累加工厂数据
-                moneyIncome += roomMoneyIncome-roomMoneyConsume;
-                supportIncome += roomSupportIncome;
-                imageIncome += roomImageIncome;
+                moneyIncome += Math.round(roomMoneyIncome-roomMoneyConsume);
+                supportIncome += Math.round(roomSupportIncome);
+                imageIncome += Math.round(roomImageIncome);
 
                 // 生成房间报表
                 roomLog = {
@@ -1765,10 +1771,10 @@ export default {
             }
 
             // 我的工厂数据赋值 2
-            imageIncome = Math.round(imageIncome);
             moneyIncome = Math.round(moneyIncome);
-            myFactory.image += imageIncome;
+            imageIncome = Math.round(imageIncome);
             myFactory.money += moneyIncome;
+            myFactory.image += imageIncome;
             if(myFactory.image>=CONFIG.relation.joint_image_threshold&&!myFactory.canViewRelation){
                 myFactory.canViewRelation = true;
                 logSuffix += `<p>- 外交系统已解锁 -</p>`;
@@ -2163,7 +2169,7 @@ export default {
             this.filter = mode;
             this.searchingWorkerID = 0;
             if(mode!=1){
-                myWorkerList = getListByID([1,2,3,4,10,9,0][mode-2],'job',tempWorkerList);
+                myWorkerList = getListByID([1,2,3,4,10,9,0,12,13][mode-2],'job',tempWorkerList);
                 this.tempData.myWorkerList = myWorkerList;
                 setTimeout(e=>{
                     this.$refs.workerList&&this.$refs.workerList.asyn();
@@ -2446,8 +2452,8 @@ export default {
             let roomList = getListByID(this.tempData.factory.id,'fid',this.game.roomList),
                 workerList = getListByID(this.tempData.factory.id,'fid',this.game.workerList),
                 myWorkerList = getListByID(this.game.factoryList.id,'id',this.game.workerList),
-                myJoint = getMatchList(myWorkerList,[['job',12],['tfid',this.tempData.factory.id]]),
-                mySpy = getMatchList(myWorkerList,[['job',13],['tfid',this.tempData.factory.id]]),
+                myJoint = getMatchList(myWorkerList,[['job',12],['tfid',this.tempData.factory.id]])[0],
+                mySpyList = getMatchList(myWorkerList,[['job',13],['tfid',this.tempData.factory.id]]),
                 imageIncrease = Math.round(this.tempData.factory.sell*.085);
             for(let room of roomList){
                 this.acquireRoom(room);
@@ -2458,7 +2464,7 @@ export default {
             if(myJoint){
                 this.releaseWorker(myJoint);
             }
-            if(mySpy){
+            for(let mySpy of mySpyList){
                 this.releaseWorker(mySpy);
             }
             this.game.relationList = removeFromList(this.tempData.factory.id,'to',this.game.relationList);

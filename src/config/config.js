@@ -98,7 +98,7 @@ module.exports = {
 			base: 1.5,
 			image_factor: .25,
 			durab_fix: 10,
-			durab_factor: 2,
+			durab_factor: .75,
 			durab_consume_factor: 2,
 			auto_factor: 2,
 			auto_power_consume: 100,
