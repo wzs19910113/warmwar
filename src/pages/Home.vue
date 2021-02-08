@@ -11,7 +11,7 @@
                 <div class="tab-panel" v-show="state==1">
                     <div class="row no-margin">
                         <h1 class="factory-name"><span>{{game.factoryList[0].name}} <a class="btn btn-edit" @click="showEditFactoryName=true">修改</a></span></h1>
-                        <h4 class="my-name">董事长：{{game.workerList[0].name}} <a class="btn btn-icon" @click="jump(4,game.workerList[0].id)">@</a></h4>
+                        <h4 class="my-name">董事长：<a class="orange" @click="jump(4,game.workerList[0].id)">{{game.workerList[0].name}}</a></h4>
                     </div>
                     <div class="row no-margin">
                         <div class="index">
@@ -19,11 +19,18 @@
                             <div class="index-cell left"><b>工厂形象: {{game.factoryList[0].image}}</b></div>
                             <div class="index-cell left"><b>房间搜索点数: {{game.factoryList[0].rrp}}</b></div>
                             <div class="index-cell left"><b>人力搜索点数: {{game.factoryList[0].hrp}}</b></div>
-                            <div class="index-cell"><b>形象代言人: <span v-if="tempData.imageAgent.name">{{tempData.imageAgent.name}} <a class="btn btn-icon" @click="jump(4,tempData.imageAgent.id)">@</a></span>
-                                <a class="btn btn-icon" @click="onTapAddWorker(1)">+</a>
-                                <a v-if="tempData.imageAgent.name" class="btn btn-icon" @click="onTapRemoveWorker(1)">-</a>
-                                <a v-if="tempData.imageAgent.name&&!game.factoryList[0].imageProped" class="btn" @click="onTapProp">形象宣传</a>
-                            </b></div>
+                            <div class="index-cell">
+                                <b>
+                                    形象代言人:
+                                    <span v-if="tempData.imageAgent.name">
+                                        <a class="orange" @click="jump(4,tempData.imageAgent.id)">{{tempData.imageAgent.name}}</a>
+                                        <i>({{tempData.imageAgent.img}})</i>
+                                    </span>
+                                    <a class="btn btn-icon" @click="onTapAddWorker(1)">+</a>
+                                    <a v-if="tempData.imageAgent.name" class="btn btn-icon" @click="onTapRemoveWorker(1)">-</a>
+                                    <a v-if="tempData.imageAgent.name&&!game.factoryList[0].imageProped" class="btn" @click="onTapProp">形象宣传</a>
+                                </b>
+                            </div>
                         </div>
                     </div>
                     <div class="row" v-show="tempData.viewType==0">
@@ -40,33 +47,69 @@
                     </div>
                     <div class="row no-margin">
                         <div class="index">
-                            <div class="index-cell"><b>电力: {{tempData.room.power}}</b> <a class="btn btn-edit" @click="showAssignPower=true" v-if="tempData.room.power>0">分配</a></div>
+                            <div class="index-cell">
+                                <b>电力: {{tempData.room.power}}</b>
+                                <a class="btn btn-edit" @click="showAssignPower=true" v-if="tempData.room.power>0">分配</a>
+                            </div>
                             <div class="index-cell"><b>策略: {{config.risk_name_map[tempData.room.risk-1]}}</b></div>
-                            <div class="index-cell left"><b>管理员:
-                                <span v-if="tempData.room.manager">{{tempData.room.manager.name}} <a class="btn btn-icon" @click="jump(4,tempData.room.manager.id)">@</a></span>
-                                <a class="btn btn-icon" @click="onTapAddWorker(2)">+</a>
-                                <a v-if="tempData.room.manager" class="btn btn-icon" @click="onTapRemoveWorker(2)">-</a>
-                            </b></div>
-                            <div class="index-cell pct-wrap left"><b>协调:</b><div class="pct"><nut-progress :text-inside="true" :percentage="tempData.room.balance"></nut-progress></div></div>
-                            <div class="index-cell left"><b>维护工人:
-                                <span v-if="tempData.room.maintainer">{{tempData.room.maintainer.name}} <a class="btn btn-icon" @click="jump(4,tempData.room.maintainer.id)">@</a></span>
-                                <a class="btn btn-icon" @click="onTapAddWorker(3)">+</a>
-                                <a v-if="tempData.room.maintainer" class="btn btn-icon" @click="onTapRemoveWorker(3)">-</a>
-                            </b></div>
+                            <div class="index-cell left">
+                                <b>管理员:
+                                    <span v-if="tempData.room.manager">
+                                        <a class="orange" @click="jump(4,tempData.room.manager.id)">{{tempData.room.manager.name}}</a>
+                                        <i>({{tempData.room.manager.com}})</i>
+                                    </span>
+                                    <a class="btn btn-icon" @click="onTapAddWorker(2)">+</a>
+                                    <a v-if="tempData.room.manager" class="btn btn-icon" @click="onTapRemoveWorker(2)">-</a>
+                                </b>
+                            </div>
+                            <div class="index-cell">
+                                <b>维护工人:
+                                    <span v-if="tempData.room.maintainer">
+                                        <a class="orange" @click="jump(4,tempData.room.maintainer.id)">{{tempData.room.maintainer.name}}</a>
+                                        <i>({{tempData.room.maintainer.str}})</i>
+                                    </span>
+                                    <a class="btn btn-icon" @click="onTapAddWorker(3)">+</a>
+                                    <a v-if="tempData.room.maintainer" class="btn btn-icon" @click="onTapRemoveWorker(3)">-</a>
+                                </b>
+                            </div>
                             <!-- <div class="index-cell left"><b>老化: {{percent(tempData.room.durab,config.max_durab)}}%</b></div> -->
-                            <div class="index-cell pct-wrap left"><b>老化:</b><div class="pct"><nut-progress :text-inside="true" :percentage="percent(tempData.room.durab,config.max_durab)"></nut-progress></div></div>
-                            <div class="index-cell" v-if="tempData.room.level>=2"><b>门面<span v-if="tempData.room.basicImage>0">（基础门面+{{tempData.room.basicImage}}）</span>:
-                                <span v-if="tempData.room.imageAgent">{{tempData.room.imageAgent.name}} <a class="btn btn-icon" @click="jump(4,tempData.room.imageAgent.id)">@</a></span>
+                            <div class="index-cell" v-if="tempData.room.level>=2">
+                                <b>门面 <span v-if="tempData.room.basicImage>0">(基础门面+{{tempData.room.basicImage}})</span>:
+                                <span v-if="tempData.room.imageAgent">
+                                    <a class="orange" @click="jump(4,tempData.room.imageAgent.id)">{{tempData.room.imageAgent.name}}</a>
+                                    <i>({{tempData.room.imageAgent.img}})</i>
+                                </span>
                                 <a class="btn btn-icon" @click="onTapAddWorker(4)">+</a>
                                 <a v-if="tempData.room.imageAgent" class="btn btn-icon" @click="onTapRemoveWorker(4)">-</a>
                             </b></div>
-                            <div class="index-cell left" v-if="tempData.room.level>=3"><b>自动化工人:
-                                <span v-if="tempData.room.autoWorker">{{tempData.room.autoWorker.name}} <a class="btn btn-icon" @click="jump(4,tempData.room.autoWorker.id)">@</a></span>
+                            <div class="index-cell" v-if="tempData.room.level>=3">
+                                <b>自动化工人:
+                                <span v-if="tempData.room.autoWorker">
+                                    <a class="orange" @click="jump(4,tempData.room.autoWorker.id)">{{tempData.room.autoWorker.name}}</a>
+                                    <i>({{tempData.room.autoWorker.int}})</i>
+                                </span>
                                 <a class="btn btn-icon" @click="onTapAddWorker(5)">+</a>
                                 <a v-if="tempData.room.autoWorker" class="btn btn-icon" @click="onTapRemoveWorker(5)">-</a>
                             </b></div>
                             <div></div>
-                            <div class="index-cell pct-wrap left" v-if="tempData.room.level>=3"><b>自动化:</b><div class="pct"><nut-progress :text-inside="true" :percentage="percent(tempData.room.auto,config.max_auto)"></nut-progress></div></div>
+                            <div class="index-cell pct-wrap">
+                                <b class="lab-name">协调:</b>
+                                <div class="pct">
+                                    <nut-progress :text-inside="true" :percentage="tempData.room.balance"></nut-progress>
+                                </div>
+                            </div>
+                            <div class="index-cell pct-wrap">
+                                <b class="lab-name">老化:</b>
+                                <div class="pct">
+                                    <nut-progress :text-inside="true" :percentage="percent(tempData.room.durab,config.max_durab)"></nut-progress>
+                                </div>
+                            </div>
+                            <div class="index-cell pct-wrap" v-if="tempData.room.level>=3">
+                                <b class="lab-name">自动化:</b>
+                                <div class="pct">
+                                    <nut-progress :text-inside="true" :percentage="percent(tempData.room.auto,config.max_auto)"></nut-progress>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     <div class="row">
@@ -85,7 +128,10 @@
                         <div class="index">
                             <div class="index-cell">
                                 <b>操作员:
-                                    <span v-if="tempData.terminal.operator&&tempData.terminal.operator.id">{{tempData.terminal.operator.name}} <a class="btn btn-icon" @click="jump(4,tempData.terminal.operator.id)">@</a></span>
+                                    <span v-if="tempData.terminal.operator&&tempData.terminal.operator.id">
+                                        <a class="orange" @click="jump(4,tempData.terminal.operator.id)">{{tempData.terminal.operator.name}}</a>
+                                        <i v-if="tempData.terminal.operator[['str','int','com','img'][tempData.terminal.operator.job-1]]">({{tempData.terminal.operator[['str','int','com','img'][tempData.terminal.operator.job-1]]}})</i>
+                                    </span>
                                     <a class="btn btn-icon" @click="onTapAddWorker(6)">+</a>
                                     <a v-if="tempData.terminal.operator&&tempData.terminal.operator.id" class="btn btn-icon" @click="onTapRemoveWorker(6)">-</a>
                                 </b>
@@ -119,8 +165,8 @@
                             <a class="btn" :class="{'select':filter==5&&searchingWorkerID==0}" @click="onTapWorkerListFilter(5)">终端维护</a><br/>
                             <a class="btn" :class="{'select':filter==6&&searchingWorkerID==0}" @click="onTapWorkerListFilter(6)">房间搜索</a>
                             <a class="btn" :class="{'select':filter==7&&searchingWorkerID==0}" @click="onTapWorkerListFilter(7)">人力搜索</a>
-                            <a class="btn" :class="{'select':filter==9&&searchingWorkerID==0}" @click="onTapWorkerListFilter(9)">外交员</a>
-                            <a class="btn" :class="{'select':filter==10&&searchingWorkerID==0}" @click="onTapWorkerListFilter(10)">间谍</a>
+                            <a v-if="game.factoryList[0].canViewRelation" class="btn" :class="{'select':filter==9&&searchingWorkerID==0}" @click="onTapWorkerListFilter(9)">外交员</a>
+                            <a v-if="game.factoryList[0].canViewRelation" class="btn" :class="{'select':filter==10&&searchingWorkerID==0}" @click="onTapWorkerListFilter(10)">间谍</a>
                         </div>
                     </div>
                     <div class="row">
@@ -180,10 +226,17 @@
                             <div class="index-cell left"><b>形象: {{tempData.factory.image}}</b></div>
                             <div class="index-cell left"><b>投资: {{tempData.relation.invest}} $</b></div>
                             <div class="index-cell left pct-wrap"><b>支持率:</b>&nbsp;<div class="pct"><nut-progress :text-inside="true" :percentage="percent(tempData.relation.support,config.max_support)"></nut-progress></div></div>
-                            <div class="index-cell"><b>外交员: <span v-if="tempData.joint">{{tempData.joint.name}} <a class="btn btn-icon" @click="jump(4,tempData.joint.id)" v-if="tempData.joint.name">@</a></span>
-                                <a class="btn btn-icon" @click="onTapAddWorker(9)">+</a>
-                                <a v-if="tempData.joint&&tempData.joint.name" class="btn btn-icon" @click="onTapRemoveWorker(9)">-</a>
-                            </b></div>
+                            <div class="index-cell">
+                                <b>
+                                    外交员:
+                                    <span v-if="tempData.joint&&tempData.joint.name">
+                                        <a class="orange" @click="jump(4,tempData.joint.id)" v-if="tempData.joint.name">{{tempData.joint.name}}</a>
+                                        <i>({{tempData.joint.com}})</i>
+                                    </span>
+                                    <a class="btn btn-icon" @click="onTapAddWorker(9)">+</a>
+                                    <a v-if="tempData.joint&&tempData.joint.name" class="btn btn-icon" @click="onTapRemoveWorker(9)">-</a>
+                                </b>
+                            </div>
 
                             <div class="row-column">
                                 <List title="间谍列表" ref="spyList" :simple="true" option="+" :largeOption="true" :data="tempData.mySpyList" :columns="WORKER_LIST_8_COLUMN" @onDoubleTap="onDoubleTapWorker" @onTapOption="onTapAddWorker(10)" />
@@ -798,15 +851,15 @@
                 </div>
                 <div class="row">
                     <h3><label>经济打压</label></h3>
-                    <p>消耗 10000 $ 的资金，以减少此工厂的资金；<br/>你厂形象越高与对方工厂形象，打压效果越好，但最多为 3 倍；<br/>执行打压后，你厂的形象将根据此工厂的形象而减少。</p>
+                    <p>小规模的经济打压，消耗 10000 $ 的资金，以损耗此工厂的资金；<br/>你厂形象越高于对方工厂形象，损耗程度越高，但最多损耗 30000 $；<br/>执行打压后，你厂的形象将根据此工厂的形象而减少。</p>
                 </div>
                 <div class="row">
                     <h3><label>经济制裁</label></h3>
-                    <p>消耗指定额度资金，以减少此工厂的资金；<br/>效果为投入金额的一半，投入金额没有上限；<br/>执行制裁后，你厂的形象将下降一半；若你厂形象为负，则你厂形象将下降一倍。</p>
+                    <p>大规模的经济打压，消耗指定额度资金，以减少此工厂的资金；<br/>效果为投入金额的一半<br/>投入金额没有上限；<br/>执行制裁后，你厂的形象将下降一半；若你厂形象为负，你厂形象将下降一倍。</p>
                 </div>
                 <div class="row">
                     <h3><label>偷取和收购</label></h3>
-                    <p>将此工厂的资源变为自己的资源；<br/>偷取将消耗支持率和你厂形象；<br/>只有资金量为负的工厂才能被收购。</p>
+                    <p>将此工厂的资源变为自己的资源；<br/>偷取将消耗大量支持率和你厂形象；<br/>只有资金量为负的工厂才能被收购。</p>
                 </div>
             </div>
             <div class="rule-board" v-show="state==8">
@@ -983,11 +1036,11 @@ export default {
                 {name:'tradeLevel',title:'交易Lv',isLevel:true,width:'1.2rem',format:v=>`LV.${v}`,},
                 {name:'durab',title:'老化',width:'.7rem',isDurab:true,format:v=>`${percent(v,CONFIG.max_durab)}%`,},
                 {name:'workerName',title:'工人',width:'1rem',format:v=>`${v||'-'}`},
-                {name:'job',title:'运行',width:'1rem',format:v=>`${v||'-'}`},
-                {name:'workerStr',title:'体力',width:'.9rem',format:v=>`${v||'-'}`},
-                {name:'workerInt',title:'智力',width:'.9rem',format:v=>`${v||'-'}`},
-                {name:'workerCom',title:'交流',width:'.9rem',format:v=>`${v||'-'}`},
-                {name:'workerImg',title:'形象',width:'.9rem',format:v=>`${v||'-'}`},
+                {name:'jobName',title:'运行',width:'1rem',format:v=>`${v||'-'}`},
+                {name:'workerStr',title:'体力',width:'.9rem',showAbi:true,format:v=>`${v||'-'}`},
+                {name:'workerInt',title:'智力',width:'.9rem',showAbi:true,format:v=>`${v||'-'}`},
+                {name:'workerCom',title:'交流',width:'.9rem',showAbi:true,format:v=>`${v||'-'}`},
+                {name:'workerImg',title:'形象',width:'.9rem',showAbi:true,format:v=>`${v||'-'}`},
             ],
             WORKER_LIST_COLUMN: [ // 弹窗人员列表
                 {name:'id',title:'ID',width:'8%',},
@@ -2101,9 +2154,10 @@ export default {
             worker.fname = '';
             this.releaseWorker(worker);
             this.game.factoryList[0].money += this.tempData.myWorker.sell;
+            this.filter = 1;
+            this.asynAllPages();
             this.showWorkerPop = false;
             this.showConfirmSellWorker = false;
-            this.asynAllPages();
         },
         onTapJob(index){ // 点击【职能】按钮
             let tid = (this.tempData.terminal||{}).id,
@@ -2159,6 +2213,7 @@ export default {
         onTapRelease(){ // 点击【解除职务】按钮
             let worker = getListByID(this.tempData.myWorker.id,'id',this.game.workerList)[0];
             this.releaseWorker(worker,1);
+            this.filter = 1;
             this.asynAllPages();
             this.showWorkerPop = false;
         },
@@ -2451,7 +2506,7 @@ export default {
             // 变更工厂数据
             let roomList = getListByID(this.tempData.factory.id,'fid',this.game.roomList),
                 workerList = getListByID(this.tempData.factory.id,'fid',this.game.workerList),
-                myWorkerList = getListByID(this.game.factoryList.id,'id',this.game.workerList),
+                myWorkerList = getListByID(this.game.factoryList[0].id,'fid',this.game.workerList),
                 myJoint = getMatchList(myWorkerList,[['job',12],['tfid',this.tempData.factory.id]])[0],
                 mySpyList = getMatchList(myWorkerList,[['job',13],['tfid',this.tempData.factory.id]]),
                 imageIncrease = Math.round(this.tempData.factory.sell*.085);
@@ -2893,7 +2948,8 @@ export default {
                     terminal.workerInt = myWorker.int;
                     terminal.workerCom = myWorker.com;
                     terminal.workerImg = myWorker.img;
-                    terminal.job = ['发电','挖矿','交易','维护'][myWorker.job-1]||'-';
+                    terminal.jobName = ['发电','挖矿','交易','维护'][myWorker.job-1]||'-';
+                    terminal.job = myWorker.job;
                 }
                 if(terminal.powerLevel<=2){
                     powerLevelUpCost += CONFIG.power_levelup_cost[terminal.powerLevel-1];
@@ -3250,9 +3306,12 @@ export default {
         margin-left: .12rem;
     }
     .index-cell b{
-        width: 100%;
         padding-left: .1rem;
         border-left: .06rem solid #ff4f18;
+    }
+    .index-cell .lab-name{
+        display: inline-block;
+        width: 1rem;
     }
     .index .left{
         float: left;

@@ -48,10 +48,10 @@ module.exports = {
         max_power_level: 3, // 终端最高供电等级
         max_dig_level: 3, // 终端最高挖矿等级
         max_trade_level: 3, // 终端最高交易等级
-        room_levelup_cost: [10000,15000], // 房间升级费用
-        power_levelup_cost: [3500,4500], // 供电等级升级费用
-        dig_levelup_cost: [3500,4500], // 挖矿等级升级费用
-        trade_levelup_cost: [3500,4500], // 交易等级升级费用
+        room_levelup_cost: [20000,30000], // 房间升级费用
+        power_levelup_cost: [3500,5000], // 供电等级升级费用
+        dig_levelup_cost: [3500,5000], // 挖矿等级升级费用
+        trade_levelup_cost: [3500,5000], // 交易等级升级费用
 		sell_factor: .5, // 贩卖系数
 		randmNewRoomDurabRange: [0,6000], // 新生成房间老化化随机范围
 		randmNewRoomAutoRange: [0,0], // 新生成房间自动化随机范围
