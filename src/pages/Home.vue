@@ -211,7 +211,7 @@
                         <h2 class="room-name">外交</h2>
                     </div>
                     <div class="row flex">
-                        <List title="世界工厂列表" ref="relationList" :showTip="tip3" :large="true" :data="tempData.relationList" :columns="RELATION_LIST_COLUMN" @onDoubleTap="onDoubleTapRelation" />
+                        <List title="世界工厂列表" remark="双击查看" ref="relationList" :showTip="tip3" :large="true" :data="tempData.relationList" :columns="RELATION_LIST_COLUMN" @onDoubleTap="onDoubleTapRelation" />
                     </div>
                 </div>
                 <!--工厂-->
@@ -1037,14 +1037,15 @@ export default {
                 {name:'durab',title:'老化',width:'.7rem',isDurab:true,format:v=>`${percent(v,CONFIG.max_durab)}%`,},
                 {name:'workerName',title:'工人',width:'1rem',format:v=>`${v||'-'}`},
                 {name:'jobName',title:'运行',width:'1rem',format:v=>`${v||'-'}`},
-                {name:'workerStr',title:'体力',width:'.9rem',showAbi:true,format:v=>`${v||'-'}`},
-                {name:'workerInt',title:'智力',width:'.9rem',showAbi:true,format:v=>`${v||'-'}`},
-                {name:'workerCom',title:'交流',width:'.9rem',showAbi:true,format:v=>`${v||'-'}`},
-                {name:'workerImg',title:'形象',width:'.9rem',showAbi:true,format:v=>`${v||'-'}`},
+                {name:'str',title:'体力',width:'.9rem',showAbi:true,format:v=>`${v||'-'}`},
+                {name:'int',title:'智力',width:'.9rem',showAbi:true,format:v=>`${v||'-'}`},
+                {name:'com',title:'交流',width:'.9rem',showAbi:true,format:v=>`${v||'-'}`},
+                {name:'img',title:'形象',width:'.9rem',showAbi:true,format:v=>`${v||'-'}`},
             ],
             WORKER_LIST_COLUMN: [ // 弹窗人员列表
                 {name:'id',title:'ID',width:'8%',},
                 {name:'name',title:'名字',width:'15%',},
+                // {name:'abi-chart',title:'能力图形',width:'24%',},
                 {name:'str',title:'体力',width:'8%',},
                 {name:'int',title:'智力',width:'8%',},
                 {name:'com',title:'交流',width:'8%',},
@@ -1394,7 +1395,7 @@ export default {
                 if(autoWorker)
                     _roomFreeWorkerList = removeFromList(autoWorker.id,'id',_roomFreeWorkerList);
             }
-            if(!omaintainer&&room.durab>=CONFIG.room.durab_threshold&&factory.money>0){
+            if(!omaintainer&&room.durab>=(CONFIG.room.durab_threshold-10)&&factory.money>0){
                 maintainer = bulbsort(_roomFreeWorkerList,'str')[0];
                 if(maintainer)
                     _roomFreeWorkerList = removeFromList(maintainer.id,'id',_roomFreeWorkerList);
@@ -1414,7 +1415,7 @@ export default {
                     worker = _roomFreeWorkerList[0];
                 }
                 if(worker&&!oworker){
-                    if(terminal.durab>=CONFIG.terminal.durab_threshold){ // 维护
+                    if(terminal.durab>=(CONFIG.terminal.durab_threshold-10)){ // 维护
                         worker.job = 4;
                     }
                     else{ // 发电|挖矿|交易
@@ -1651,12 +1652,12 @@ export default {
                 // 生成房间报表
                 roomLog = {
                     name: room.name,
-                    powerIncome: roomPowerIncome,
-                    moneyIncome: roomMoneyIncome,
-                    imageIncome: roomImageIncome,
-                    supporrtIncome: roomSupportIncome,
-                    powerConsume: roomPowerConsume,
-                    moneyConsume: roomMoneyConsume,
+                    powerIncome: Math.round(roomPowerIncome),
+                    moneyIncome: Math.round(roomMoneyIncome),
+                    imageIncome: Math.round(roomImageIncome),
+                    supporrtIncome: Math.round(roomSupportIncome),
+                    powerConsume: Math.round(roomPowerConsume),
+                    moneyConsume: Math.round(roomMoneyConsume),
                 }
                 logRoomList.push(roomLog);
             }
@@ -1778,7 +1779,7 @@ export default {
                     if(!youFactory.imageDamaged){
                         youImageIncome = r(Math.floor(youImageIncomeImpact/4),youImageIncomeImpact);
                     }
-                    youMoneyIncome += Math.floor(youImageIncome*1.2);
+                    youMoneyIncome += Math.round(youImageIncome*1.2);
                     if(relation.invest>0){
                         let supportPct = relation.support/CONFIG.max_support,
                             investIncome = Math.round(youMoneyIncome*supportPct+relation.invest*supportPct*.006);
@@ -2944,10 +2945,10 @@ export default {
                     myWorker = {...worker};
                 if(myWorker){
                     terminal.workerName = myWorker.name;
-                    terminal.workerStr = myWorker.str;
-                    terminal.workerInt = myWorker.int;
-                    terminal.workerCom = myWorker.com;
-                    terminal.workerImg = myWorker.img;
+                    terminal.str = myWorker.str;
+                    terminal.int = myWorker.int;
+                    terminal.com = myWorker.com;
+                    terminal.img = myWorker.img;
                     terminal.jobName = ['发电','挖矿','交易','维护'][myWorker.job-1]||'-';
                     terminal.job = myWorker.job;
                 }

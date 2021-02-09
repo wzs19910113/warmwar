@@ -13,7 +13,14 @@
             <div class="list" v-if="localData.length>0">
                 <a class="list-item" :class="{'select':item.select}" :data-id="item.id" v-for="(item,index) in localData" @click="onTapListItem($event)">
                     <a class="tip" v-if="index==0&&showTip">双击可查看</a>
-                    <div class="list-cell" :class="{'warm':(column.isDurab&&item[column.name]>=5000),'lv1':(column.isLevel&&item[column.name]==1),'lv2':(column.isLevel&&item[column.name]==2),'lv3':(column.isLevel&&item[column.name]==3),'abi-hl':((column.name=='workerStr'&&(item.job==1||item.job==4)||(column.name=='workerInt'&&item.job==2)||(column.name=='workerCom'&&item.job==3)))}" v-for="(column,index) in localColumns" v-if="column.width!=0" :style="{width:column.width}">{{column.format?column.format(item[column.name],item):item[column.name]}}</div>
+                    <div class="list-cell" :class="genClassName(column,item)" :style="genStyle(column,item)" v-for="(column,index) in localColumns" v-if="column.width!=0">
+                        <!-- <div class="abi-chart" v-if="column.name=='abi-chart'" v-for="abiName in ['str','int','com','img']">
+                            <div class="abi-bar-wrap">
+                                <div class="abi-bar-fill" :class="`abi-${abiName}`" :style="{width:`${item[abiName]}%`}"></div>
+                            </div>
+                        </div> -->
+                        {{column.format?column.format(item[column.name],item):item[column.name]}}
+                    </div>
                 </a>
             </div>
             <div class="list" v-else>
@@ -64,6 +71,27 @@ export default {
                     ...d,
                 }
             })
+        },
+        genClassName(column,item){
+            return {
+                'warm': column.isDurab&&item[column.name]>=5000,
+                'lv1': column.isLevel&&item[column.name]==1,
+                'lv2': column.isLevel&&item[column.name]==2,
+                'lv3': column.isLevel&&item[column.name]==3,
+                'abi-hl': (column.name=='str'&&(item.job==1||item.job==4||item.job==6)
+                            ||(column.name=='int'&&(item.job==2||item.job==5||item.job==13))
+                            ||(column.name=='com'&&(item.job==3||item.job==7||item.job==12))
+                            ||(column.name=='img'&&(item.job==8||item.job==11))),
+            }
+        },
+        genStyle(column,item){
+            let res = {
+                    'width': column.width,
+                }
+            // if(column.name=='str'||column.name=='int'||column.name=='com'||column.name=='img'){
+            //     res.fontSize = `${parseFloat(item[column.name]/100*.14+.2).toFixed(2)}rem`;
+            // }
+            return res;
         },
         onTapOption_(e){
             this.$emit('onTapOption');
@@ -182,6 +210,7 @@ export default {
         line-height: .6rem;
         display: inline-block;
         text-align: center;
+        vertical-align: middle;
     }
     .warm{
         color: red;
@@ -256,5 +285,33 @@ export default {
     .no-border .tip,
     .no-border .list{
         border: none;
+    }
+    .abi-chart{
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+        height: .15rem;
+    }
+    .abi-bar-wrap{
+        width: 80%;
+        height: 100%;
+        height: .09rem;
+        margin: .03rem 0;
+    }
+    .abi-bar-fill{
+        height: 100%;
+    }
+    .abi-str{
+        background-color: red;
+    }
+    .abi-int{
+        background-color: blue;
+    }
+    .abi-com{
+        background-color: orange;
+    }
+    .abi-img{
+        background-color: green;
     }
 </style>
