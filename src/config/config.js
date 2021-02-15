@@ -70,9 +70,7 @@ module.exports = {
 		buy_factory_support_threshold: 0, // 收购工厂支持率阈值
 		image_price_factor: .2, // 形象/价值系数
 
-		damage_money_cost: 10000, // 一次打压资金消耗
-		max_damage: 30000, // 一次打压最大伤害
-		min_damage: 20, // 一次打压最大伤害
+		damage_money_cost: 100000, // 一次形象破坏资金消耗
 
 		max_image_prop_money: 10000, // 形象宣传投入资金最大值
 		image_prop_factor: .002, // 形象宣传提升形象系数
@@ -85,7 +83,7 @@ module.exports = {
 			dig_power_consume_base: 40,
 			dig_power_consume_factor: 40,
 			trade_money_factor: .2,
-			trade_support_factor: .04,
+			trade_support_factor: .01,
 			trade_power_consume_base: 40,
 			trade_power_consume_factor: 40,
 			durab_threshold: 5000,

@@ -81,7 +81,12 @@ export default {
                 'abi-hl': (column.name=='str'&&(item.job==1||item.job==4||item.job==6)
                             ||(column.name=='int'&&(item.job==2||item.job==5||item.job==13))
                             ||(column.name=='com'&&(item.job==3||item.job==7||item.job==12))
-                            ||(column.name=='img'&&(item.job==8||item.job==11))),
+                            ||(column.name=='img'&&(item.job==8||item.job==11))
+                            ||(column.name=='str'&&item.job==10&&item.str>=item.int)
+                            ||(column.name=='int'&&item.job==10&&item.int>=item.str)
+                            ||(column.name=='com'&&item.job==9&&item.com>=item.img)
+                            ||(column.name=='img'&&item.job==9&&item.img>=item.com)
+                        ),
             }
         },
         genStyle(column,item){

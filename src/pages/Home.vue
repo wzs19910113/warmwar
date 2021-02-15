@@ -507,12 +507,12 @@
                     <a class="risk-item" @click="onTapInvest"><b>投资</b></a>
                 </div>
                 <div class="row btn" v-if="!tempData.factory.damaged">
-                    <a class="risk-item" @click="showConfirmDamage=true"><b>经济打压</b></a>
+                    <a class="risk-item" @click="showConfirmDamage=true"><b>形象破坏</b></a>
                 </div>
                 <div class="row btn" v-if="!tempData.factory.sanctioned">
-                    <a class="risk-item" @click="onTapSanction"><b>经济制裁</b></a>
+                    <a class="risk-item" @click="onTapSanction"><b>经济打压</b></a>
                 </div>
-                <div class="row btn" v-if="tempData.factory.money<=0">
+                <div class="row btn">
                     <a class="risk-item" @click="showConfirmBuyFactory=true"><b>收购</b></a>
                 </div>
             </div>
@@ -520,18 +520,18 @@
         <nut-popup v-model="showConfirmDamage">
             <div class="row room-board" v-if="tempData.factory">
                 <div class="row level">
-                    <a class="btn" @click="onTapConfirmDamage">对{{tempData.factory.name}}执行一次经济打压（{{config.damage_money_cost}} $）</a>
+                    <a class="btn" @click="onTapConfirmDamage">对{{tempData.factory.name}}执行一次形象破坏（{{config.damage_money_cost}} $）</a>
                 </div>
             </div>
         </nut-popup>
         <nut-popup v-model="showSanction">
             <div class="row room-board" v-if="tempData.factory">
                 <div class="row">
-                    <nut-textinput placeholder="输入制裁金额" v-model="tempData.sanctionMoney" />
+                    <nut-textinput placeholder="输入打压金额" v-model="tempData.sanctionMoney" />
                     <nut-numberkeyboard :visible="showKeyborad" v-model="tempData.sanctionMoney" maxlength="8" @close="showKeyborad=false"></nut-numberkeyboard>
                 </div>
                 <div class="row sell">
-                    <a class="risk-item" @click="onTapConfirmSanction">确认制裁</a>
+                    <a class="risk-item" @click="onTapConfirmSanction">确认打压</a>
                 </div>
             </div>
         </nut-popup>
@@ -626,8 +626,7 @@
                 <div class="row">
                     <h3><label>新手指导</label></h3>
                     <p>
-                        你是工厂的董事长。<br/>
-                        你的目的很简单：收购所有其他工厂，垄断整个行业。<br/>
+                        你是工厂的董事长。你的目的很简单：收购所有其他工厂，垄断整个行业。<br/>
                         收购工厂前你需要对其进行经济打压，这需要消耗你厂的「资金」和「工厂形象」，因此你必须先提高你厂的实力。<br/>
                     </p>
                 </div>
@@ -642,20 +641,16 @@
                 <div class="row">
                     <h3><label>扩大规模</label></h3>
                     <p>
-                        你需要更多的人员和房间，你可以在市场购买它们<br/><br/>
-                        人员和房间是不需要支付工资的，它们只是商品而已，但你得先派人去市场搜集一定数量的「搜索点数」才能找到新的商品<br/><br/>
-                        好的工厂形象能帮助你更快地找到新的人员<br/>
+                        你需要更多的人员和房间，你可以在市场购买它们。<br/><br/>
+                        人员和房间是不需要支付工资的，它们只是商品而已，但你得先派人去市场搜集一定数量的「搜索点数」才能找到新的商品。<br/><br/>
+                        好的工厂形象能帮助你更快地找到新的人员。<br/>
                     </p>
                 </div>
                 <div class="row">
                     <h3><label>外交</label></h3>
                     <p>
                         当游戏进入后期，你厂具备了一定实力，你可以对其他工厂进行外交。<br/><br/>
-                        投资其他工厂可以获得稳定的收益；<br/>
-                        如果想偷取其他工厂的资源，必须先提升你厂对目标工厂的支持率；<br/>
-                        如果想破坏其他工厂的形象，可以花重金派遣间谍，对其造成持续的形象损失；<br/>
-                        如果想破坏其他工厂的经济，可以花重金进行经济打压，但这会损耗你厂的形象，请谨慎使用；<br/><br/>
-                        把其他工厂搞到负债，你就可以直接收购它了。<br/>
+                        把其他工厂搞到负债，就可以直接收购它了。<br/>
                     </p>
                 </div>
             </div>
@@ -744,7 +739,7 @@
                     <p>当有终端工作时，房间会老化；<br/>老化值低于 50% 不会有任何影响；达到 50% 时，所有收益都会根据老化值按比例减少。</p>
                     <div class="sub-row">
                         <h3><label>维护工人</label></h3>
-                        <p>安排维护工人可以大幅降低房间老化，同时小幅降低每个终端的老化；<br/>维护不会消耗电力，但会消耗资金；<br/>维护的效果取决于维护工人的「体力」值。</p>
+                        <p>安排维护工人可以降低房间老化，同时小幅降低每个终端的老化；<br/>维护不会消耗电力，但会消耗资金；<br/>维护的效果取决于维护工人的「体力」值。</p>
                     </div>
                 </div>
                 <div class="row">
@@ -847,15 +842,15 @@
                 </div>
                 <div class="row">
                     <h3><label>投资</label></h3>
-                    <p>投资此工厂，可以获得稳定的收益；<br/>投资收益取决于此工厂的规模增量，以及你对此工厂的支持率。</p>
+                    <p>投资此工厂，可以获得稳定的收益；<br/>投资收益取决于此工厂的规模增量和形象，以及你对此工厂的支持率。</p>
+                </div>
+                <div class="row">
+                    <h3><label>形象破坏</label></h3>
+                    <p>消耗 100000 $ 资金让此工厂的形象减半；<br/>每十天可执行一次。</p>
                 </div>
                 <div class="row">
                     <h3><label>经济打压</label></h3>
-                    <p>小规模的经济打压，消耗 10000 $ 的资金，以损耗此工厂的资金；<br/>你厂形象越高于对方工厂形象，损耗程度越高，但最多损耗 30000 $；<br/>执行打压后，你厂的形象将根据此工厂的形象而减少。</p>
-                </div>
-                <div class="row">
-                    <h3><label>经济制裁</label></h3>
-                    <p>大规模的经济打压，消耗指定额度资金，以减少此工厂的资金；<br/>效果为投入金额的一半<br/>投入金额没有上限；<br/>执行制裁后，你厂的形象将下降一半；若你厂形象为负，你厂形象将下降一倍。</p>
+                    <p>消耗指定额度资金，以减少此工厂的资金；<br/>效果为投入金额的一半；<br/>执行打压后，你厂的形象将减少，减少量为此工厂的形象值；<br/>每十天可执行一次。</p>
                 </div>
                 <div class="row">
                     <h3><label>偷取和收购</label></h3>
@@ -1113,7 +1108,7 @@ export default {
     },
     mounted(){
         if(DEBUG){
-            window.GLOBAL = JSON.parse('{"game":{"factoryList":[{"id":4,"name":"和矿控股","money":260000,"image":2999,"hrp":0,"rrp":0},{"id":5,"name":"亚光集团","money":38478,"image":483},{"id":6,"name":"洲复传媒","money":8316,"image":25629}],"roomList":[{"id":5,"fid":4,"fname":"和矿控股","name":"新汇小区挖矿厂","power":500000,"durab":4999,"risk":2,"auto":0,"level":1,"type":2,"basicImage":15},{"id":6,"fid":5,"fname":"亚光集团","name":"星乐路通用房","type":0,"basicImage":0,"power":7615,"durab":8127,"risk":2,"auto":2948,"level":2},{"id":7,"fid":5,"fname":"亚光集团","name":"国惠园交易所","type":3,"basicImage":0,"power":1279,"durab":1292,"risk":2,"auto":3528,"level":1},{"id":8,"fid":5,"fname":"亚光集团","name":"漫宇大厦挖矿厂","type":2,"basicImage":0,"power":4325,"durab":1788,"risk":2,"auto":8668,"level":3},{"id":9,"fid":6,"fname":"洲复传媒","name":"柯牛路发电站","type":1,"basicImage":0,"power":230,"durab":4761,"risk":2,"auto":2589,"level":3},{"id":10,"fid":6,"fname":"洲复传媒","name":"凡财街发电站","type":1,"basicImage":0,"power":7099,"durab":4002,"risk":1,"auto":4416,"level":1},{"id":11,"fid":6,"fname":"洲复传媒","name":"亚金镇挖矿厂","type":2,"basicImage":0,"power":1818,"durab":3997,"risk":2,"auto":2625,"level":2}],"terminalList":[{"id":25,"fid":4,"rid":5,"durab":4999,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":26,"fid":4,"rid":5,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":27,"fid":4,"rid":5,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":28,"fid":4,"rid":5,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":29,"fid":4,"rid":5,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":30,"fid":4,"rid":5,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":31,"fid":5,"rid":6,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":32,"fid":5,"rid":6,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":33,"fid":5,"rid":6,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":34,"fid":5,"rid":6,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":35,"fid":5,"rid":6,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":36,"fid":5,"rid":6,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":37,"fid":5,"rid":6,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":38,"fid":5,"rid":6,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":39,"fid":5,"rid":7,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":40,"fid":5,"rid":7,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":41,"fid":5,"rid":7,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":42,"fid":5,"rid":7,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":43,"fid":5,"rid":7,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":44,"fid":5,"rid":7,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":45,"fid":5,"rid":8,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":46,"fid":5,"rid":8,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":47,"fid":5,"rid":8,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":48,"fid":5,"rid":8,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":49,"fid":5,"rid":8,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":50,"fid":5,"rid":8,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":51,"fid":5,"rid":8,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":52,"fid":5,"rid":8,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":53,"fid":5,"rid":8,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":54,"fid":5,"rid":8,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":55,"fid":6,"rid":9,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":56,"fid":6,"rid":9,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":57,"fid":6,"rid":9,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":58,"fid":6,"rid":9,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":59,"fid":6,"rid":9,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":60,"fid":6,"rid":9,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":61,"fid":6,"rid":9,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":62,"fid":6,"rid":9,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":63,"fid":6,"rid":9,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":64,"fid":6,"rid":9,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":65,"fid":6,"rid":10,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":66,"fid":6,"rid":10,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":67,"fid":6,"rid":10,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":68,"fid":6,"rid":10,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":69,"fid":6,"rid":10,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":70,"fid":6,"rid":10,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":71,"fid":6,"rid":11,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":72,"fid":6,"rid":11,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":73,"fid":6,"rid":11,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":74,"fid":6,"rid":11,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":75,"fid":6,"rid":11,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":76,"fid":6,"rid":11,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":77,"fid":6,"rid":11,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":78,"fid":6,"rid":11,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1}],"workerList":[{"id":14,"tid":0,"rid":0,"fid":4,"fname":"和矿控股","rname":"","tfname":"","tfid":0,"name":"王可","str":50,"int":50,"com":50,"img":94,"job":0,"boss":true},{"id":15,"fid":4,"fname":"和矿控股","rid":0,"rname":"","tid":0,"tfid":0,"ftname":"","name":"滑儿凝","str":5,"int":100,"com":5,"img":9,"job":0,"boss":false},{"id":16,"fid":4,"fname":"和矿控股","rid":0,"rname":"","tid":0,"tfid":0,"ftname":"","name":"孙昊智","str":50,"int":50,"com":50,"img":50,"job":0,"boss":false},{"id":17,"fid":5,"fname":"亚光集团","rid":6,"rname":"星乐路通用房","tid":0,"tfid":0,"ftname":"","name":"诸丘","str":27,"int":91,"com":58,"img":19,"job":0,"boss":true},{"id":18,"fid":4,"fname":"和矿控股","rid":0,"rname":"","tid":0,"tfid":0,"ftname":"","name":"周菱莲","str":50,"int":50,"com":50,"img":50,"job":0,"boss":false},{"id":19,"fid":5,"fname":"亚光集团","rid":6,"rname":"星乐路通用房","tid":0,"tfid":0,"ftname":"","name":"莫宛莫","str":87,"int":15,"com":68,"img":25,"job":0,"boss":false},{"id":20,"fid":5,"fname":"亚光集团","rid":6,"rname":"星乐路通用房","tid":0,"tfid":0,"ftname":"","name":"姚春风","str":15,"int":42,"com":18,"img":49,"job":0,"boss":false},{"id":21,"fid":5,"fname":"亚光集团","rid":7,"rname":"国惠园交易所","tid":0,"tfid":0,"ftname":"","name":"毛硕云","str":41,"int":27,"com":3,"img":34,"job":0,"boss":false},{"id":22,"fid":5,"fname":"亚光集团","rid":7,"rname":"国惠园交易所","tid":0,"tfid":0,"ftname":"","name":"蒋咏亦","str":10,"int":39,"com":4,"img":50,"job":0,"boss":false},{"id":23,"fid":5,"fname":"亚光集团","rid":7,"rname":"国惠园交易所","tid":0,"tfid":0,"ftname":"","name":"刘奕","str":8,"int":12,"com":42,"img":5,"job":0,"boss":false},{"id":24,"fid":5,"fname":"亚光集团","rid":7,"rname":"国惠园交易所","tid":0,"tfid":0,"ftname":"","name":"伏蕊养","str":49,"int":37,"com":50,"img":26,"job":0,"boss":false},{"id":25,"fid":5,"fname":"亚光集团","rid":7,"rname":"国惠园交易所","tid":0,"tfid":0,"ftname":"","name":"王语安","str":15,"int":6,"com":12,"img":62,"job":0,"boss":false},{"id":26,"fid":5,"fname":"亚光集团","rid":8,"rname":"漫宇大厦挖矿厂","tid":0,"tfid":0,"ftname":"","name":"陈藩满","str":48,"int":11,"com":4,"img":59,"job":0,"boss":false},{"id":27,"fid":5,"fname":"亚光集团","rid":8,"rname":"漫宇大厦挖矿厂","tid":0,"tfid":0,"ftname":"","name":"廖蕾","str":11,"int":33,"com":33,"img":59,"job":0,"boss":false},{"id":28,"fid":5,"fname":"亚光集团","rid":8,"rname":"漫宇大厦挖矿厂","tid":0,"tfid":0,"ftname":"","name":"陈衷意","str":12,"int":33,"com":17,"img":2,"job":0,"boss":false},{"id":29,"fid":5,"fname":"亚光集团","rid":8,"rname":"漫宇大厦挖矿厂","tid":0,"tfid":0,"ftname":"","name":"邓美菅","str":20,"int":68,"com":24,"img":12,"job":0,"boss":false},{"id":30,"fid":5,"fname":"亚光集团","rid":8,"rname":"漫宇大厦挖矿厂","tid":0,"tfid":0,"ftname":"","name":"周璇","str":82,"int":2,"com":24,"img":49,"job":0,"boss":false},{"id":31,"fid":5,"fname":"亚光集团","rid":8,"rname":"漫宇大厦挖矿厂","tid":0,"tfid":0,"ftname":"","name":"裴彤敏","str":6,"int":12,"com":22,"img":43,"job":0,"boss":false},{"id":32,"fid":5,"fname":"亚光集团","rid":8,"rname":"漫宇大厦挖矿厂","tid":0,"tfid":0,"ftname":"","name":"欧阳水慧","str":3,"int":48,"com":81,"img":25,"job":0,"boss":false},{"id":33,"fid":6,"fname":"洲复传媒","rid":9,"rname":"柯牛路发电站","tid":0,"tfid":0,"ftname":"","name":"刘才城","str":69,"int":66,"com":76,"img":36,"job":0,"boss":true},{"id":34,"fid":6,"fname":"洲复传媒","rid":9,"rname":"柯牛路发电站","tid":0,"tfid":0,"ftname":"","name":"顾悦蕊","str":22,"int":60,"com":48,"img":5,"job":0,"boss":false},{"id":35,"fid":6,"fname":"洲复传媒","rid":9,"rname":"柯牛路发电站","tid":0,"tfid":0,"ftname":"","name":"祝闻","str":25,"int":73,"com":64,"img":11,"job":0,"boss":false},{"id":36,"fid":6,"fname":"洲复传媒","rid":9,"rname":"柯牛路发电站","tid":0,"tfid":0,"ftname":"","name":"汲佘慕","str":6,"int":40,"com":31,"img":5,"job":0,"boss":false},{"id":37,"fid":6,"fname":"洲复传媒","rid":9,"rname":"柯牛路发电站","tid":0,"tfid":0,"ftname":"","name":"房闾","str":21,"int":44,"com":44,"img":1,"job":0,"boss":false},{"id":38,"fid":6,"fname":"洲复传媒","rid":9,"rname":"柯牛路发电站","tid":0,"tfid":0,"ftname":"","name":"刘兰","str":44,"int":8,"com":14,"img":57,"job":0,"boss":false},{"id":39,"fid":6,"fname":"洲复传媒","rid":9,"rname":"柯牛路发电站","tid":0,"tfid":0,"ftname":"","name":"管涵龙","str":89,"int":32,"com":67,"img":35,"job":0,"boss":false},{"id":40,"fid":6,"fname":"洲复传媒","rid":9,"rname":"柯牛路发电站","tid":0,"tfid":0,"ftname":"","name":"江露盼","str":26,"int":36,"com":15,"img":62,"job":0,"boss":false},{"id":41,"fid":6,"fname":"洲复传媒","rid":10,"rname":"凡财街发电站","tid":0,"tfid":0,"ftname":"","name":"陈蕴","str":30,"int":48,"com":40,"img":29,"job":0,"boss":false},{"id":42,"fid":6,"fname":"洲复传媒","rid":10,"rname":"凡财街发电站","tid":0,"tfid":0,"ftname":"","name":"周叶琦","str":9,"int":11,"com":18,"img":48,"job":0,"boss":false},{"id":43,"fid":6,"fname":"洲复传媒","rid":10,"rname":"凡财街发电站","tid":0,"tfid":0,"ftname":"","name":"陈尔","str":59,"int":14,"com":36,"img":37,"job":0,"boss":false},{"id":44,"fid":6,"fname":"洲复传媒","rid":10,"rname":"凡财街发电站","tid":0,"tfid":0,"ftname":"","name":"江央焦","str":49,"int":50,"com":33,"img":5,"job":0,"boss":false},{"id":45,"fid":6,"fname":"洲复传媒","rid":11,"rname":"亚金镇挖矿厂","tid":0,"tfid":0,"ftname":"","name":"陈越优","str":94,"int":54,"com":86,"img":64,"job":0,"boss":false},{"id":46,"fid":6,"fname":"洲复传媒","rid":11,"rname":"亚金镇挖矿厂","tid":0,"tfid":0,"ftname":"","name":"李泽瑶","str":88,"int":33,"com":11,"img":1,"job":0,"boss":false},{"id":47,"fid":6,"fname":"洲复传媒","rid":11,"rname":"亚金镇挖矿厂","tid":0,"tfid":0,"ftname":"","name":"李懿淑","str":79,"int":29,"com":41,"img":15,"job":0,"boss":false},{"id":48,"fid":6,"fname":"洲复传媒","rid":11,"rname":"亚金镇挖矿厂","tid":0,"tfid":0,"ftname":"","name":"廖海闻","str":59,"int":88,"com":46,"img":34,"job":0,"boss":false},{"id":49,"fid":6,"fname":"洲复传媒","rid":11,"rname":"亚金镇挖矿厂","tid":0,"tfid":0,"ftname":"","name":"宦吉竹","str":23,"int":48,"com":32,"img":47,"job":0,"boss":false},{"id":50,"fid":6,"fname":"洲复传媒","rid":11,"rname":"亚金镇挖矿厂","tid":0,"tfid":0,"ftname":"","name":"龙乐井","str":46,"int":36,"com":31,"img":11,"job":0,"boss":false},{"id":51,"fid":6,"fname":"洲复传媒","rid":11,"rname":"亚金镇挖矿厂","tid":0,"tfid":0,"ftname":"","name":"张明红","str":95,"int":53,"com":25,"img":15,"job":0,"boss":false}],"relationList":[{"id":"10","from":4,"fromName":"和矿控股","to":5,"toName":"亚光集团","invest":0,"support":0,"jointID":0,"jointName":"","spyID":0,"spyName":""},{"id":"20","from":4,"fromName":"和矿控股","to":6,"toName":"洲复传媒","invest":0,"support":0,"jointID":0,"jointName":"","spyID":0,"spyName":""},{"id":"01","from":5,"fromName":"亚光集团","to":4,"toName":"和矿控股","invest":0,"support":0,"jointID":0,"jointName":"","spyID":0,"spyName":""},{"id":"21","from":5,"fromName":"亚光集团","to":6,"toName":"洲复传媒","invest":0,"support":0},{"id":"02","from":6,"fromName":"洲复传媒","to":4,"toName":"和矿控股","invest":0,"support":0},{"id":"12","from":6,"fromName":"洲复传媒","to":5,"toName":"亚光集团","invest":0,"support":0}],"logList":[]},"accFactoryID":7,"accRoomID":12,"accTerminalID":79,"accWorkerID":52,"day":1}');
+            window.GLOBAL = JSON.parse('{"game":{"factoryList":[{"id":4,"name":"和矿控股","money":260000,"image":8000,"hrp":15000,"rrp":10000,"canViewRelation":true},{"id":5,"name":"亚光集团","money":38478,"image":483},{"id":6,"name":"洲复传媒","money":8316,"image":25629}],"roomList":[{"id":5,"fid":4,"fname":"和矿控股","name":"新汇小区挖矿厂","power":500000,"durab":4999,"risk":2,"auto":0,"level":1,"type":2,"basicImage":15},{"id":6,"fid":5,"fname":"亚光集团","name":"星乐路通用房","type":0,"basicImage":0,"power":7615,"durab":8127,"risk":2,"auto":2948,"level":2},{"id":7,"fid":5,"fname":"亚光集团","name":"国惠园交易所","type":3,"basicImage":0,"power":1279,"durab":1292,"risk":2,"auto":3528,"level":1},{"id":8,"fid":5,"fname":"亚光集团","name":"漫宇大厦挖矿厂","type":2,"basicImage":0,"power":4325,"durab":1788,"risk":2,"auto":8668,"level":3},{"id":9,"fid":6,"fname":"洲复传媒","name":"柯牛路发电站","type":1,"basicImage":0,"power":230,"durab":4761,"risk":2,"auto":2589,"level":3},{"id":10,"fid":6,"fname":"洲复传媒","name":"凡财街发电站","type":1,"basicImage":0,"power":7099,"durab":4002,"risk":1,"auto":4416,"level":1},{"id":11,"fid":6,"fname":"洲复传媒","name":"亚金镇挖矿厂","type":2,"basicImage":0,"power":1818,"durab":3997,"risk":2,"auto":2625,"level":2}],"terminalList":[{"id":25,"fid":4,"rid":5,"durab":4999,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":26,"fid":4,"rid":5,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":27,"fid":4,"rid":5,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":28,"fid":4,"rid":5,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":29,"fid":4,"rid":5,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":30,"fid":4,"rid":5,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":31,"fid":5,"rid":6,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":32,"fid":5,"rid":6,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":33,"fid":5,"rid":6,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":34,"fid":5,"rid":6,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":35,"fid":5,"rid":6,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":36,"fid":5,"rid":6,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":37,"fid":5,"rid":6,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":38,"fid":5,"rid":6,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":39,"fid":5,"rid":7,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":40,"fid":5,"rid":7,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":41,"fid":5,"rid":7,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":42,"fid":5,"rid":7,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":43,"fid":5,"rid":7,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":44,"fid":5,"rid":7,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":45,"fid":5,"rid":8,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":46,"fid":5,"rid":8,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":47,"fid":5,"rid":8,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":48,"fid":5,"rid":8,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":49,"fid":5,"rid":8,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":50,"fid":5,"rid":8,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":51,"fid":5,"rid":8,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":52,"fid":5,"rid":8,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":53,"fid":5,"rid":8,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":54,"fid":5,"rid":8,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":55,"fid":6,"rid":9,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":56,"fid":6,"rid":9,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":57,"fid":6,"rid":9,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":58,"fid":6,"rid":9,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":59,"fid":6,"rid":9,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":60,"fid":6,"rid":9,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":61,"fid":6,"rid":9,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":62,"fid":6,"rid":9,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":63,"fid":6,"rid":9,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":64,"fid":6,"rid":9,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":65,"fid":6,"rid":10,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":66,"fid":6,"rid":10,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":67,"fid":6,"rid":10,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":68,"fid":6,"rid":10,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":69,"fid":6,"rid":10,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":70,"fid":6,"rid":10,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":71,"fid":6,"rid":11,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":72,"fid":6,"rid":11,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":73,"fid":6,"rid":11,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":74,"fid":6,"rid":11,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":75,"fid":6,"rid":11,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":76,"fid":6,"rid":11,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":77,"fid":6,"rid":11,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":78,"fid":6,"rid":11,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1}],"workerList":[{"id":14,"tid":0,"rid":0,"fid":4,"fname":"和矿控股","rname":"","tfname":"","tfid":0,"name":"王可","str":49,"int":50,"com":51,"img":94,"job":0,"boss":true},{"id":15,"fid":4,"fname":"和矿控股","rid":0,"rname":"","tid":0,"tfid":0,"ftname":"","name":"滑儿凝","str":5,"int":100,"com":90,"img":25,"job":0,"boss":false},{"id":16,"fid":4,"fname":"和矿控股","rid":0,"rname":"","tid":0,"tfid":0,"ftname":"","name":"孙昊智","str":96,"int":38,"com":10,"img":20,"job":0,"boss":false},{"id":17,"fid":5,"fname":"亚光集团","rid":6,"rname":"星乐路通用房","tid":0,"tfid":0,"ftname":"","name":"诸丘","str":27,"int":91,"com":58,"img":19,"job":0,"boss":true},{"id":18,"fid":4,"fname":"和矿控股","rid":0,"rname":"","tid":0,"tfid":0,"ftname":"","name":"周菱莲","str":50,"int":50,"com":50,"img":50,"job":0,"boss":false},{"id":19,"fid":5,"fname":"亚光集团","rid":6,"rname":"星乐路通用房","tid":0,"tfid":0,"ftname":"","name":"莫宛莫","str":87,"int":15,"com":68,"img":25,"job":0,"boss":false},{"id":20,"fid":5,"fname":"亚光集团","rid":6,"rname":"星乐路通用房","tid":0,"tfid":0,"ftname":"","name":"姚春风","str":15,"int":42,"com":18,"img":49,"job":0,"boss":false},{"id":21,"fid":5,"fname":"亚光集团","rid":7,"rname":"国惠园交易所","tid":0,"tfid":0,"ftname":"","name":"毛硕云","str":41,"int":27,"com":3,"img":34,"job":0,"boss":false},{"id":22,"fid":5,"fname":"亚光集团","rid":7,"rname":"国惠园交易所","tid":0,"tfid":0,"ftname":"","name":"蒋咏亦","str":10,"int":39,"com":4,"img":50,"job":0,"boss":false},{"id":23,"fid":5,"fname":"亚光集团","rid":7,"rname":"国惠园交易所","tid":0,"tfid":0,"ftname":"","name":"刘奕","str":8,"int":12,"com":42,"img":5,"job":0,"boss":false},{"id":24,"fid":5,"fname":"亚光集团","rid":7,"rname":"国惠园交易所","tid":0,"tfid":0,"ftname":"","name":"伏蕊养","str":49,"int":37,"com":50,"img":26,"job":0,"boss":false},{"id":25,"fid":5,"fname":"亚光集团","rid":7,"rname":"国惠园交易所","tid":0,"tfid":0,"ftname":"","name":"王语安","str":15,"int":6,"com":12,"img":62,"job":0,"boss":false},{"id":26,"fid":5,"fname":"亚光集团","rid":8,"rname":"漫宇大厦挖矿厂","tid":0,"tfid":0,"ftname":"","name":"陈藩满","str":48,"int":11,"com":4,"img":59,"job":0,"boss":false},{"id":27,"fid":5,"fname":"亚光集团","rid":8,"rname":"漫宇大厦挖矿厂","tid":0,"tfid":0,"ftname":"","name":"廖蕾","str":11,"int":33,"com":33,"img":59,"job":0,"boss":false},{"id":28,"fid":5,"fname":"亚光集团","rid":8,"rname":"漫宇大厦挖矿厂","tid":0,"tfid":0,"ftname":"","name":"陈衷意","str":12,"int":33,"com":17,"img":2,"job":0,"boss":false},{"id":29,"fid":5,"fname":"亚光集团","rid":8,"rname":"漫宇大厦挖矿厂","tid":0,"tfid":0,"ftname":"","name":"邓美菅","str":20,"int":68,"com":24,"img":12,"job":0,"boss":false},{"id":30,"fid":5,"fname":"亚光集团","rid":8,"rname":"漫宇大厦挖矿厂","tid":0,"tfid":0,"ftname":"","name":"周璇","str":82,"int":2,"com":24,"img":49,"job":0,"boss":false},{"id":31,"fid":5,"fname":"亚光集团","rid":8,"rname":"漫宇大厦挖矿厂","tid":0,"tfid":0,"ftname":"","name":"裴彤敏","str":6,"int":12,"com":22,"img":43,"job":0,"boss":false},{"id":32,"fid":5,"fname":"亚光集团","rid":8,"rname":"漫宇大厦挖矿厂","tid":0,"tfid":0,"ftname":"","name":"欧阳水慧","str":3,"int":48,"com":81,"img":25,"job":0,"boss":false},{"id":33,"fid":6,"fname":"洲复传媒","rid":9,"rname":"柯牛路发电站","tid":0,"tfid":0,"ftname":"","name":"刘才城","str":69,"int":66,"com":76,"img":36,"job":0,"boss":true},{"id":34,"fid":6,"fname":"洲复传媒","rid":9,"rname":"柯牛路发电站","tid":0,"tfid":0,"ftname":"","name":"顾悦蕊","str":22,"int":60,"com":48,"img":5,"job":0,"boss":false},{"id":35,"fid":6,"fname":"洲复传媒","rid":9,"rname":"柯牛路发电站","tid":0,"tfid":0,"ftname":"","name":"祝闻","str":25,"int":73,"com":64,"img":11,"job":0,"boss":false},{"id":36,"fid":6,"fname":"洲复传媒","rid":9,"rname":"柯牛路发电站","tid":0,"tfid":0,"ftname":"","name":"汲佘慕","str":6,"int":40,"com":31,"img":5,"job":0,"boss":false},{"id":37,"fid":6,"fname":"洲复传媒","rid":9,"rname":"柯牛路发电站","tid":0,"tfid":0,"ftname":"","name":"房闾","str":21,"int":44,"com":44,"img":1,"job":0,"boss":false},{"id":38,"fid":6,"fname":"洲复传媒","rid":9,"rname":"柯牛路发电站","tid":0,"tfid":0,"ftname":"","name":"刘兰","str":44,"int":8,"com":14,"img":57,"job":0,"boss":false},{"id":39,"fid":6,"fname":"洲复传媒","rid":9,"rname":"柯牛路发电站","tid":0,"tfid":0,"ftname":"","name":"管涵龙","str":89,"int":32,"com":67,"img":35,"job":0,"boss":false},{"id":40,"fid":6,"fname":"洲复传媒","rid":9,"rname":"柯牛路发电站","tid":0,"tfid":0,"ftname":"","name":"江露盼","str":26,"int":36,"com":15,"img":62,"job":0,"boss":false},{"id":41,"fid":6,"fname":"洲复传媒","rid":10,"rname":"凡财街发电站","tid":0,"tfid":0,"ftname":"","name":"陈蕴","str":30,"int":48,"com":40,"img":29,"job":0,"boss":false},{"id":42,"fid":6,"fname":"洲复传媒","rid":10,"rname":"凡财街发电站","tid":0,"tfid":0,"ftname":"","name":"周叶琦","str":9,"int":11,"com":18,"img":48,"job":0,"boss":false},{"id":43,"fid":6,"fname":"洲复传媒","rid":10,"rname":"凡财街发电站","tid":0,"tfid":0,"ftname":"","name":"陈尔","str":59,"int":14,"com":36,"img":37,"job":0,"boss":false},{"id":44,"fid":6,"fname":"洲复传媒","rid":10,"rname":"凡财街发电站","tid":0,"tfid":0,"ftname":"","name":"江央焦","str":49,"int":50,"com":33,"img":5,"job":0,"boss":false},{"id":45,"fid":6,"fname":"洲复传媒","rid":11,"rname":"亚金镇挖矿厂","tid":0,"tfid":0,"ftname":"","name":"陈越优","str":94,"int":54,"com":86,"img":64,"job":0,"boss":false},{"id":46,"fid":6,"fname":"洲复传媒","rid":11,"rname":"亚金镇挖矿厂","tid":0,"tfid":0,"ftname":"","name":"李泽瑶","str":88,"int":33,"com":11,"img":1,"job":0,"boss":false},{"id":47,"fid":6,"fname":"洲复传媒","rid":11,"rname":"亚金镇挖矿厂","tid":0,"tfid":0,"ftname":"","name":"李懿淑","str":79,"int":29,"com":41,"img":15,"job":0,"boss":false},{"id":48,"fid":6,"fname":"洲复传媒","rid":11,"rname":"亚金镇挖矿厂","tid":0,"tfid":0,"ftname":"","name":"廖海闻","str":59,"int":88,"com":46,"img":34,"job":0,"boss":false},{"id":49,"fid":6,"fname":"洲复传媒","rid":11,"rname":"亚金镇挖矿厂","tid":0,"tfid":0,"ftname":"","name":"宦吉竹","str":23,"int":48,"com":32,"img":47,"job":0,"boss":false},{"id":50,"fid":6,"fname":"洲复传媒","rid":11,"rname":"亚金镇挖矿厂","tid":0,"tfid":0,"ftname":"","name":"龙乐井","str":46,"int":36,"com":31,"img":11,"job":0,"boss":false},{"id":51,"fid":6,"fname":"洲复传媒","rid":11,"rname":"亚金镇挖矿厂","tid":0,"tfid":0,"ftname":"","name":"张明红","str":95,"int":53,"com":25,"img":15,"job":0,"boss":false}],"relationList":[{"id":"10","from":4,"fromName":"和矿控股","to":5,"toName":"亚光集团","invest":0,"support":10000,"jointID":0,"jointName":""},{"id":"20","from":4,"fromName":"和矿控股","to":6,"toName":"洲复传媒","invest":0,"support":10000,"jointID":0,"jointName":""},{"id":"01","from":5,"fromName":"亚光集团","to":4,"toName":"和矿控股","invest":0,"support":0,"jointID":0,"jointName":"","spyID":0,"spyName":""},{"id":"21","from":5,"fromName":"亚光集团","to":6,"toName":"洲复传媒","invest":0,"support":0},{"id":"02","from":6,"fromName":"洲复传媒","to":4,"toName":"和矿控股","invest":0,"support":0},{"id":"12","from":6,"fromName":"洲复传媒","to":5,"toName":"亚光集团","invest":0,"support":0}],"logList":[]},"accFactoryID":7,"accRoomID":12,"accTerminalID":79,"accWorkerID":52,"day":1}');
         }
         if(window.GLOBAL&&window.GLOBAL.game){
             this.game = window.GLOBAL.game;
@@ -1244,7 +1239,7 @@ export default {
             let terminalList = getListByID(room.id,'rid',this.game.terminalList),
                 terminalLevelValueMap = [500,CONFIG.power_levelup_cost[0]+500,CONFIG.power_levelup_cost[1]+500],
                 roomLevelValueMap = [10000,CONFIG.room_levelup_cost[0]+10000,CONFIG.room_levelup_cost[1]+10000],
-                sum = 5000;
+                sum = 1000;
             for(let terminal of terminalList){
                 sum += terminalLevelValueMap[terminal.powerLevel-1];
                 sum += terminalLevelValueMap[terminal.digLevel-1];
@@ -1252,20 +1247,20 @@ export default {
                 sum -= 300*terminal.durab/CONFIG.max_durab;
             }
             sum += roomLevelValueMap[room.level-1];
-            sum -= 1200*room.durab/CONFIG.max_durab;
-            sum += 5*room.basicImage;
-            sum += 50*room.auto/CONFIG.max_auto;
-            sum += .2*room.power;
+            sum -= 4800*room.durab/CONFIG.max_durab;
+            sum += 45*room.basicImage;
+            sum += 500*room.auto/CONFIG.max_auto;
+            sum += .8*room.power;
             if(room.type==0){
-                sum = Math.round(sum/3);
+                sum = Math.round(sum/2);
             }
             return Math.round(Math.round(sum/100)*100);
         },
         calcWorkerValue(worker){ // 计算人员价格
             let sum = 100;
-            sum += worker.str*13+48;
-            sum += worker.int*13+49;
-            sum += worker.com*13+50;
+            sum += worker.str*15;
+            sum += worker.int*15;
+            sum += worker.com*15;
             sum += worker.img*17;
             return Math.round(Math.round(sum/100)*100);
         },
@@ -1635,7 +1630,6 @@ export default {
                 roomDurabIncrease = roomDurabIncrease*calcFade(workingWorkerCount);
                 roomDurabIncrease = Math.round((roomDurabIncrease+CONFIG.room.durab_fix)*durabImpact*(1-room.auto/CONFIG.max_auto));
                 room.durab += roomDurabIncrease-roomDurabReduce;
-                console.log(roomDurabIncrease,roomDurabReduce);
                 if(room.durab<0)
                     room.durab = 0;
                 else if(room.durab>CONFIG.max_durab)
@@ -1779,7 +1773,7 @@ export default {
                     if(!youFactory.imageDamaged){
                         youImageIncome = r(Math.floor(youImageIncomeImpact/4),youImageIncomeImpact);
                     }
-                    youMoneyIncome += Math.round(youImageIncome*1.2);
+                    youMoneyIncome = Math.round(youMoneyIncome*youFactory.image*0.00008);
                     if(relation.invest>0){
                         let supportPct = relation.support/CONFIG.max_support,
                             investIncome = Math.round(youMoneyIncome*supportPct+relation.invest*supportPct*.006);
@@ -2031,7 +2025,7 @@ export default {
                     this.popTip = `选择「交流」能力高的人来固定房间的协调值`;
                 break;
                 case 3: // 房间维护工人
-                    this.popTip = `选择「体力」高的人，大幅降低房间老化，同时小幅降低每个终端的老化，同时会持续消耗资金`;
+                    this.popTip = `选择「体力」高的人，降低房间老化，同时小幅降低每个终端的老化，同时会持续消耗资金`;
                 break;
                 case 4: // 房间门面
                     this.popTip = `选择「形象」高的人，持续提升工厂形象`;
@@ -2354,13 +2348,14 @@ export default {
             let value = this.calcRoomValue(this.tempData.stealRoom),
                 myFactory = this.game.factoryList[0],
                 youFactory = this.tempData.factory,
-                diff = youFactory.image-myFactory.image,
                 imageCost = 0,
                 supportCost = CONFIG.steal_room_support_cost,
                 relation = this.tempData.relation;
-            imageCost = Math.round((diff>0?diff:0)*.0001*value)+1000;
-            if(imageCost>2000)
-                imageCost = 2000;
+            if(myFactory.image<=0){
+                this.$toast.text(`我厂形象必须为正`);
+                return ;
+            }
+            imageCost = Math.round(value*.1)+2500;
             myFactory.image -= imageCost;
             relation.support -= supportCost;
             // 变更房间数据
@@ -2370,7 +2365,7 @@ export default {
             this.$dialog({
                 title: '结果报告',
                 textAlign: 'left',
-                content: `偷取到了 ${this.tempData.stealRoom.name}<br/>损失了 ${Math.round(supportCost*100/CONFIG.max_support)}% 的支持率<br/>${imageCost>=0?'损失':'提升'}了 ${Math.abs(imageCost)} 的形象`,
+                content: `偷取到了 <b>${this.tempData.stealRoom.name}</b><br/>损失了 <b>${Math.round(supportCost*100/CONFIG.max_support)}%</b> 的支持率<br/>${imageCost>=0?'损失':'提升'}了 <b>${Math.abs(imageCost)}</b> 的形象`,
                 noCancelBtn: true,
                 noOkBtn: true,
             });
@@ -2383,13 +2378,16 @@ export default {
             let value = this.calcWorkerValue(this.tempData.stealWorker),
                 myFactory = this.game.factoryList[0],
                 youFactory = this.tempData.factory,
-                diff = youFactory.image-myFactory.image,
                 imageCost = 0,
                 supportCost = CONFIG.steal_worker_support_cost,
                 relation = this.tempData.relation;
-            imageCost = Math.round((diff>0?diff:0)*.0001*value)+500;
-            if(imageCost>1000)
-                imageCost = 1000;
+            if(myFactory.image<=0){
+                this.$toast.text(`我厂形象必须为正`);
+                return ;
+            }
+            imageCost = Math.round(value*.5)+1000;
+            if(imageCost>10000)
+                imageCost = 10000;
             myFactory.image -= imageCost;
             relation.support -= supportCost;
             // 变更人员数据
@@ -2399,7 +2397,7 @@ export default {
             this.$dialog({
                 title: '结果报告',
                 textAlign: 'left',
-                content: `偷取到了 ${this.tempData.stealWorker.name}<br/>损失了 ${Math.round(supportCost*100/CONFIG.max_support)}% 的支持率<br/>${imageCost>=0?'损失':'提升'}了 ${Math.abs(imageCost)} 的形象`,
+                content: `偷取到了 <b>${this.tempData.stealWorker.name}</b><br/>损失了 <b>${Math.round(supportCost*100/CONFIG.max_support)}%</b> 的支持率<br/>${imageCost>=0?'损失':'提升'}了 <b>${Math.abs(imageCost)}</b> 的形象`,
                 noCancelBtn: true,
                 noOkBtn: true,
             });
@@ -2412,54 +2410,50 @@ export default {
             this.showEditFactory = false;
             this.showInvest = true;
         },
-        onTapSanction(){ // 点击【经济制裁】按钮
+        onTapSanction(){ // 点击【经济打压】按钮
             this.showEditFactory = false;
             this.showSanction = true;
         },
-        onTapConfirmDamage(){ // 点击【确认经济打压】按钮
+        onTapConfirmDamage(){ // 点击【确认形象破坏】按钮
             let factory = getListByID(this.tempData.factory.id,'id',this.game.factoryList)[0],
                 myFactory = this.game.factoryList[0];
+            if(myFactory.image<=0){
+                this.$toast.text(`我厂形象必须为正`);
+                return ;
+            }
             if(myFactory.money<CONFIG.damage_money_cost){
                 this.$toast.text(`资金不足`);
                 return ;
             }
             if(factory.damaged){
-                this.$toast.text(`已经打压过了`);
+                this.$toast.text(`已经破坏过了`);
                 return ;
             }
-            let m = factory.image;
-            if(m<=0){
-                m = 1;
-            }
-            let damageFactor = myFactory.image/m,
-                damage = Math.round(CONFIG.damage_money_cost*damageFactor);
-            if(damage>CONFIG.max_damage){
-                damage = CONFIG.max_damage;
-            }
-            else if(damage<CONFIG.min_damage){
-                damage = CONFIG.min_damage;
-            }
+            let damage = Math.round(factory.image/2);
             myFactory.money -= CONFIG.damage_money_cost;
-            myFactory.image -= factory.image;
-            factory.money -= damage;
+            factory.image -= damage;
             factory.damaged = true;
             this.showConfirmDamage = false;
             this.asynAllPages();
             this.tempData.factory.sell = Math.round(this.calcFactoryValue(this.tempData.factory)*CONFIG.sell_factor);
             this.$dialog({
-                title: '经济打压结果报告',
+                title: '形象破坏结果报告',
                 textAlign: 'left',
-                content: `${factory.name}的总资金减少了<b>${damage} $</b><br/>我厂共花费 <b>${CONFIG.damage_money_cost} $</b><br/>我厂形象${factory.image>=0?'下降了':'提升了'} <b>${Math.abs(factory.image)}</b>`,
+                content: `${factory.name}的形象减少了<b>${damage} $</b><br/>我厂共花费 <b>${CONFIG.damage_money_cost} $</b>`,
                 noCancelBtn: true,
                 noOkBtn: true,
             });
         },
-        onTapConfirmSanction(){ // 点击【确认经济制裁】按钮
+        onTapConfirmSanction(){ // 点击【确认经济打压】按钮
             let factory = getListByID(this.tempData.factory.id,'id',this.game.factoryList)[0],
                 myFactory = this.game.factoryList[0],
                 sanctionMoney = this.tempData.sanctionMoney;
+            if(myFactory.image<=0){
+                this.$toast.text(`我厂形象必须为正`);
+                return ;
+            }
             if(factory.sanctioned){
-                this.$toast.text(`已经制裁过了`);
+                this.$toast.text(`已经打压过了`);
                 return ;
             }
             if(myFactory.money<sanctionMoney){
@@ -2467,13 +2461,13 @@ export default {
                 return ;
             }
             let damage = Math.round(sanctionMoney/2),
-                imageCost = 0;
-            if(myFactory.image>=0){
-                imageCost = Math.round(myFactory.image/2);
-            }
-            else{
-                imageCost = myFactory.image*2;
-            }
+                imageCost = factory.image;
+            // if(myFactory.image>=0){
+            //     imageCost = Math.round(myFactory.image/2);
+            // }
+            // else{
+            //     imageCost = myFactory.image*2;
+            // }
 
             myFactory.money -= sanctionMoney;
             myFactory.image -= imageCost;
@@ -2483,7 +2477,7 @@ export default {
             this.asynAllPages();
             this.tempData.factory.sell = Math.round(this.calcFactoryValue(this.tempData.factory)*CONFIG.sell_factor);
             this.$dialog({
-                title: '经济制裁结果报告',
+                title: '经济打压结果报告',
                 textAlign: 'left',
                 content: `${factory.name}的总资金减少了<b>${damage} $</b><br/>我厂共花费 <b>${sanctionMoney} $</b><br/>我厂形象下降了 <b>${Math.abs(imageCost)}</b>`,
                 noCancelBtn: true,
@@ -2533,7 +2527,7 @@ export default {
             this.$dialog({
                 title: '结果报告',
                 textAlign: 'left',
-                content: `我厂共花费 <b>${this.tempData.factory.sell} $</b> 收购了${this.tempData.factory.name}<br/>共 ${roomList.length} 个房间， ${workerList.length} 个人员<br/>并获得了 ${imageIncrease} 的工厂形象`,
+                content: `我厂共花费 <b>${this.tempData.factory.sell} $</b> 收购了 <b>${this.tempData.factory.name}</b><br/>共 <b>${roomList.length}</b> 个房间， <b>${workerList.length}</b> 个人员<br/>并获得了 <b>${imageIncrease}</b> 的工厂形象`,
                 noCancelBtn: true,
                 noOkBtn: true,
                 closeCallback: e=>{
@@ -2550,14 +2544,19 @@ export default {
             this.jump(1);
         },
         onTapConfirmInvest(){ // 点击【确认投资】按钮
-            let investMoney = parseInt(this.tempData.investMoney)||0;
+            let investMoney = parseInt(this.tempData.investMoney)||0,
+                myFactory = this.game.factoryList[0];
             if(investMoney<=0){
                 return ;
             }
-            if(investMoney<=this.game.factoryList[0].money){
+            if(myFactory.image<=0){
+                this.$toast.text(`我厂形象必须为正`);
+                return ;
+            }
+            if(investMoney<=myFactory.money){
                 let relation = getListByID(this.tempData.relation.id,'id',this.game.relationList)[0];
                 relation.invest += investMoney;
-                this.game.factoryList[0].money -= investMoney;
+                myFactory.money -= investMoney;
                 this.asynAllPages();
                 this.investMoney = '';
                 this.showInvest = false;
