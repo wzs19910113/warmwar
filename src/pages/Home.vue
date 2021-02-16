@@ -221,7 +221,7 @@
                 <!--工厂-->
                 <div class="tab-panel" v-if="tempData.factory" v-show="state==7">
                     <div class="row no-margin">
-                        <h1 class="room-name">{{tempData.factory.name}} <a class="btn btn-edit" @click="onTapEditFactory">操作</a></h1>
+                        <h1 class="room-name">{{tempData.factory.name}} <a class="btn btn-edit" @click="onTapEditFactory">执行策略</a> <a class="btn btn-edit" @click="onTapTab(6)">离开</a></h1>
                         <h4 class="my-name">董事长：{{tempData.factory.boss.name}}</h4>
                     </div>
                     <div class="row no-margin">
@@ -288,7 +288,6 @@
                 <div class="fact-item">总资金：{{numFormat(game.factoryList[0].money)}} $</div>
                 <div class="fact-item">工厂形象：{{numFormat(game.factoryList[0].image)}}</div>
             </div>
-            <!-- <nut-button class="btn btn-save" @click="save">存档</nut-button> -->
             <nut-button class="btn btn-go" @click="onTapGo"><p>第 {{day}} 天结束</p><small>共 {{dayLimit}} 天</small></nut-button>
         </div>
         <!--弹出层-->
@@ -2864,6 +2863,10 @@ export default {
             this.showConfirmBuyWorker = true;
         },
         onDoubleTapRelation(id){ // 双击【外交关系】按钮
+            if(!this.game.factoryList[0].canViewRelation){
+                this.$toast.text(`工厂形象达到 ${CONFIG.relation.joint_image_threshold} 才能访问其他工厂`);
+                return ;
+            }
             let relation = getListByID(id,'id',this.game.relationList)[0];
             this.tempData.relation = relation;
             localStorage.setItem('NTIP3',1);
@@ -2904,7 +2907,7 @@ export default {
                     //     canJump = false;
                     // }
                     if(this.day<=10){
-                        this.$toast.text(`外交信息将在 ${11-this.day} 天后公布`);
+                        this.$toast.text(`世界工厂信息将在 ${11-this.day} 天后公布`);
                         canJump = false;
                     }
                 break;
