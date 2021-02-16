@@ -132,6 +132,7 @@ export default {
             this.loading = this.$toast.loading();
             window.GLOBAL.game = game;
             window.GLOBAL.day = 1;
+            window.GLOBAL.dayLimit = CONFIG.days_limit_range[initConfig.factoryCount-3];
             query(DEBUG?'http://darkmirror.cn/api/monopoly_new.php':'../../api/monopoly_new.php',rdata=>{ // 新建存档
                 this.loading.hide();
                 this.loading = null;

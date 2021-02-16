@@ -4,6 +4,10 @@
         <nut-drag direction="y" :style="{right:'0px',top:'24px'}">
             <a class="touch-dom" @click="showSystemMenu=true">系统<br/>菜单</a>
         </nut-drag>
+        <!--作弊-->
+        <nut-drag direction="y" :style="{right:'0px',top:'75px'}" v-if="debug">
+            <a class="touch-dom" @click="onTapCheat">CHEAT</a>
+        </nut-drag>
         <!--页面内容-->
         <div class="panel">
             <div class="block">
@@ -254,6 +258,7 @@
                 <div class="tab-panel" v-show="state==8">
                     <div class="row no-margin">
                         <h2 class="room-name">经营报表</h2>
+                        <div class="my-name" v-if="dayLimit-day>=0">当前第 <b>{{day}}</b> 天，共 <b>{{dayLimit}}</b> 天，还剩 <b>{{dayLimit-day}}</b> 天</div>
                     </div>
                     <div class="row log">
                         <nut-timeline>
@@ -284,7 +289,7 @@
                 <div class="fact-item">工厂形象：{{numFormat(game.factoryList[0].image)}}</div>
             </div>
             <!-- <nut-button class="btn btn-save" @click="save">存档</nut-button> -->
-            <nut-button class="btn btn-go" @click="onTapGo">第 {{day}} 天<br/>结束</nut-button>
+            <nut-button class="btn btn-go" @click="onTapGo"><p>第 {{day}} 天结束</p><small>共 {{dayLimit}} 天</small></nut-button>
         </div>
         <!--弹出层-->
         <nut-popup class="pop pop-system-menu" :round="true" v-model="showSystemMenu">
@@ -324,7 +329,10 @@
                     <a class="risk-item" v-for="index in [0,1,2,3,4,5,6]" @click="onTapEntireOrder(index)">{{['待命','发电','挖矿','交易','维护','离开终端','离开房间'][index]}}</a>
                 </div>
                 <div class="row">
-                    <a class="risk-item btn" @click="onTapAutoAssignTaskInRoom">自动安排空闲人员任务</a>
+                    <a class="risk-item btn" @click="onTapAssembleFreeWorker">所有空闲人员调至此房间</a>
+                </div>
+                <div class="row">
+                    <a class="risk-item btn" @click="onTapAutoAssignTaskInRoom">自动安排空闲人员</a>
                 </div>
                 <div class="row sell">
                     <a class="risk-item" @click="onTapSellRoom">出售</a>
@@ -626,7 +634,7 @@
                 <div class="row">
                     <h3><label>新手指导</label></h3>
                     <p>
-                        你是工厂的董事长。你的目的很简单：收购所有其他工厂，垄断整个行业。<br/>
+                        你是工厂的董事长。你的目的很简单：在规定时间内收购所有其他工厂，垄断整个行业。<br/>
                         收购工厂前你需要对其进行经济打压，这需要消耗你厂的「资金」和「工厂形象」，因此你必须先提高你厂的实力。<br/>
                     </p>
                 </div>
@@ -879,6 +887,8 @@ export default {
             dragActive: false,
             state: 1,
             day: 0,
+            dayLimit: 0,
+            debug: DEBUG,
             game: {},
             filter: 1, // 人员列表页过滤器
             marketType: 1, // 市场页搜索类型
@@ -1108,11 +1118,12 @@ export default {
     },
     mounted(){
         if(DEBUG){
-            window.GLOBAL = JSON.parse('{"game":{"factoryList":[{"id":4,"name":"和矿控股","money":2600000,"image":8000,"hrp":15000,"rrp":10000,"canViewRelation":true},{"id":5,"name":"亚光集团","money":38478,"image":483},{"id":6,"name":"洲复传媒","money":8316,"image":25629}],"roomList":[{"id":5,"fid":4,"fname":"和矿控股","name":"新汇小区挖矿厂","power":500000,"durab":4999,"risk":2,"auto":0,"level":1,"type":2,"basicImage":15},{"id":6,"fid":5,"fname":"亚光集团","name":"星乐路通用房","type":0,"basicImage":0,"power":7615,"durab":8127,"risk":2,"auto":2948,"level":2},{"id":7,"fid":5,"fname":"亚光集团","name":"国惠园交易所","type":3,"basicImage":0,"power":1279,"durab":1292,"risk":2,"auto":3528,"level":1},{"id":8,"fid":5,"fname":"亚光集团","name":"漫宇大厦挖矿厂","type":2,"basicImage":0,"power":4325,"durab":1788,"risk":2,"auto":8668,"level":3},{"id":9,"fid":6,"fname":"洲复传媒","name":"柯牛路发电站","type":1,"basicImage":0,"power":230,"durab":4761,"risk":2,"auto":2589,"level":3},{"id":10,"fid":6,"fname":"洲复传媒","name":"凡财街发电站","type":1,"basicImage":0,"power":7099,"durab":4002,"risk":1,"auto":4416,"level":1},{"id":11,"fid":6,"fname":"洲复传媒","name":"亚金镇挖矿厂","type":2,"basicImage":0,"power":1818,"durab":3997,"risk":2,"auto":2625,"level":2}],"terminalList":[{"id":25,"fid":4,"rid":5,"durab":4999,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":26,"fid":4,"rid":5,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":27,"fid":4,"rid":5,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":28,"fid":4,"rid":5,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":29,"fid":4,"rid":5,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":30,"fid":4,"rid":5,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":31,"fid":5,"rid":6,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":32,"fid":5,"rid":6,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":33,"fid":5,"rid":6,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":34,"fid":5,"rid":6,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":35,"fid":5,"rid":6,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":36,"fid":5,"rid":6,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":37,"fid":5,"rid":6,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":38,"fid":5,"rid":6,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":39,"fid":5,"rid":7,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":40,"fid":5,"rid":7,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":41,"fid":5,"rid":7,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":42,"fid":5,"rid":7,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":43,"fid":5,"rid":7,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":44,"fid":5,"rid":7,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":45,"fid":5,"rid":8,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":46,"fid":5,"rid":8,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":47,"fid":5,"rid":8,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":48,"fid":5,"rid":8,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":49,"fid":5,"rid":8,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":50,"fid":5,"rid":8,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":51,"fid":5,"rid":8,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":52,"fid":5,"rid":8,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":53,"fid":5,"rid":8,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":54,"fid":5,"rid":8,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":55,"fid":6,"rid":9,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":56,"fid":6,"rid":9,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":57,"fid":6,"rid":9,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":58,"fid":6,"rid":9,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":59,"fid":6,"rid":9,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":60,"fid":6,"rid":9,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":61,"fid":6,"rid":9,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":62,"fid":6,"rid":9,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":63,"fid":6,"rid":9,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":64,"fid":6,"rid":9,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":65,"fid":6,"rid":10,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":66,"fid":6,"rid":10,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":67,"fid":6,"rid":10,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":68,"fid":6,"rid":10,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":69,"fid":6,"rid":10,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":70,"fid":6,"rid":10,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":71,"fid":6,"rid":11,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":72,"fid":6,"rid":11,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":73,"fid":6,"rid":11,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":74,"fid":6,"rid":11,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":75,"fid":6,"rid":11,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":76,"fid":6,"rid":11,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":77,"fid":6,"rid":11,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":78,"fid":6,"rid":11,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1}],"workerList":[{"id":14,"tid":0,"rid":0,"fid":4,"fname":"和矿控股","rname":"","tfname":"","tfid":0,"name":"王可","str":49,"int":50,"com":51,"img":94,"job":0,"boss":true},{"id":15,"fid":4,"fname":"和矿控股","rid":0,"rname":"","tid":0,"tfid":0,"ftname":"","name":"滑儿凝","str":5,"int":100,"com":90,"img":25,"job":0,"boss":false},{"id":16,"fid":4,"fname":"和矿控股","rid":0,"rname":"","tid":0,"tfid":0,"ftname":"","name":"孙昊智","str":96,"int":38,"com":10,"img":20,"job":0,"boss":false},{"id":17,"fid":5,"fname":"亚光集团","rid":6,"rname":"星乐路通用房","tid":0,"tfid":0,"ftname":"","name":"诸丘","str":27,"int":91,"com":58,"img":19,"job":0,"boss":true},{"id":18,"fid":4,"fname":"和矿控股","rid":0,"rname":"","tid":0,"tfid":0,"ftname":"","name":"周菱莲","str":50,"int":50,"com":50,"img":50,"job":0,"boss":false},{"id":19,"fid":5,"fname":"亚光集团","rid":6,"rname":"星乐路通用房","tid":0,"tfid":0,"ftname":"","name":"莫宛莫","str":87,"int":15,"com":68,"img":25,"job":0,"boss":false},{"id":20,"fid":5,"fname":"亚光集团","rid":6,"rname":"星乐路通用房","tid":0,"tfid":0,"ftname":"","name":"姚春风","str":15,"int":42,"com":18,"img":49,"job":0,"boss":false},{"id":21,"fid":5,"fname":"亚光集团","rid":7,"rname":"国惠园交易所","tid":0,"tfid":0,"ftname":"","name":"毛硕云","str":41,"int":27,"com":3,"img":34,"job":0,"boss":false},{"id":22,"fid":5,"fname":"亚光集团","rid":7,"rname":"国惠园交易所","tid":0,"tfid":0,"ftname":"","name":"蒋咏亦","str":10,"int":39,"com":4,"img":50,"job":0,"boss":false},{"id":23,"fid":5,"fname":"亚光集团","rid":7,"rname":"国惠园交易所","tid":0,"tfid":0,"ftname":"","name":"刘奕","str":8,"int":12,"com":42,"img":5,"job":0,"boss":false},{"id":24,"fid":5,"fname":"亚光集团","rid":7,"rname":"国惠园交易所","tid":0,"tfid":0,"ftname":"","name":"伏蕊养","str":49,"int":37,"com":50,"img":26,"job":0,"boss":false},{"id":25,"fid":5,"fname":"亚光集团","rid":7,"rname":"国惠园交易所","tid":0,"tfid":0,"ftname":"","name":"王语安","str":15,"int":6,"com":12,"img":62,"job":0,"boss":false},{"id":26,"fid":5,"fname":"亚光集团","rid":8,"rname":"漫宇大厦挖矿厂","tid":0,"tfid":0,"ftname":"","name":"陈藩满","str":48,"int":11,"com":4,"img":59,"job":0,"boss":false},{"id":27,"fid":5,"fname":"亚光集团","rid":8,"rname":"漫宇大厦挖矿厂","tid":0,"tfid":0,"ftname":"","name":"廖蕾","str":11,"int":33,"com":33,"img":59,"job":0,"boss":false},{"id":28,"fid":5,"fname":"亚光集团","rid":8,"rname":"漫宇大厦挖矿厂","tid":0,"tfid":0,"ftname":"","name":"陈衷意","str":12,"int":33,"com":17,"img":2,"job":0,"boss":false},{"id":29,"fid":5,"fname":"亚光集团","rid":8,"rname":"漫宇大厦挖矿厂","tid":0,"tfid":0,"ftname":"","name":"邓美菅","str":20,"int":68,"com":24,"img":12,"job":0,"boss":false},{"id":30,"fid":5,"fname":"亚光集团","rid":8,"rname":"漫宇大厦挖矿厂","tid":0,"tfid":0,"ftname":"","name":"周璇","str":82,"int":2,"com":24,"img":49,"job":0,"boss":false},{"id":31,"fid":5,"fname":"亚光集团","rid":8,"rname":"漫宇大厦挖矿厂","tid":0,"tfid":0,"ftname":"","name":"裴彤敏","str":6,"int":12,"com":22,"img":43,"job":0,"boss":false},{"id":32,"fid":5,"fname":"亚光集团","rid":8,"rname":"漫宇大厦挖矿厂","tid":0,"tfid":0,"ftname":"","name":"欧阳水慧","str":3,"int":48,"com":81,"img":25,"job":0,"boss":false},{"id":33,"fid":6,"fname":"洲复传媒","rid":9,"rname":"柯牛路发电站","tid":0,"tfid":0,"ftname":"","name":"刘才城","str":69,"int":66,"com":76,"img":36,"job":0,"boss":true},{"id":34,"fid":6,"fname":"洲复传媒","rid":9,"rname":"柯牛路发电站","tid":0,"tfid":0,"ftname":"","name":"顾悦蕊","str":22,"int":60,"com":48,"img":5,"job":0,"boss":false},{"id":35,"fid":6,"fname":"洲复传媒","rid":9,"rname":"柯牛路发电站","tid":0,"tfid":0,"ftname":"","name":"祝闻","str":25,"int":73,"com":64,"img":11,"job":0,"boss":false},{"id":36,"fid":6,"fname":"洲复传媒","rid":9,"rname":"柯牛路发电站","tid":0,"tfid":0,"ftname":"","name":"汲佘慕","str":6,"int":40,"com":31,"img":5,"job":0,"boss":false},{"id":37,"fid":6,"fname":"洲复传媒","rid":9,"rname":"柯牛路发电站","tid":0,"tfid":0,"ftname":"","name":"房闾","str":21,"int":44,"com":44,"img":1,"job":0,"boss":false},{"id":38,"fid":6,"fname":"洲复传媒","rid":9,"rname":"柯牛路发电站","tid":0,"tfid":0,"ftname":"","name":"刘兰","str":44,"int":8,"com":14,"img":57,"job":0,"boss":false},{"id":39,"fid":6,"fname":"洲复传媒","rid":9,"rname":"柯牛路发电站","tid":0,"tfid":0,"ftname":"","name":"管涵龙","str":89,"int":32,"com":67,"img":35,"job":0,"boss":false},{"id":40,"fid":6,"fname":"洲复传媒","rid":9,"rname":"柯牛路发电站","tid":0,"tfid":0,"ftname":"","name":"江露盼","str":26,"int":36,"com":15,"img":62,"job":0,"boss":false},{"id":41,"fid":6,"fname":"洲复传媒","rid":10,"rname":"凡财街发电站","tid":0,"tfid":0,"ftname":"","name":"陈蕴","str":30,"int":48,"com":40,"img":29,"job":0,"boss":false},{"id":42,"fid":6,"fname":"洲复传媒","rid":10,"rname":"凡财街发电站","tid":0,"tfid":0,"ftname":"","name":"周叶琦","str":9,"int":11,"com":18,"img":48,"job":0,"boss":false},{"id":43,"fid":6,"fname":"洲复传媒","rid":10,"rname":"凡财街发电站","tid":0,"tfid":0,"ftname":"","name":"陈尔","str":59,"int":14,"com":36,"img":37,"job":0,"boss":false},{"id":44,"fid":6,"fname":"洲复传媒","rid":10,"rname":"凡财街发电站","tid":0,"tfid":0,"ftname":"","name":"江央焦","str":49,"int":50,"com":33,"img":5,"job":0,"boss":false},{"id":45,"fid":6,"fname":"洲复传媒","rid":11,"rname":"亚金镇挖矿厂","tid":0,"tfid":0,"ftname":"","name":"陈越优","str":94,"int":54,"com":86,"img":64,"job":0,"boss":false},{"id":46,"fid":6,"fname":"洲复传媒","rid":11,"rname":"亚金镇挖矿厂","tid":0,"tfid":0,"ftname":"","name":"李泽瑶","str":88,"int":33,"com":11,"img":1,"job":0,"boss":false},{"id":47,"fid":6,"fname":"洲复传媒","rid":11,"rname":"亚金镇挖矿厂","tid":0,"tfid":0,"ftname":"","name":"李懿淑","str":79,"int":29,"com":41,"img":15,"job":0,"boss":false},{"id":48,"fid":6,"fname":"洲复传媒","rid":11,"rname":"亚金镇挖矿厂","tid":0,"tfid":0,"ftname":"","name":"廖海闻","str":59,"int":88,"com":46,"img":34,"job":0,"boss":false},{"id":49,"fid":6,"fname":"洲复传媒","rid":11,"rname":"亚金镇挖矿厂","tid":0,"tfid":0,"ftname":"","name":"宦吉竹","str":23,"int":48,"com":32,"img":47,"job":0,"boss":false},{"id":50,"fid":6,"fname":"洲复传媒","rid":11,"rname":"亚金镇挖矿厂","tid":0,"tfid":0,"ftname":"","name":"龙乐井","str":46,"int":36,"com":31,"img":11,"job":0,"boss":false},{"id":51,"fid":6,"fname":"洲复传媒","rid":11,"rname":"亚金镇挖矿厂","tid":0,"tfid":0,"ftname":"","name":"张明红","str":95,"int":53,"com":25,"img":15,"job":0,"boss":false}],"relationList":[{"id":"10","from":4,"fromName":"和矿控股","to":5,"toName":"亚光集团","invest":0,"support":10000,"jointID":0,"jointName":""},{"id":"20","from":4,"fromName":"和矿控股","to":6,"toName":"洲复传媒","invest":0,"support":10000,"jointID":0,"jointName":""},{"id":"01","from":5,"fromName":"亚光集团","to":4,"toName":"和矿控股","invest":0,"support":0,"jointID":0,"jointName":"","spyID":0,"spyName":""},{"id":"21","from":5,"fromName":"亚光集团","to":6,"toName":"洲复传媒","invest":0,"support":0},{"id":"02","from":6,"fromName":"洲复传媒","to":4,"toName":"和矿控股","invest":0,"support":0},{"id":"12","from":6,"fromName":"洲复传媒","to":5,"toName":"亚光集团","invest":0,"support":0}],"logList":[]},"accFactoryID":7,"accRoomID":12,"accTerminalID":79,"accWorkerID":52,"day":1}');
+            window.GLOBAL = JSON.parse('{"game":{"factoryList":[{"id":4,"name":"和矿控股","money":2600000,"image":2990,"hrp":15000,"rrp":10000},{"id":5,"name":"亚光集团","money":38478,"image":483},{"id":6,"name":"洲复传媒","money":8316,"image":25629}],"roomList":[{"id":5,"fid":4,"fname":"和矿控股","name":"新汇小区挖矿厂","power":500000,"durab":4999,"risk":2,"auto":0,"level":1,"type":2,"basicImage":15},{"id":6,"fid":5,"fname":"亚光集团","name":"星乐路通用房","type":0,"basicImage":0,"power":7615,"durab":8127,"risk":2,"auto":2948,"level":2},{"id":7,"fid":5,"fname":"亚光集团","name":"国惠园交易所","type":3,"basicImage":0,"power":1279,"durab":1292,"risk":2,"auto":3528,"level":1},{"id":8,"fid":5,"fname":"亚光集团","name":"漫宇大厦挖矿厂","type":2,"basicImage":0,"power":4325,"durab":1788,"risk":2,"auto":8668,"level":3},{"id":9,"fid":6,"fname":"洲复传媒","name":"柯牛路发电站","type":1,"basicImage":0,"power":230,"durab":4761,"risk":2,"auto":2589,"level":3},{"id":10,"fid":6,"fname":"洲复传媒","name":"凡财街发电站","type":1,"basicImage":0,"power":7099,"durab":4002,"risk":1,"auto":4416,"level":1},{"id":11,"fid":6,"fname":"洲复传媒","name":"亚金镇挖矿厂","type":2,"basicImage":0,"power":1818,"durab":3997,"risk":2,"auto":2625,"level":2}],"terminalList":[{"id":25,"fid":4,"rid":5,"durab":4999,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":26,"fid":4,"rid":5,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":27,"fid":4,"rid":5,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":28,"fid":4,"rid":5,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":29,"fid":4,"rid":5,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":30,"fid":4,"rid":5,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":31,"fid":5,"rid":6,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":32,"fid":5,"rid":6,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":33,"fid":5,"rid":6,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":34,"fid":5,"rid":6,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":35,"fid":5,"rid":6,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":36,"fid":5,"rid":6,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":37,"fid":5,"rid":6,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":38,"fid":5,"rid":6,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":39,"fid":5,"rid":7,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":40,"fid":5,"rid":7,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":41,"fid":5,"rid":7,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":42,"fid":5,"rid":7,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":43,"fid":5,"rid":7,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":44,"fid":5,"rid":7,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":45,"fid":5,"rid":8,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":46,"fid":5,"rid":8,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":47,"fid":5,"rid":8,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":48,"fid":5,"rid":8,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":49,"fid":5,"rid":8,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":50,"fid":5,"rid":8,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":51,"fid":5,"rid":8,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":52,"fid":5,"rid":8,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":53,"fid":5,"rid":8,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":54,"fid":5,"rid":8,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":55,"fid":6,"rid":9,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":56,"fid":6,"rid":9,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":57,"fid":6,"rid":9,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":58,"fid":6,"rid":9,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":59,"fid":6,"rid":9,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":60,"fid":6,"rid":9,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":61,"fid":6,"rid":9,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":62,"fid":6,"rid":9,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":63,"fid":6,"rid":9,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":64,"fid":6,"rid":9,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":65,"fid":6,"rid":10,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":66,"fid":6,"rid":10,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":67,"fid":6,"rid":10,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":68,"fid":6,"rid":10,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":69,"fid":6,"rid":10,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":70,"fid":6,"rid":10,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":71,"fid":6,"rid":11,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":72,"fid":6,"rid":11,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":73,"fid":6,"rid":11,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":74,"fid":6,"rid":11,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":75,"fid":6,"rid":11,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":76,"fid":6,"rid":11,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":77,"fid":6,"rid":11,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1},{"id":78,"fid":6,"rid":11,"durab":0,"powerLevel":1,"digLevel":1,"tradeLevel":1}],"workerList":[{"id":14,"tid":0,"rid":0,"fid":4,"fname":"和矿控股","rname":"","tfname":"","tfid":0,"name":"王可","str":49,"int":50,"com":51,"img":94,"job":0,"boss":true},{"id":15,"fid":4,"fname":"和矿控股","rid":0,"rname":"","tid":0,"tfid":0,"ftname":"","name":"滑儿凝","str":5,"int":100,"com":90,"img":25,"job":0,"boss":false},{"id":16,"fid":4,"fname":"和矿控股","rid":0,"rname":"","tid":0,"tfid":0,"ftname":"","name":"孙昊智","str":96,"int":38,"com":10,"img":20,"job":0,"boss":false},{"id":17,"fid":5,"fname":"亚光集团","rid":6,"rname":"星乐路通用房","tid":0,"tfid":0,"ftname":"","name":"诸丘","str":27,"int":91,"com":58,"img":19,"job":0,"boss":true},{"id":18,"fid":4,"fname":"和矿控股","rid":0,"rname":"","tid":0,"tfid":0,"ftname":"","name":"周菱莲","str":50,"int":50,"com":50,"img":50,"job":0,"boss":false},{"id":19,"fid":5,"fname":"亚光集团","rid":6,"rname":"星乐路通用房","tid":0,"tfid":0,"ftname":"","name":"莫宛莫","str":87,"int":15,"com":68,"img":25,"job":0,"boss":false},{"id":20,"fid":5,"fname":"亚光集团","rid":6,"rname":"星乐路通用房","tid":0,"tfid":0,"ftname":"","name":"姚春风","str":15,"int":42,"com":18,"img":49,"job":0,"boss":false},{"id":21,"fid":5,"fname":"亚光集团","rid":7,"rname":"国惠园交易所","tid":0,"tfid":0,"ftname":"","name":"毛硕云","str":41,"int":27,"com":3,"img":34,"job":0,"boss":false},{"id":22,"fid":5,"fname":"亚光集团","rid":7,"rname":"国惠园交易所","tid":0,"tfid":0,"ftname":"","name":"蒋咏亦","str":10,"int":39,"com":4,"img":50,"job":0,"boss":false},{"id":23,"fid":5,"fname":"亚光集团","rid":7,"rname":"国惠园交易所","tid":0,"tfid":0,"ftname":"","name":"刘奕","str":8,"int":12,"com":42,"img":5,"job":0,"boss":false},{"id":24,"fid":5,"fname":"亚光集团","rid":7,"rname":"国惠园交易所","tid":0,"tfid":0,"ftname":"","name":"伏蕊养","str":49,"int":37,"com":50,"img":26,"job":0,"boss":false},{"id":25,"fid":5,"fname":"亚光集团","rid":7,"rname":"国惠园交易所","tid":0,"tfid":0,"ftname":"","name":"王语安","str":15,"int":6,"com":12,"img":62,"job":0,"boss":false},{"id":26,"fid":5,"fname":"亚光集团","rid":8,"rname":"漫宇大厦挖矿厂","tid":0,"tfid":0,"ftname":"","name":"陈藩满","str":48,"int":11,"com":4,"img":59,"job":0,"boss":false},{"id":27,"fid":5,"fname":"亚光集团","rid":8,"rname":"漫宇大厦挖矿厂","tid":0,"tfid":0,"ftname":"","name":"廖蕾","str":11,"int":33,"com":33,"img":59,"job":0,"boss":false},{"id":28,"fid":5,"fname":"亚光集团","rid":8,"rname":"漫宇大厦挖矿厂","tid":0,"tfid":0,"ftname":"","name":"陈衷意","str":12,"int":33,"com":17,"img":2,"job":0,"boss":false},{"id":29,"fid":5,"fname":"亚光集团","rid":8,"rname":"漫宇大厦挖矿厂","tid":0,"tfid":0,"ftname":"","name":"邓美菅","str":20,"int":68,"com":24,"img":12,"job":0,"boss":false},{"id":30,"fid":5,"fname":"亚光集团","rid":8,"rname":"漫宇大厦挖矿厂","tid":0,"tfid":0,"ftname":"","name":"周璇","str":82,"int":2,"com":24,"img":49,"job":0,"boss":false},{"id":31,"fid":5,"fname":"亚光集团","rid":8,"rname":"漫宇大厦挖矿厂","tid":0,"tfid":0,"ftname":"","name":"裴彤敏","str":6,"int":12,"com":22,"img":43,"job":0,"boss":false},{"id":32,"fid":5,"fname":"亚光集团","rid":8,"rname":"漫宇大厦挖矿厂","tid":0,"tfid":0,"ftname":"","name":"欧阳水慧","str":3,"int":48,"com":81,"img":25,"job":0,"boss":false},{"id":33,"fid":6,"fname":"洲复传媒","rid":9,"rname":"柯牛路发电站","tid":0,"tfid":0,"ftname":"","name":"刘才城","str":69,"int":66,"com":76,"img":36,"job":0,"boss":true},{"id":34,"fid":6,"fname":"洲复传媒","rid":9,"rname":"柯牛路发电站","tid":0,"tfid":0,"ftname":"","name":"顾悦蕊","str":22,"int":60,"com":48,"img":5,"job":0,"boss":false},{"id":35,"fid":6,"fname":"洲复传媒","rid":9,"rname":"柯牛路发电站","tid":0,"tfid":0,"ftname":"","name":"祝闻","str":25,"int":73,"com":64,"img":11,"job":0,"boss":false},{"id":36,"fid":6,"fname":"洲复传媒","rid":9,"rname":"柯牛路发电站","tid":0,"tfid":0,"ftname":"","name":"汲佘慕","str":6,"int":40,"com":31,"img":5,"job":0,"boss":false},{"id":37,"fid":6,"fname":"洲复传媒","rid":9,"rname":"柯牛路发电站","tid":0,"tfid":0,"ftname":"","name":"房闾","str":21,"int":44,"com":44,"img":1,"job":0,"boss":false},{"id":38,"fid":6,"fname":"洲复传媒","rid":9,"rname":"柯牛路发电站","tid":0,"tfid":0,"ftname":"","name":"刘兰","str":44,"int":8,"com":14,"img":57,"job":0,"boss":false},{"id":39,"fid":6,"fname":"洲复传媒","rid":9,"rname":"柯牛路发电站","tid":0,"tfid":0,"ftname":"","name":"管涵龙","str":89,"int":32,"com":67,"img":35,"job":0,"boss":false},{"id":40,"fid":6,"fname":"洲复传媒","rid":9,"rname":"柯牛路发电站","tid":0,"tfid":0,"ftname":"","name":"江露盼","str":26,"int":36,"com":15,"img":62,"job":0,"boss":false},{"id":41,"fid":6,"fname":"洲复传媒","rid":10,"rname":"凡财街发电站","tid":0,"tfid":0,"ftname":"","name":"陈蕴","str":30,"int":48,"com":40,"img":29,"job":0,"boss":false},{"id":42,"fid":6,"fname":"洲复传媒","rid":10,"rname":"凡财街发电站","tid":0,"tfid":0,"ftname":"","name":"周叶琦","str":9,"int":11,"com":18,"img":48,"job":0,"boss":false},{"id":43,"fid":6,"fname":"洲复传媒","rid":10,"rname":"凡财街发电站","tid":0,"tfid":0,"ftname":"","name":"陈尔","str":59,"int":14,"com":36,"img":37,"job":0,"boss":false},{"id":44,"fid":6,"fname":"洲复传媒","rid":10,"rname":"凡财街发电站","tid":0,"tfid":0,"ftname":"","name":"江央焦","str":49,"int":50,"com":33,"img":5,"job":0,"boss":false},{"id":45,"fid":6,"fname":"洲复传媒","rid":11,"rname":"亚金镇挖矿厂","tid":0,"tfid":0,"ftname":"","name":"陈越优","str":94,"int":54,"com":86,"img":64,"job":0,"boss":false},{"id":46,"fid":6,"fname":"洲复传媒","rid":11,"rname":"亚金镇挖矿厂","tid":0,"tfid":0,"ftname":"","name":"李泽瑶","str":88,"int":33,"com":11,"img":1,"job":0,"boss":false},{"id":47,"fid":6,"fname":"洲复传媒","rid":11,"rname":"亚金镇挖矿厂","tid":0,"tfid":0,"ftname":"","name":"李懿淑","str":79,"int":29,"com":41,"img":15,"job":0,"boss":false},{"id":48,"fid":6,"fname":"洲复传媒","rid":11,"rname":"亚金镇挖矿厂","tid":0,"tfid":0,"ftname":"","name":"廖海闻","str":59,"int":88,"com":46,"img":34,"job":0,"boss":false},{"id":49,"fid":6,"fname":"洲复传媒","rid":11,"rname":"亚金镇挖矿厂","tid":0,"tfid":0,"ftname":"","name":"宦吉竹","str":23,"int":48,"com":32,"img":47,"job":0,"boss":false},{"id":50,"fid":6,"fname":"洲复传媒","rid":11,"rname":"亚金镇挖矿厂","tid":0,"tfid":0,"ftname":"","name":"龙乐井","str":46,"int":36,"com":31,"img":11,"job":0,"boss":false},{"id":51,"fid":6,"fname":"洲复传媒","rid":11,"rname":"亚金镇挖矿厂","tid":0,"tfid":0,"ftname":"","name":"张明红","str":95,"int":53,"com":25,"img":15,"job":0,"boss":false}],"relationList":[{"id":"10","from":4,"fromName":"和矿控股","to":5,"toName":"亚光集团","invest":0,"support":0,"jointID":0,"jointName":""},{"id":"20","from":4,"fromName":"和矿控股","to":6,"toName":"洲复传媒","invest":0,"support":10000,"jointID":0,"jointName":""},{"id":"01","from":5,"fromName":"亚光集团","to":4,"toName":"和矿控股","invest":0,"support":0,"jointID":0,"jointName":"","spyID":0,"spyName":""},{"id":"21","from":5,"fromName":"亚光集团","to":6,"toName":"洲复传媒","invest":0,"support":0},{"id":"02","from":6,"fromName":"洲复传媒","to":4,"toName":"和矿控股","invest":0,"support":0},{"id":"12","from":6,"fromName":"洲复传媒","to":5,"toName":"亚光集团","invest":0,"support":0}],"logList":[]},"accFactoryID":7,"accRoomID":12,"accTerminalID":79,"accWorkerID":52,"day":1,"dayLimit":30}');
         }
         if(window.GLOBAL&&window.GLOBAL.game){
             this.game = window.GLOBAL.game;
             this.day = window.GLOBAL.day;
+            this.dayLimit = window.GLOBAL.dayLimit;
             this.asynHomePage();
             if(!localStorage.getItem('NSG')){
                 this.showGuide = true;
@@ -1247,8 +1258,8 @@ export default {
                 sum -= 300*terminal.durab/CONFIG.max_durab;
             }
             sum += roomLevelValueMap[room.level-1];
-            sum -= 4800*room.durab/CONFIG.max_durab;
-            sum += 45*room.basicImage;
+            sum -= 6500*room.durab/CONFIG.max_durab;
+            sum += 90*room.basicImage;
             sum += 500*room.auto/CONFIG.max_auto;
             sum += .8*room.power;
             if(room.type==0){
@@ -1324,7 +1335,7 @@ export default {
                         occupyCount = [2,3,4][room.level-1]+CONFIG.terminal_count_distribution[room.level-1];
                     return workerList.length>=occupyCount;
                 };
-            let _myFreeWorkerList = [...myFreeWorkerList], // 有空房间列表
+            let _myFreeWorkerList = [...myFreeWorkerList], // 空闲人员列表
                 _myFreeRoomList = [...myRoomList]; // 有空房间列表
             while(_myFreeWorkerList.length>0&&_myFreeRoomList.length>0){
                 let targetWorker = _myFreeWorkerList[r(0,_myFreeWorkerList.length-1)],
@@ -1332,7 +1343,7 @@ export default {
                 if(roomIsFull(targetRoom)){ // 房间已满，将此房间移出有空房间列表
                     _myFreeRoomList = removeFromList(targetRoom.id,'id',_myFreeRoomList);
                 }
-                else{
+                else{ // 房间未满，将人员放入此房间
                     targetWorker.rid = targetRoom.id;
                     targetWorker.rname = targetRoom.name;
                     _myFreeWorkerList = removeFromList(targetWorker.id,'id',_myFreeWorkerList);
@@ -1390,7 +1401,7 @@ export default {
                 if(autoWorker)
                     _roomFreeWorkerList = removeFromList(autoWorker.id,'id',_roomFreeWorkerList);
             }
-            if(!omaintainer&&room.durab>=(CONFIG.room.durab_threshold-10)&&factory.money>0){
+            if(!omaintainer&&room.durab>0&&factory.money>0){
                 maintainer = bulbsort(_roomFreeWorkerList,'str')[0];
                 if(maintainer)
                     _roomFreeWorkerList = removeFromList(maintainer.id,'id',_roomFreeWorkerList);
@@ -1476,7 +1487,7 @@ export default {
                     if(abi&&abi>0){ // 重新计算 riskImpact
                         riskImpact = 1;
                         if(room.risk==3){ // 冒险
-                            riskImpact = 5*abi/CONFIG.max_worker_ability;
+                            riskImpact = 1+4*abi/CONFIG.max_worker_ability;
                         }
                     }
                     return Math.round(income*durabImpact*(balance/100)*riskImpact);
@@ -1686,6 +1697,23 @@ export default {
             rrpIncome = Math.round(rrpIncome*calcFade(searchRoomWorkerList.length));
             hrpIncome = Math.round(hrpIncome*calcFade(searchWorkerWorkerList.length));
 
+            // 还债
+            let remainDays = this.dayLimit-this.day+1;
+            if(remainDays<=0&&this.game.factoryList.length>1){
+                moneyIncome -= 50000+Math.abs(remainDays*1000);
+                imageIncome -= 5000+Math.abs(remainDays*100);
+                rrpIncome -= 500+Math.abs(remainDays*10);
+                hrpIncome -= 500+Math.abs(remainDays*1);
+                let loseWorkerCount = r(0,3);
+                for(let i=0;i<loseWorkerCount;i++){
+                    let myWorkerList = getListByID(this.game.factoryList[0].id,'fid',this.game.workerList),
+                        loseWorker = myWorkerList[r(0,myWorkerList.length-1)];
+                    if(loseWorker&&!loseWorker.boss){
+                        this.game.workerList = removeFromList(loseWorker.id,'id',this.game.workerList);
+                    }
+                }
+            }
+
             // 我的工厂数据赋值 1
             myFactory.rrp += rrpIncome;
             myFactory.hrp += hrpIncome;
@@ -1864,6 +1892,13 @@ export default {
             localStorage.setItem('AS',status);
         },
 
+        onTapCheat(){ // 点击【作弊】按钮 @MODIFY
+            for(let i=0;i<10;i++){
+                this.game.workerList.push(genRandomWorker(window.GLOBAL.accWorkerID++,{fid:this.game.factoryList[0].id,fname:this.game.factoryList[0].name,}));
+            }
+            this.asynAllPages();
+        },
+
         onTapDrag(index){ // 点击【悬浮拖拽】按钮
             if(this.loading) return;
             switch(index){
@@ -1937,6 +1972,24 @@ export default {
                 if(!((this.day-1)%CONFIG.period)){
                     this.save();
                 }
+            }
+            let remainDays = this.dayLimit-this.day+1;
+            if((remainDays==200||remainDays==100)&&this.game.factoryList.length>1){
+                this.$dialog({
+                    title: '请注意',
+                    textAlign: 'center',
+                    content: `你还剩 ${remainDays} 天的时间，请尽快收购所有工厂。`,
+                    noCancelBtn: true,
+                    noOkBtn: true,
+                });
+            }
+            else if(remainDays==0&&this.game.factoryList.length>1){
+                this.$dialog({
+                    title: '游戏失败',
+                    content: `你未在规定时间内垄断整个行业。`,
+                    noCancelBtn: true,
+                    noOkBtn: true,
+                });
             }
         },
 
@@ -2466,13 +2519,6 @@ export default {
             }
             let damage = Math.round(sanctionMoney/2),
                 imageCost = factory.image;
-            // if(myFactory.image>=0){
-            //     imageCost = Math.round(myFactory.image/2);
-            // }
-            // else{
-            //     imageCost = myFactory.image*2;
-            // }
-
             myFactory.money -= sanctionMoney;
             myFactory.image -= imageCost;
             factory.money -= damage;
@@ -2483,7 +2529,7 @@ export default {
             this.$dialog({
                 title: '经济打压结果报告',
                 textAlign: 'left',
-                content: `${factory.name}的总资金减少了<b>${damage} $</b><br/>我厂共花费 <b>${sanctionMoney} $</b><br/>我厂形象下降了 <b>${Math.abs(imageCost)}</b>`,
+                content: `${factory.name}的总资金减少了<b>${damage} $</b><br/>我厂共花费 <b>${sanctionMoney} $</b><br/>我厂形象${imageCost>=0?'下降':'提升'}了 <b>${Math.abs(imageCost)}</b>`,
                 noCancelBtn: true,
                 noOkBtn: true,
             });
@@ -2538,7 +2584,7 @@ export default {
                     if(this.game.factoryList.length==1){ // 获胜
                         this.$dialog({
                             title: '游戏获胜',
-                            content: `恭喜 <h3>${this.game.workerList[0].name}</h3> 带领 <h3>${this.game.factoryList[0].name}</h3> 垄断了整个挖矿行业`,
+                            content: `恭喜 <h3>${this.game.workerList[0].name}</h3> 带领 <h3>${this.game.factoryList[0].name}</h3> 在 ${this.day} 天内垄断了整个挖矿行业`,
                             noCancelBtn: true,
                             noOkBtn: true,
                         });
@@ -2604,6 +2650,18 @@ export default {
             }
             // 重新安排房间工位配置
             this.arrangeRoom(this.tempData.room);
+            this.asynAllPages();
+            this.showEditRoom = false;
+        },
+        onTapAssembleFreeWorker(){ // 点击【所有空闲人员调至此房间】按钮
+            let myFactory = this.game.factoryList[0],
+                room = getListByID(this.tempData.room.id,'id',this.game.roomList)[0],
+                myWorkerList = getListByID(myFactory.id,'fid',this.game.workerList),
+                myFreeWorkerList = getMatchList(myWorkerList,[['job',0],['rid',0]]);
+            for(let worker of myFreeWorkerList){
+                worker.rid = room.id;
+                worker.rname = room.name;
+            }
             this.asynAllPages();
             this.showEditRoom = false;
         },
@@ -2841,8 +2899,12 @@ export default {
                     this.searchingWorkerID = id||0;
                 break;
                 case 6: // 外交
-                    if(!this.game.factoryList[0].canViewRelation){
-                        this.$toast.text(`工厂形象达到 ${CONFIG.relation.joint_image_threshold} 解锁外交系统`);
+                    // if(!this.game.factoryList[0].canViewRelation){
+                    //     this.$toast.text(`工厂形象达到 ${CONFIG.relation.joint_image_threshold} 解锁外交系统`);
+                    //     canJump = false;
+                    // }
+                    if(this.day<=10){
+                        this.$toast.text(`外交信息将在 ${11-this.day} 天后公布`);
                         canJump = false;
                     }
                 break;
@@ -3195,6 +3257,11 @@ export default {
     .btn-go{
         color: #fff;
     }
+    .btn-go p,
+    .btn-go small{
+        word-break: keep-all;
+        white-space: nowrap;
+    }
     .btn-small{
         margin-left: .2rem;
         font-size: .22rem;
@@ -3244,6 +3311,10 @@ export default {
         line-height: .46rem;
         font-weight: normal;
         text-align: left;
+    }
+    .my-name >b{
+        display: inline-block;
+        margin: 0 .04rem;
     }
     .room-name{
         height: .9rem;

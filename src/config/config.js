@@ -9,17 +9,17 @@ module.exports = {
 			roomResourcePoint: 0, // 初始房间资源点数
 			roomType: 0, // 初始房间类型
 			roomBasicImage: 0, // 初始房间基础形象
-			randomOtherMoney: [5000,50000], // 其他公司初始资金随机范围
-			randomOtherImage: [100,3000], // 其他公司初始形象随机范围
+			randomOtherMoney: [30000,40000], // 其他公司初始资金随机范围
+			randomOtherImage: [1500,2500], // 其他公司初始形象随机范围
 			roomPower: 1000, // 第一个房间的初始电力
 			roomDurab: 0, // 第一个房间的初始耐久
 			roomRisk: 2, // 第一个房间的初始风险等级
 			roomAuto: 0, // 第一个房间的初始自动化程度
 			roomLevel: 1, // 第一个房间的初始等级
-			randomOtherRoomRange: [1,5], // 其他公司初始房间数量随机范围
+			randomOtherRoomRange: [3,5], // 其他公司初始房间数量随机范围
 			randmOtherRoomPowerRange: [50,10000], // 其他公司初始房间电力随机范围
 			randmOtherRoomDurabRange: [0,10000], // 其他公司初始房间耐久随机范围
-			randmOtherRoomRiskRange: [1,3], // 其他公司初始房间风险等级随机范围
+			randmOtherRoomRiskRange: [2,2], // 其他公司初始房间风险等级随机范围
 			randmOtherRoomAutoRange: [0,10000], // 其他公司初始房间自动化随机范围
 			randmOtherRoomLevelRange: [1,3], // 其他公司初始房间等级随机范围
 			terminalDurab: 0, // 终端机初始耐久
@@ -49,9 +49,9 @@ module.exports = {
         max_dig_level: 3, // 终端最高挖矿等级
         max_trade_level: 3, // 终端最高交易等级
         room_levelup_cost: [20000,30000], // 房间升级费用
-        power_levelup_cost: [3500,5000], // 供电等级升级费用
-        dig_levelup_cost: [3500,5000], // 挖矿等级升级费用
-        trade_levelup_cost: [3500,5000], // 交易等级升级费用
+        power_levelup_cost: [3000,5000], // 供电等级升级费用
+        dig_levelup_cost: [3000,5000], // 挖矿等级升级费用
+        trade_levelup_cost: [3000,5000], // 交易等级升级费用
 		sell_factor: .5, // 贩卖系数
 		randmNewRoomDurabRange: [0,6000], // 新生成房间老化化随机范围
 		randmNewRoomAutoRange: [0,0], // 新生成房间自动化随机范围
@@ -74,6 +74,8 @@ module.exports = {
 
 		max_image_prop_money: 10000, // 形象宣传投入资金最大值
 		image_prop_factor: .002, // 形象宣传提升形象系数
+
+		days_limit_range: [550,600,650,700,750,800], // 时间限制范围
 
 		terminal: {
 			base: 1.5,
