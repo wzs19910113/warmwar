@@ -134,7 +134,7 @@
                                 <b>操作员:
                                     <span v-if="tempData.terminal.operator&&tempData.terminal.operator.id">
                                         <a class="orange" @click="jump(4,tempData.terminal.operator.id)">{{tempData.terminal.operator.name}}</a>
-                                        <i v-if="tempData.terminal.operator[['str','int','com','img'][tempData.terminal.operator.job-1]]">({{tempData.terminal.operator[['str','int','com','img'][tempData.terminal.operator.job-1]]}})</i>
+                                        <i v-if="tempData.terminal.operator[['str','int','com','str'][tempData.terminal.operator.job-1]]">({{tempData.terminal.operator[['str','int','com','str'][tempData.terminal.operator.job-1]]}})</i>
                                     </span>
                                     <a class="btn btn-icon" @click="onTapAddWorker(6)">+</a>
                                     <a v-if="tempData.terminal.operator&&tempData.terminal.operator.id" class="btn btn-icon" @click="onTapRemoveWorker(6)">-</a>
