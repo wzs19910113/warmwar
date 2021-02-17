@@ -73,7 +73,7 @@ module.exports = {
 		damage_money_cost: 100000, // 一次形象破坏资金消耗
 
 		max_image_prop_money: 10000, // 形象宣传投入资金最大值
-		image_prop_factor: .002, // 形象宣传提升形象系数
+		image_prop_factor: .001, // 形象宣传提升形象系数
 
 		days_limit_range: [800,900,1000,1000,1000,1000], // 时间限制范围
 
@@ -81,17 +81,16 @@ module.exports = {
 			base: 1.5,
 			power_factor: .3,
 			durab_increase: 25,
-			dig_factor: .24,
+			dig_factor: .48,
 			dig_power_consume_base: 40,
 			dig_power_consume_factor: 40,
-			trade_money_factor: .2,
+			trade_money_factor: .4,
 			trade_support_factor: .01,
 			trade_power_consume_base: 40,
 			trade_power_consume_factor: 40,
 			durab_threshold: 5000,
 			durab_factor: 1.8,
-			durab_consume_factor: .5,
-			room_risk_addition_durab: 100,
+			durab_consume_factor: .8,
 		},
 
 		room: {
