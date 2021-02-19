@@ -221,13 +221,14 @@ export default {
         color: red;
     }
     .lv1{
-        color: #808080;
+        color: #a5a5a5;
     }
     .lv2{
-        color: #1E90FF;
+        color: #5EC0FF;
+        font-weight: bold;
     }
     .lv3{
-        color: #1E90FF;
+        color: #0E56FF;
         font-weight: bold;
     }
     .list .select{

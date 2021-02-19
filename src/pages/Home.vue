@@ -148,9 +148,21 @@
                             </div>
                             <!-- <div class="index-cell"><b>老化: {{percent(tempData.terminal.durab,config.max_durab)}}%</b></div> -->
                             <div class="index-cell pct-wrap"><b>老化:</b>&nbsp;<div class="pct"><nut-progress :text-inside="true" :percentage="percent(tempData.terminal.durab,config.max_durab)"></nut-progress></div></div>
-                            <div class="index-cell"><b>供电等级: {{tempData.terminal.powerLevel}}</b></div>
-                            <div class="index-cell"><b>挖矿等级: {{tempData.terminal.digLevel}}</b></div>
-                            <div class="index-cell"><b>交易等级: {{tempData.terminal.tradeLevel}}</b></div>
+                            <div class="index-cell">
+                                <b>供电等级:</b>
+                                <span class="level-bar" :class="`level-bar-${tempData.terminal.powerLevel}`" v-for="i in tempData.terminal.powerLevel"></span>
+                                <span class="level-text">{{tempData.terminal.powerLevel}}</span>
+                            </div>
+                            <div class="index-cell">
+                                <b>挖矿等级:</b>
+                                <span class="level-bar" :class="`level-bar-${tempData.terminal.digLevel}`" v-for="i in tempData.terminal.digLevel"></span>
+                                <span class="level-text">{{tempData.terminal.digLevel}}</span>
+                            </div>
+                            <div class="index-cell">
+                                <b>交易等级:</b>
+                                <span class="level-bar" :class="`level-bar-${tempData.terminal.tradeLevel}`" v-for="i in tempData.terminal.tradeLevel"></span>
+                                <span class="level-text">{{tempData.terminal.tradeLevel}}</span>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -3696,5 +3708,24 @@ export default {
     }
     .rule-board .sub-row p{
         padding-left: .32rem;
+    }
+    .level-bar{
+        display: inline-block;
+        height: .2rem;
+        line-height: .2rem;
+        width: 1rem;
+        margin-right: .04rem;
+    }
+    .level-bar-1{
+        background-color: #ccc;
+    }
+    .level-bar-2{
+        background-color: #5EC0FF;
+    }
+    .level-bar-3{
+        background-color: #0E56FF;
+    }
+    .level-text{
+        font-weight: bold;
     }
 </style>
