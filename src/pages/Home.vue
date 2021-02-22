@@ -546,7 +546,7 @@
         <nut-popup v-model="showSanction">
             <div class="row room-board" v-if="tempData.factory">
                 <div class="row">
-                    <nut-textinput placeholder="输入打压金额" v-model="tempData.sanctionMoney" />
+                    <nut-textinput placeholder="输入打压金额（最低 100000 $）" v-model="tempData.sanctionMoney" />
                     <nut-numberkeyboard :visible="showKeyborad" v-model="tempData.sanctionMoney" maxlength="8" @close="showKeyborad=false"></nut-numberkeyboard>
                 </div>
                 <div class="row sell">
@@ -861,7 +861,7 @@
                 </div>
                 <div class="row">
                     <h3><label>投资</label></h3>
-                    <p>投资此工厂，可以获得稳定的收益；<br/>投资收益取决于此工厂的规模增量和形象，以及你对此工厂的支持率。</p>
+                    <p>投资此工厂，可以获得稳定的收益；<br/>投资收益取决于此工厂的规模增量和形象，以及你对此工厂的支持率；<br/>投资一般都有很高的回报，但不要投入太多，因为被投资的工厂本身的收入也会提升，这会导致其后期实力过强而难以收购。</p>
                 </div>
                 <div class="row">
                     <h3><label>形象破坏</label></h3>
@@ -2489,6 +2489,10 @@ export default {
                 this.$toast.text(`我厂形象必须为正`);
                 return ;
             }
+            if(factory.image<=0){
+                this.$toast.text(`对方工厂形象必须为正`);
+                return ;
+            }
             if(myFactory.money<CONFIG.damage_money_cost){
                 this.$toast.text(`资金不足`);
                 return ;
@@ -2522,6 +2526,10 @@ export default {
             }
             if(factory.sanctioned){
                 this.$toast.text(`已经打压过了`);
+                return ;
+            }
+            if(sanctionMoney<CONFIG.min_saction_money){
+                this.$toast.text(`最低 100000 $`);
                 return ;
             }
             if(myFactory.money<sanctionMoney){
