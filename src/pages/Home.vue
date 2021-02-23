@@ -1813,19 +1813,19 @@ export default {
                         youImageIncome = r(Math.floor(youImageIncomeImpact/4),youImageIncomeImpact);
                     }
                     youMoneyIncome = Math.round(youMoneyIncome*youFactory.image*0.00008);
-                    if(relation.invest>0){
+                    if(relation.invest>0){ // 结算彼此投资收益
                         let supportPct = relation.support/CONFIG.max_support,
-                            investIncome = youMoneyIncome*supportPct+relation.invest*supportPct*.006,
-                            infract = relation.invest*0.00001;
-                        if(infract>1)
-                            infract = 1;
+                            investIncome = youMoneyIncome*supportPct+relation.invest*supportPct*.0008,
+                            infract = relation.invest/youFactory.money;
+                        if(infract>10)
+                            infract = 10;
                         investIncome = Math.round(investIncome*infract);
+                        moneyIncome += investIncome;
+                        youMoneyIncome += Math.round(investIncome*.125);
                         logInvestList.push({
                             name: youFactory.name,
                             income: investIncome,
                         });
-                        moneyIncome += investIncome;
-                        youMoneyIncome += Math.round(youMoneyIncome*supportPct*.15);
                     }
                     youFactory.money += youMoneyIncome;
                     youFactory.image += youImageIncome;
