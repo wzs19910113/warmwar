@@ -1816,7 +1816,7 @@ export default {
                     if(relation.invest>0){ // 结算彼此投资收益
                         let supportPct = relation.support/CONFIG.max_support,
                             investIncome = youMoneyIncome*supportPct+relation.invest*supportPct*.0008,
-                            infract = relation.invest/youFactory.money;
+                            infract = relation.invest/youFactory.money*5;
                         if(infract>10)
                             infract = 10;
                         investIncome = Math.round(investIncome*infract);
