@@ -1820,6 +1820,9 @@ export default {
                         if(infract>10)
                             infract = 10;
                         investIncome = Math.round(investIncome*infract);
+                        if(investIncome<0){
+                            investIncome = 0;
+                        }
                         moneyIncome += investIncome;
                         youMoneyIncome += Math.round(investIncome*.125);
                         logInvestList.push({
