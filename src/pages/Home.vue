@@ -1412,7 +1412,7 @@ export default {
                 if(autoWorker)
                     _roomFreeWorkerList = removeFromList(autoWorker.id,'id',_roomFreeWorkerList);
             }
-            if(!omaintainer&&room.durab>0&&factory.money>0){
+            if(!omaintainer&&room.durab>0&&factory.money>0&&room.auto<CONFIG.max_auto){
                 maintainer = bulbsort(_roomFreeWorkerList,'str')[0];
                 if(maintainer)
                     _roomFreeWorkerList = removeFromList(maintainer.id,'id',_roomFreeWorkerList);
@@ -2389,7 +2389,7 @@ export default {
                 if(room.id==this.tempData.room.id){
                     fromRoom = room;
                 }
-                else{
+                else if(room.type!=1){
                     toRoomList.push(room);
                 }
             }
