@@ -1735,7 +1735,7 @@ export default {
                     joint = getMatchList(workerList,[['tfid',relation.to],['job',12]])[0],
                     spyList = getMatchList(workerList,[['tfid',relation.to],['job',13]]);
                 // 外交员
-                if(joint&&myFactory.image>=CONFIG.relation.joint_image_threshold){
+                if(joint&&myFactory.image>0){
                     let supportIncrease = Math.round(CONFIG.relation.support_increase_fix+CONFIG.relation.support_joint_increase_factor*joint.com)+Math.round(supportIncome*CONFIG.relation.support_trade_increase_factor);
                     relation.support += supportIncrease;
                     logSuffix += `<p><span style="color:green">▲</span> 我厂对${youFactory.name}的支持率提升了</p>`;
@@ -1767,11 +1767,11 @@ export default {
                             youFactory.imageDamaged = true;
                             youFactory.image -= imageDamage;
                             moneyIncome -= spyConsume;
-                            logSuffix += `<p><span style="color:green">▲</span> ${mySpy.name}（智力 ${myInt}）的间谍工作对${youFactory.name}造成了 <b>${imageDamage}</b> 的形象损失（我厂消耗 <b>${spyConsume}</b> $）</p>`;
+                            logSuffix += `<p><span style="color:green">▲</span> ${mySpy.name}（${myInt}）的间谍工作对${youFactory.name}造成了 <b>${imageDamage}</b> 的形象损失（我厂消耗 <b>${spyConsume}</b> $）</p>`;
                         }
                         else if(mySpy&&youWorker){
                             moneyIncome -= spyConsume;
-                            logSuffix += `<p><span style="color:red">▼</span> ${mySpy.name}（智力 ${myInt}）的间谍工作被 ${youWorker.name}（智力 ${youInt}）识破了，没有造成任何效果（我厂消耗 <b>${spyConsume}</b> $）</p>`;
+                            logSuffix += `<p><span style="color:red">▼</span> ${mySpy.name}（${myInt}）的间谍工作被 ${youWorker.name}（${youInt}）识破了，没有造成任何效果（我厂消耗 <b>${spyConsume}</b> $）</p>`;
                         }
                     }
                 }
