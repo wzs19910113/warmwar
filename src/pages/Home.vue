@@ -539,18 +539,14 @@
         <nut-popup v-model="showConfirmDamage">
             <div class="row room-board" v-if="tempData.factory">
                 <div class="row level">
-                    <a class="btn" @click="onTapConfirmDamage">对{{tempData.factory.name}}执行一次形象破坏（{{config.damage_money_cost}} $）</a>
+                    <a class="btn" @click="onTapConfirmDamage">对{{tempData.factory.name}}执行一次形象破坏（100万 $）</a>
                 </div>
             </div>
         </nut-popup>
         <nut-popup v-model="showSanction">
             <div class="row room-board" v-if="tempData.factory">
-                <div class="row">
-                    <nut-textinput placeholder="输入打压金额（最低 100000 $）" v-model="tempData.sanctionMoney" />
-                    <nut-numberkeyboard :visible="showKeyborad" v-model="tempData.sanctionMoney" maxlength="8" @close="showKeyborad=false"></nut-numberkeyboard>
-                </div>
-                <div class="row sell">
-                    <a class="risk-item" @click="onTapConfirmSanction">确认打压</a>
+                <div class="row level">
+                    <a class="btn" @click="onTapConfirmSanction">对{{tempData.factory.name}}执行一次经济打压（100万 $）</a>
                 </div>
             </div>
         </nut-popup>
@@ -865,11 +861,11 @@
                 </div>
                 <div class="row">
                     <h3><label>形象破坏</label></h3>
-                    <p>消耗 100000 $ 资金让此工厂的形象减半；<br/>每十天可执行一次。</p>
+                    <p>消耗 100万 $ 资金让此工厂的形象减半；<br/>每十天可执行一次。</p>
                 </div>
                 <div class="row">
                     <h3><label>经济打压</label></h3>
-                    <p>消耗指定额度资金，以减少此工厂的资金；<br/>效果为投入金额的一半；<br/>执行打压后，你厂的形象将减少，减少量为此工厂的形象值；<br/>每十天可执行一次。</p>
+                    <p>消耗 100万 $ 资金让此工厂的资金减少 50万 $；<br/>执行打压后，你厂的形象将减少，减少量为此工厂的形象值；<br/>每十天可执行一次。</p>
                 </div>
                 <div class="row">
                     <h3><label>偷取和收购</label></h3>
@@ -957,7 +953,6 @@ export default {
                 stealRoom: null,
                 stealWorker: null,
                 investMoney: '',
-                sanctionMoney: '',
 
                 // 报表
                 log: {},
@@ -2496,12 +2491,12 @@ export default {
                 this.$toast.text(`对方工厂形象必须为正`);
                 return ;
             }
-            if(myFactory.money<CONFIG.damage_money_cost){
-                this.$toast.text(`资金不足`);
-                return ;
-            }
             if(factory.damaged){
                 this.$toast.text(`已经破坏过了`);
+                return ;
+            }
+            if(myFactory.money<CONFIG.damage_money_cost){
+                this.$toast.text(`资金不足`);
                 return ;
             }
             let damage = Math.round(factory.image/2);
@@ -2514,15 +2509,14 @@ export default {
             this.$dialog({
                 title: '形象破坏结果报告',
                 textAlign: 'left',
-                content: `${factory.name}的形象减少了<b>${damage} $</b><br/>我厂共花费 <b>${CONFIG.damage_money_cost} $</b>`,
+                content: `${factory.name}的形象减少了<b>${damage} $</b><br/>我厂共花费 <b>100 万 $</b>`,
                 noCancelBtn: true,
                 noOkBtn: true,
             });
         },
         onTapConfirmSanction(){ // 点击【确认经济打压】按钮
             let factory = getListByID(this.tempData.factory.id,'id',this.game.factoryList)[0],
-                myFactory = this.game.factoryList[0],
-                sanctionMoney = this.tempData.sanctionMoney;
+                myFactory = this.game.factoryList[0];
             if(myFactory.image<=0){
                 this.$toast.text(`我厂形象必须为正`);
                 return ;
@@ -2531,17 +2525,13 @@ export default {
                 this.$toast.text(`已经打压过了`);
                 return ;
             }
-            if(sanctionMoney<CONFIG.min_saction_money){
-                this.$toast.text(`最低 100000 $`);
-                return ;
-            }
-            if(myFactory.money<sanctionMoney){
+            if(myFactory.money<CONFIG.saction_money_cost){
                 this.$toast.text(`资金不足`);
                 return ;
             }
-            let damage = Math.round(sanctionMoney/2),
+            let damage = Math.round(CONFIG.saction_money_cost/2),
                 imageCost = factory.image;
-            myFactory.money -= sanctionMoney;
+            myFactory.money -= CONFIG.saction_money_cost;
             myFactory.image -= imageCost;
             factory.money -= damage;
             factory.sanctioned = true;
@@ -2551,7 +2541,7 @@ export default {
             this.$dialog({
                 title: '经济打压结果报告',
                 textAlign: 'left',
-                content: `${factory.name}的总资金减少了<b>${damage} $</b><br/>我厂共花费 <b>${sanctionMoney} $</b><br/>我厂形象${imageCost>=0?'下降':'提升'}了 <b>${Math.abs(imageCost)}</b>`,
+                content: `${factory.name}的总资金减少了<b>50 万 $</b><br/>我厂共花费 <b>100 万 $</b><br/>我厂形象${imageCost>=0?'下降':'提升'}了 <b>${Math.abs(imageCost)}</b>`,
                 noCancelBtn: true,
                 noOkBtn: true,
             });
