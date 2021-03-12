@@ -2509,7 +2509,7 @@ export default {
             this.$dialog({
                 title: '形象破坏结果报告',
                 textAlign: 'left',
-                content: `${factory.name}的形象减少了<b>${damage} $</b><br/>我厂共花费 <b>50 万 $</b>`,
+                content: `${factory.name}的形象减少了<b>${damage} $</b><br/>我厂共花费 <b>100 万 $</b>`,
                 noCancelBtn: true,
                 noOkBtn: true,
             });
@@ -2541,7 +2541,7 @@ export default {
             this.$dialog({
                 title: '经济打压结果报告',
                 textAlign: 'left',
-                content: `${factory.name}的总资金减少了<b>50 万 $</b><br/>我厂共花费 <b>50 万 $</b><br/>我厂形象${imageCost>=0?'下降':'提升'}了 <b>${Math.abs(imageCost)}</b>`,
+                content: `${factory.name}的总资金减少了<b>50 万 $</b><br/>我厂共花费 <b>100 万 $</b><br/>我厂形象${imageCost>=0?'下降':'提升'}了 <b>${Math.abs(imageCost)}</b>`,
                 noCancelBtn: true,
                 noOkBtn: true,
             });
