@@ -2529,7 +2529,7 @@ export default {
                 this.$toast.text(`资金不足`);
                 return ;
             }
-            let damage = Math.round(CONFIG.saction_money_cost/2),
+            let damage = CONFIG.saction_money_cost,
                 imageCost = factory.image;
             myFactory.money -= CONFIG.saction_money_cost;
             myFactory.image -= imageCost;
