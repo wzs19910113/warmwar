@@ -70,8 +70,8 @@ module.exports = {
 		buy_factory_support_threshold: 0, // 收购工厂支持率阈值
 		image_price_factor: .2, // 形象/价值系数
 
-		damage_money_cost: 1000000, // 一次形象破坏资金消耗
-		saction_money_cost: 1000000, // 经济打压最低投入金额
+		damage_money_cost: 500000, // 一次形象破坏资金消耗
+		saction_money_cost: 500000, // 经济打压最低投入金额
 
 		max_image_prop_money: 10000, // 形象宣传投入资金最大值
 		image_prop_factor: .001, // 形象宣传提升形象系数

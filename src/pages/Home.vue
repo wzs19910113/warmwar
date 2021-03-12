@@ -539,14 +539,14 @@
         <nut-popup v-model="showConfirmDamage">
             <div class="row room-board" v-if="tempData.factory">
                 <div class="row level">
-                    <a class="btn" @click="onTapConfirmDamage">对{{tempData.factory.name}}执行一次形象破坏（100万 $）</a>
+                    <a class="btn" @click="onTapConfirmDamage">对{{tempData.factory.name}}执行一次形象破坏（50万 $）</a>
                 </div>
             </div>
         </nut-popup>
         <nut-popup v-model="showSanction">
             <div class="row room-board" v-if="tempData.factory">
                 <div class="row level">
-                    <a class="btn" @click="onTapConfirmSanction">对{{tempData.factory.name}}执行一次经济打压（100万 $）</a>
+                    <a class="btn" @click="onTapConfirmSanction">对{{tempData.factory.name}}执行一次经济打压（50万 $）</a>
                 </div>
             </div>
         </nut-popup>
@@ -738,7 +738,7 @@
                     </div>
                     <div class="sub-row">
                         <h3><label>冒险</label></h3>
-                        <p>每日收益提升至 250%，老化速度提升至 300%。</p>
+                        <p>发电、挖矿和交易收益提升 100%，老化速度提升 200%。</p>
                     </div>
                 </div>
                 <div class="row">
@@ -746,7 +746,7 @@
                     <p>房间最终收益为其终端收益总和的协调值百分比，因此协调值越高越好；<br/>当只有一个人员工作时，协调值为 100%；当有多个人员工作时，协调值为其「交流」能力值的平均值。</p>
                     <div class="sub-row">
                         <h3><label>管理员</label></h3>
-                        <p>如果安排了管理员，不论房间内有多少人员工作，房间的协调值固定为管理员的「交流」能力值；<br/><br/>如果安排了管理员，在冒险模式下，房间的总收益将取决于管理员对应不同房间类型的能力值（体力-发电站，智力-挖矿厂，交流-交易所，平均值-通用房）；<br/><br/>比如当房间类型为挖矿厂，管理员的智力为 100 时，房间的总收益将固定提升至 500%。</p>
+                        <p>如果安排了管理员，不论房间内有多少人员工作，房间的协调值固定为管理员的「交流」能力值；<br/><br/>如果安排了管理员，在冒险模式下，房间的总收益将取决于管理员对应不同房间类型的能力值（体力-发电站，智力-挖矿厂，交流-交易所，平均值-通用房）；<br/><br/>比如当房间类型为挖矿厂，管理员的智力为 100 时，房间的总收益将固定提升 150%。</p>
                     </div>
                 </div>
                 <div class="row">
@@ -861,11 +861,11 @@
                 </div>
                 <div class="row">
                     <h3><label>形象破坏</label></h3>
-                    <p>消耗 100万 $ 资金让此工厂的形象减半；<br/>每十天可执行一次。</p>
+                    <p>消耗 50万 $ 资金让此工厂的形象减半；<br/>每十天可执行一次。</p>
                 </div>
                 <div class="row">
                     <h3><label>经济打压</label></h3>
-                    <p>消耗 100万 $ 资金让此工厂的资金减少 50万 $；<br/>执行打压后，你厂的形象将减少，减少量为此工厂的形象值；<br/>每十天可执行一次。</p>
+                    <p>消耗 50万 $ 资金让此工厂的资金减少 50万 $；<br/>执行打压后，你厂的形象将减少，减少量为此工厂的形象值；<br/>每十天可执行一次。</p>
                 </div>
                 <div class="row">
                     <h3><label>偷取和收购</label></h3>
@@ -1492,7 +1492,7 @@ export default {
                     }
                     if(abi&&abi>0){ // 重新计算 riskImpact
                         if(room.risk==3){ // 冒险
-                            riskImpact = 1+4*abi/CONFIG.max_worker_ability;
+                            riskImpact = 2+.5*abi/CONFIG.max_worker_ability;
                         }
                     }
                     return Math.round(income*durabImpact*(balance/100)*riskImpact);
@@ -1603,7 +1603,7 @@ export default {
                 }
                 else if(room.risk==3){ // 冒险
                     durabImpact = 3;
-                    roomRiskImpact = 2.5;
+                    roomRiskImpact = 2;
                 }
                 let abi = 0;
                 if(manager){
@@ -1642,7 +1642,7 @@ export default {
                 }
 
                 // 房间数据赋值
-                roomPowerConsume = roomPowerConsume*roomRiskImpact;
+                roomPowerConsume = roomPowerConsume*(roomRiskImpact+2);
                 room.power += roomPowerIncome-roomPowerConsume;
                 roomDurabIncrease = roomDurabIncrease*calcFade(workingWorkerCount);
                 roomDurabIncrease = Math.round((roomDurabIncrease+CONFIG.room.durab_fix)*durabImpact*(1-room.auto/CONFIG.max_auto));
@@ -2509,7 +2509,7 @@ export default {
             this.$dialog({
                 title: '形象破坏结果报告',
                 textAlign: 'left',
-                content: `${factory.name}的形象减少了<b>${damage} $</b><br/>我厂共花费 <b>100 万 $</b>`,
+                content: `${factory.name}的形象减少了<b>${damage} $</b><br/>我厂共花费 <b>50 万 $</b>`,
                 noCancelBtn: true,
                 noOkBtn: true,
             });
@@ -2541,7 +2541,7 @@ export default {
             this.$dialog({
                 title: '经济打压结果报告',
                 textAlign: 'left',
-                content: `${factory.name}的总资金减少了<b>50 万 $</b><br/>我厂共花费 <b>100 万 $</b><br/>我厂形象${imageCost>=0?'下降':'提升'}了 <b>${Math.abs(imageCost)}</b>`,
+                content: `${factory.name}的总资金减少了<b>50 万 $</b><br/>我厂共花费 <b>50 万 $</b><br/>我厂形象${imageCost>=0?'下降':'提升'}了 <b>${Math.abs(imageCost)}</b>`,
                 noCancelBtn: true,
                 noOkBtn: true,
             });
