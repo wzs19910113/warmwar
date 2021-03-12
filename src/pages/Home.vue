@@ -539,14 +539,14 @@
         <nut-popup v-model="showConfirmDamage">
             <div class="row room-board" v-if="tempData.factory">
                 <div class="row level">
-                    <a class="btn" @click="onTapConfirmDamage">对{{tempData.factory.name}}执行一次形象破坏（50万 $）</a>
+                    <a class="btn" @click="onTapConfirmDamage">对{{tempData.factory.name}}执行一次形象破坏（100万 $）</a>
                 </div>
             </div>
         </nut-popup>
         <nut-popup v-model="showSanction">
             <div class="row room-board" v-if="tempData.factory">
                 <div class="row level">
-                    <a class="btn" @click="onTapConfirmSanction">对{{tempData.factory.name}}执行一次经济打压（50万 $）</a>
+                    <a class="btn" @click="onTapConfirmSanction">对{{tempData.factory.name}}执行一次经济打压（100万 $）</a>
                 </div>
             </div>
         </nut-popup>
@@ -861,11 +861,11 @@
                 </div>
                 <div class="row">
                     <h3><label>形象破坏</label></h3>
-                    <p>消耗 50万 $ 资金让此工厂的形象减半；<br/>每十天可执行一次。</p>
+                    <p>消耗 100万 $ 资金让此工厂的形象减半；<br/>每十天可执行一次。</p>
                 </div>
                 <div class="row">
                     <h3><label>经济打压</label></h3>
-                    <p>消耗 50万 $ 资金让此工厂的资金减少 50万 $；<br/>执行打压后，你厂的形象将减少，减少量为此工厂的形象值；<br/>每十天可执行一次。</p>
+                    <p>消耗 100万 $ 资金让此工厂的资金减少 50万 $；<br/>执行打压后，你厂的形象将减少，减少量为此工厂的形象值；<br/>每十天可执行一次。</p>
                 </div>
                 <div class="row">
                     <h3><label>偷取和收购</label></h3>
@@ -2529,7 +2529,7 @@ export default {
                 this.$toast.text(`资金不足`);
                 return ;
             }
-            let damage = CONFIG.saction_money_cost,
+            let damage = Math.floor(CONFIG.saction_money_cost/2),
                 imageCost = factory.image;
             myFactory.money -= CONFIG.saction_money_cost;
             myFactory.image -= imageCost;
