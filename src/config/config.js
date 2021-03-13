@@ -182,6 +182,7 @@ room = {
 	risk: 1,(1-3)
 	auto: 1500,(1-10000)
 	level: 1,(1-3)
+	avgPower: 1,(0,1) // 接受平分电力
 }
 
 factory = {
