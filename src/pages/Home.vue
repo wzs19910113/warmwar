@@ -1642,7 +1642,7 @@ export default {
                 }
 
                 // 房间数据赋值
-                roomPowerConsume = roomPowerConsume*(roomRiskImpact+2);
+                roomPowerConsume = roomPowerConsume*(room.risk!=3?roomRiskImpact:(roomRiskImpact+2));
                 room.power += roomPowerIncome-roomPowerConsume;
                 roomDurabIncrease = roomDurabIncrease*calcFade(workingWorkerCount);
                 roomDurabIncrease = Math.round((roomDurabIncrease+CONFIG.room.durab_fix)*durabImpact*(1-room.auto/CONFIG.max_auto));
