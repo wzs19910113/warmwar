@@ -116,16 +116,20 @@ export function query(url,success,fail,type=0,data={}){ // 通用ajax请求
     return true;
 }
 export function numFormat(number){ // 货币表达格式
-    // let arr = (number+'').split(''),
-    //     tarr = [];
-    // for(let i=1;i<arr.length+1;i++){
-    //     tarr.push(arr[i-1]);
-    //     if(i%3==0&&i!=arr.length){
-    //         tarr.push(',');
-    //     }
-    // }
-    // return tarr.join('');
-    return number;
+    let abs = Math.abs(number),
+        arr = (abs+'').split(''),
+        tarr = [];
+    for(let i=arr.length-1;i>=0;i--){
+        tarr.push(arr[arr.length-i-1]);
+        if(i%3==0&&i!=arr.length&&i!=0){
+            tarr.push(',');
+        }
+    }
+    if(number<0){
+        tarr.unshift('-')
+    }
+    return tarr.join('');
+    // return number;
 }
 export function avg(arr,valname){ // 数组平均值
     let total = 0;
@@ -167,7 +171,7 @@ export function genRandomRoomName(type){ // 随机生成房间名字
 export function genRandomFactoryName(){ // 随机生成工厂名字
     return genName(CONFIG.namespace.common,CONFIG.namespace.common,CONFIG.namespace.factory);
 }
-export function genRandomRoom(id,{fid,fname,power,durab,risk,auto,level,type,basicImage,avgPower}={}){ // 随机生成房间
+export function genRandomRoom(id,{fid,fname,power,durab,risk,auto,level,type,basicImage,avgPower,group}={}){ // 随机生成房间
     type = (type||type==0)?type:r(0,3);
     return {
         id,
@@ -182,6 +186,7 @@ export function genRandomRoom(id,{fid,fname,power,durab,risk,auto,level,type,bas
         auto: (auto||auto==0)?auto:r(CONFIG.init.randmOtherRoomAutoRange[0],CONFIG.init.randmOtherRoomAutoRange[1]),
         level: (level||level==0)?level:r(CONFIG.init.randmOtherRoomLevelRange[0],CONFIG.init.randmOtherRoomLevelRange[1]),
         avgPower: avgPower||1,
+        group: group||1,
     }
 }
 export function genRandomWorker(id,{fid,fname,rid,rname,tid,initJob,boss}={}){ // 随机生成工人

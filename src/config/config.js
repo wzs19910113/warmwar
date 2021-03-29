@@ -100,7 +100,7 @@ module.exports = {
 			durab_fix: 10,
 			durab_factor: .75,
 			durab_consume_factor: 2,
-			auto_factor: 2,
+			auto_factor: 1.2,
 			auto_power_consume: 100,
 			auto_money_consume: 100,
 			durab_threshold: 5000,
@@ -158,6 +158,7 @@ worker = {
 				5:房间自动化|6:房间维护|7:房间管理|8:房间门面|
 				9:人力搜索|10:房间搜索|11:形象总代言人|
 				12:外交||13:卧底]
+	group: 0, // 房间分组(0-4)
 }
 
 terminal = {
@@ -168,6 +169,7 @@ terminal = {
 	powerLevel: 1,(1-3)
 	digLevel: 1,(1-3)
 	tradeLevel: 1,(1-3)
+	group: 0, // 房间分组(0-4)
 }
 
 room = {
@@ -183,6 +185,7 @@ room = {
 	auto: 1500,(1-10000)
 	level: 1,(1-3)
 	avgPower: 1,(0,1) // 接受平分电力
+	group: 0, // 房间分组(0-4)
 }
 
 factory = {

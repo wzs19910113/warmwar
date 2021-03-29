@@ -43,6 +43,9 @@
                     <div class="row" v-show="tempData.viewType==1">
                         <List title="房间列表" remark="双击查看" ref="roomList2" option="基本情况" @onTapOption="tempData.viewType=0" :data="tempData.myRoomList2" :columns="ROOM_LIST_5_COLUMN" @onDoubleTap="onDoubleTapRoom" :showTip="tip1" />
                     </div>
+                    <!-- <div class="row">
+                        <List title="代管房间一组" ref="roomList3" :simple="true" option="+" :largeOption="true" @onTapOption="onTapAddAgentRoomGroup(1)" :data="tempData.myRoomList3" :columns="ROOM_LIST_5_COLUMN" @onDoubleTap="onDoubleTapRoom" />
+                    </div> -->
                 </div>
                 <!--房间-->
                 <div class="tab-panel" v-if="tempData.room" v-show="state==2">
@@ -169,7 +172,7 @@
                 <!--人员-->
                 <div class="tab-panel" v-if="tempData.myWorkerList" v-show="state==4">
                     <div class="row no-margin">
-                        <h2 class="room-name">人员管理 <a class="btn btn-edit" @click="showEditWorkerPage=true">操作</a></h2>
+                        <h2 class="room-name">人员管理<!--<a class="btn btn-edit" @click="showEditWorkerPage=true">操作</a>--></h2>
                     </div>
                     <div class="row no-margin">
                         <div class="index filter">
@@ -179,6 +182,10 @@
                             <a class="btn" :class="{'select':filter==3&&searchingWorkerID==0}" @click="onTapWorkerListFilter(3)">挖矿</a>
                             <a class="btn" :class="{'select':filter==4&&searchingWorkerID==0}" @click="onTapWorkerListFilter(4)">交易</a>
                             <a class="btn" :class="{'select':filter==5&&searchingWorkerID==0}" @click="onTapWorkerListFilter(5)">终端维护</a><br/>
+                            <a class="btn" :class="{'select':filter==11&&searchingWorkerID==0}" @click="onTapWorkerListFilter(11)">管理员</a>
+                            <a class="btn" :class="{'select':filter==12&&searchingWorkerID==0}" @click="onTapWorkerListFilter(12)">房间维护</a>
+                            <a class="btn" :class="{'select':filter==13&&searchingWorkerID==0}" @click="onTapWorkerListFilter(13)">门面</a>
+                            <a class="btn" :class="{'select':filter==14&&searchingWorkerID==0}" @click="onTapWorkerListFilter(14)">自动化</a><br/>
                             <a class="btn" :class="{'select':filter==6&&searchingWorkerID==0}" @click="onTapWorkerListFilter(6)">房间搜索</a>
                             <a class="btn" :class="{'select':filter==7&&searchingWorkerID==0}" @click="onTapWorkerListFilter(7)">人力搜索</a>
                             <a v-if="game.factoryList[0].canViewRelation" class="btn" :class="{'select':filter==9&&searchingWorkerID==0}" @click="onTapWorkerListFilter(9)">外交员</a>
@@ -298,7 +305,7 @@
         <div class="footer">
             <div class="fact">
                 <div class="fact-item">总资金：{{numFormat(game.factoryList[0].money)}} $</div>
-                <div class="fact-item">工厂形象：{{numFormat(game.factoryList[0].image)}}</div>
+                <div class="fact-item">工厂形象：{{game.factoryList[0].image}}</div>
             </div>
             <nut-button class="btn btn-go" @click="onTapGo"><p>第 {{day}} 天结束</p><small>共 {{dayLimit}} 天</small></nut-button>
         </div>
@@ -321,13 +328,13 @@
             <div class="row room-board" v-if="tempData.room">
                 <div class="row room-level">
                     <div class="main-level">
-                        <h3>等级 {{tempData.room.level}}</h3>
+                        <h3>房间等级 {{tempData.room.level}}</h3>
                         <a class="btn" v-if="tempData.room.level<config.max_room_level" @click="onTapRoomLevelUp">提升等级（{{config.room_levelup_cost[tempData.room.level-1]}} $）</a>
                     </div>
                     <div class="all-level" v-if="tempData.powerLevelUpCost>0||tempData.digLevelUpCost>0||tempData.tradeLevelUpCost>0">
-                        <a class="risk-item btn-small" @click="onTapAllTerminalLevelUp(1)" v-if="tempData.powerLevelUpCost>0">提升发电等级（{{tempData.powerLevelUpCost}} $）</a>
-                        <a class="risk-item btn-small btn-small" @click="onTapAllTerminalLevelUp(2)" v-if="tempData.digLevelUpCost>0">提升挖矿等级（{{tempData.digLevelUpCost}} $）</a>
-                        <a class="risk-item btn-small" @click="onTapAllTerminalLevelUp(3)" v-if="tempData.tradeLevelUpCost>0">提升交易等级（{{tempData.tradeLevelUpCost}} $）</a>
+                        <a class="risk-item btn-small" @click="onTapAllTerminalLevelUp(1)" v-if="tempData.powerLevelUpCost>0">提升所有终端发电等级（{{tempData.powerLevelUpCost}} $）</a>
+                        <a class="risk-item btn-small btn-small" @click="onTapAllTerminalLevelUp(2)" v-if="tempData.digLevelUpCost>0">提升所有终端挖矿等级（{{tempData.digLevelUpCost}} $）</a>
+                        <a class="risk-item btn-small" @click="onTapAllTerminalLevelUp(3)" v-if="tempData.tradeLevelUpCost>0">提升所有终端交易等级（{{tempData.tradeLevelUpCost}} $）</a>
                     </div>
                 </div>
                 <div class="row risk">
@@ -626,7 +633,7 @@
                 </div>
             </div>
         </nut-popup>
-        <nut-popup v-model="showEditWorkerPage">
+        <!-- <nut-popup v-model="showEditWorkerPage">
             <div class="row room-board">
                 <div class="row">
                     <a class="risk-item btn" @click="onTapReleaseAll">全体待命</a>
@@ -638,7 +645,7 @@
                     <a class="risk-item btn" @click="onTapAutoAssignTask">自动安排空闲人员任务</a>
                 </div>
             </div>
-        </nut-popup>
+        </nut-popup> -->
         <div class="rule heavy-shadow" :class="{'rule-hide':!showGuide}" @click="showGuide=false">
             <div class="rule-board">
                 <div class="row">
@@ -741,7 +748,7 @@
                     </div>
                     <div class="sub-row">
                         <h3><label>冒险</label></h3>
-                        <p>发电、挖矿和交易收益提升 100%，老化速度提升 200%。</p>
+                        <p>发电、挖矿和交易收益提升至 200-250%，耗电量提升至 200%，老化速度提升至 300%。</p>
                     </div>
                 </div>
                 <div class="row">
@@ -778,7 +785,7 @@
                 </div>
                 <div class="row">
                     <h3><label>自动化（3级房间解锁）</label></h3>
-                    <p>在常规和冒险模式下，自动化越高，房间和终端的老化速度越慢；<br/>当房间的自动化达到 100% 时，房间和房间里的终端都将永不老化。</p>
+                    <p>自动化程度越高，房间和终端的老化速度越慢；<br/>当房间的自动化达到 100% 时，房间和房间里的终端都将永不老化。</p>
                     <div class="sub-row">
                         <h3><label>自动化工人</label></h3>
                         <p>消耗电力和资金以提升房间的自动化；<br/>提升速度取决于自动化工人的「智力」值。</p>
@@ -909,6 +916,7 @@ export default {
                 // 首页
                 myRoomList: [],
                 myRoomList2: [],
+                myRoomList3: [],
                 imageAgent: {},
                 viewType: 0,
                 propMoneyPct: 0,
@@ -1117,7 +1125,7 @@ export default {
             ],
             RELATION_LIST_COLUMN: [ // 外交关系列表
                 {name:'toName',title:'工厂名',width:'15%',},
-                {name:'money',title:'总资金',width:'20%',format:v=>`${v} $`,},
+                {name:'money',title:'总资金',width:'20%',format:v=>`${numFormat(v)} $`,},
                 {name:'image',title:'形象',width:'12.5%',},
                 {name:'invest',title:'投资',width:'15%',},
                 {name:'support',title:'支持率',width:'12.5%',format:v=>`${percent(v,CONFIG.max_support)}%`,},
@@ -1646,8 +1654,8 @@ export default {
                 }
 
                 // 房间数据赋值
-                roomPowerConsume = roomPowerConsume*(room.risk!=3?roomRiskImpact:(roomRiskImpact+2));
-                room.power += roomPowerIncome-roomPowerConsume;
+                roomPowerConsume = roomPowerConsume*(room.risk!=3?roomRiskImpact:(roomRiskImpact+1));
+                room.power += Math.round(roomPowerIncome-roomPowerConsume);
                 roomDurabIncrease = roomDurabIncrease*calcFade(workingWorkerCount);
                 roomDurabIncrease = Math.round((roomDurabIncrease+CONFIG.room.durab_fix)*durabImpact*(1-room.auto/CONFIG.max_auto));
                 room.durab += roomDurabIncrease-roomDurabReduce;
@@ -1959,7 +1967,7 @@ export default {
                 }
             }
             for(let room of myRoomList){
-                if(room.power<=0){
+                if(room.power<=0&&room.avgPower==1){
                     hasNoPowerRoom = true;
                     break;
                 }
@@ -2294,7 +2302,7 @@ export default {
             this.filter = mode;
             this.searchingWorkerID = 0;
             if(mode!=1){
-                myWorkerList = getListByID([1,2,3,4,10,9,0,12,13][mode-2],'job',tempWorkerList);
+                myWorkerList = getListByID([1,2,3,4,10,9,0,12,13,7,6,8,5][mode-2],'job',tempWorkerList);
                 this.tempData.myWorkerList = myWorkerList;
                 setTimeout(e=>{
                     this.$refs.workerList&&this.$refs.workerList.asyn();
@@ -2742,6 +2750,9 @@ export default {
             this.releaseWorker(worker);
             this.asynAllPages();
             this.showWorkerPop = false;
+        },
+        onTapAddAgentRoomGroup(id){ // 点击【添加代管房间】按钮
+            console.log(`点击【添加代管房间】按钮`,id);
         },
 
         onDoubleTapRoom(id){ // 双击【房间】按钮
@@ -3429,7 +3440,6 @@ export default {
     .filter{
         padding: .1rem 0;
         margin: 0;
-        height: 1.8rem;
         line-height: .5rem;
     }
     .filter .select,
