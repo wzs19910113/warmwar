@@ -186,7 +186,7 @@ export function genRandomRoom(id,{fid,fname,power,durab,risk,auto,level,type,bas
         auto: (auto||auto==0)?auto:r(CONFIG.init.randmOtherRoomAutoRange[0],CONFIG.init.randmOtherRoomAutoRange[1]),
         level: (level||level==0)?level:r(CONFIG.init.randmOtherRoomLevelRange[0],CONFIG.init.randmOtherRoomLevelRange[1]),
         avgPower: avgPower||1,
-        group: group||1,
+        group: group||0,
     }
 }
 export function genRandomWorker(id,{fid,fname,rid,rname,tid,initJob,boss}={}){ // 随机生成工人

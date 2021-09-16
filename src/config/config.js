@@ -3,7 +3,7 @@ module.exports = {
 	CONFIG:{
         init:{
             money: 5000, // 初始资金
-            image: 0, // 初始形象值
+            image: 100, // 初始形象值
 			workerCount: 2, // 初始工人数量
 			humanResourcePoint: 2000, // 初始人力资源点数
 			roomResourcePoint: 0, // 初始房间资源点数
@@ -37,7 +37,7 @@ module.exports = {
 		risk_name_map: ['平稳','常规','冒险'], // 风险类别名称
 		job_name_map: ['-','发电','挖矿','交易','终端维护','自动化','房间维护','管理员','门面','人力搜索','房间搜索','形象总代言','外交','间谍'], // 职能类别名称
 		room_type_name_map: ['通用房','发电站','挖矿厂','交易所'], // 房间类型名称
-		randomRoomBasicImageProb: 25, // 其他公司初始房间拥有基础形象概率
+		randomRoomBasicImageProb: 50, // 其他公司初始房间拥有基础形象概率
         max_durab: 10000, // 最大老化值
         max_balance: 100, // 房间最大平衡值
         max_auto: 10000, // 房间最大自动化值
@@ -65,8 +65,8 @@ module.exports = {
 		invest_support_threshold: 3000, // 投资支持率阈值
 		steal_worker_support_threshold: 5000, // 偷取人员支持率阈值
 		steal_worker_support_cost: 5000, // 偷取人员支持率消耗
-		steal_room_support_threshold: 7000, // 偷取房间支持率阈值
-		steal_room_support_cost: 7000, // 偷取房间支持率消耗
+		steal_room_support_threshold: 10000, // 偷取房间支持率阈值
+		steal_room_support_cost: 10000, // 偷取房间支持率消耗
 		buy_factory_support_threshold: 0, // 收购工厂支持率阈值
 		image_price_factor: .2, // 形象/价值系数
 
@@ -178,14 +178,14 @@ room = {
 	fname: '', // 工厂名
 	name: '',
 	power: 0,
-	type: 1, // 房间类型[0:：通用间|1：发电站|2：挖矿厂|3：交易所]
+	type: 1, // 房间类型[0：通用间|1：发电站|2：挖矿厂|3：交易所]
 	basicImage: 1,(0-120) // 基础形象
 	durab: 1000,(1-10000)
 	risk: 1,(1-3)
 	auto: 1500,(1-10000)
 	level: 1,(1-3)
 	avgPower: 1,(0,1) // 接受平分电力
-	group: 0, // 房间分组(0-4)
+	group: 0, // 房间分组[0：自管|1：代理|2：自营]
 }
 
 factory = {

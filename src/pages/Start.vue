@@ -221,6 +221,7 @@ export default {
                 level: init.roomLevel,
                 type: init.roomType,
                 basicImage: init.roomBasicImage,
+                group: 0,
             });
             for(let f=1;f<factoryList.length;f++){
                 for(let i=0;i<r(init.randomOtherRoomRange[0],init.randomOtherRoomRange[1]);i++){
