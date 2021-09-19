@@ -171,7 +171,7 @@ export function genRandomRoomName(type){ // 随机生成房间名字
 export function genRandomFactoryName(){ // 随机生成工厂名字
     return genName(CONFIG.namespace.common,CONFIG.namespace.common,CONFIG.namespace.factory);
 }
-export function genRandomRoom(id,{fid,fname,power,durab,risk,auto,level,type,basicImage,avgPower,group}={}){ // 随机生成房间
+export function genRandomRoom(id,{fid,fname,power,durab,risk,auto,level,type,basicImage,avgPower,order,group}={}){ // 随机生成房间
     type = (type||type==0)?type:r(0,3);
     return {
         id,
@@ -186,6 +186,7 @@ export function genRandomRoom(id,{fid,fname,power,durab,risk,auto,level,type,bas
         auto: (auto||auto==0)?auto:r(CONFIG.init.randmOtherRoomAutoRange[0],CONFIG.init.randmOtherRoomAutoRange[1]),
         level: (level||level==0)?level:r(CONFIG.init.randmOtherRoomLevelRange[0],CONFIG.init.randmOtherRoomLevelRange[1]),
         avgPower: avgPower||1,
+        order: order||1,
         group: group||0,
     }
 }
@@ -253,7 +254,7 @@ export function getMatchList(arr,matchList){ // 根据匹配获取列表 matchLi
     });
     return res;
 }
-export function removeFromList(id,idname,arr){ // 根据ID从列表中移除
+export function removeFromList(id,idname,arr){ // 根据字段名从列表中移除
     let res = [];
     Array.from(arr,inst=>{
         if(inst[idname]!=id){

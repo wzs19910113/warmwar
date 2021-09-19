@@ -1,5 +1,13 @@
 module.exports = {
 	DEBUG: false,
+	CACHE: {
+		list: '_DS_MONO_L',
+		code: '_DS_MONO_C',
+		tip1: '_DS_MONO_TP1',
+		tip2: '_DS_MONO_TP2',
+		tip3: '_DS_MONO_TP3',
+		not_show_guide: '_DS_MONO_NSG',
+	},
 	CONFIG:{
         init:{
             money: 5000, // 初始资金
@@ -178,6 +186,7 @@ room = {
 	fname: '', // 工厂名
 	name: '',
 	power: 0,
+	order: 0, // 排序值
 	type: 1, // 房间类型[0：通用间|1：发电站|2：挖矿厂|3：交易所]
 	basicImage: 1,(0-120) // 基础形象
 	durab: 1000,(1-10000)

@@ -1,11 +1,11 @@
 <template>
     <div class="main">
         <h1 class="title"><i>Molopoly</i></h1>
-        <div class="warp" v-show="state==0">
+        <div class="wrap" v-show="state==0">
             <nut-button class="btn btn-newgame" @click="newgame">新游戏</nut-button>
-            <nut-button class="btn btn-read" @click="read">读档</nut-button>
+            <nut-button class="btn btn-read" @click="read" v-if="storageList.length>0">读档</nut-button>
         </div>
-        <div class="warp" v-show="state==1">
+        <div class="wrap" v-show="state==1" style="margin-bottom:1.2rem">
             <div class="row">
                 <div class="label">你的名字：</div>
                 <nut-textinput class="input" v-model="myname" placeholder="公司创始人的姓名" :disabled="false"/>
@@ -34,10 +34,27 @@
             <nut-button class="btn btn-start" @click="start">开始游戏</nut-button>
             <nut-button class="btn btn-back" @click="back">返回</nut-button>
         </div>
-        <div class="warp" v-show="state==2">
+        <div class="wrap" v-show="state==2">
             <nut-textinput class="row code" v-model="loadcode" label="" placeholder="输入存档代码" :disabled="false"/>
             <nut-button class="btn btn-load" @click="load">继续游戏</nut-button>
             <nut-button class="btn btn-back" @click="back">返回</nut-button>
+            <div class="storage-list-wrap" v-if="storageList.length>0">
+                <div class="storage-list-title">存档列表 &nbsp;<a class="btn btn-truncate" @click="onTapTruncate">清空所有存档</a></div>
+                <div class="storage-list-head">
+                    <span class="storage-code">存档代码</span>
+                    <span class="storage-boss">老板</span>
+                    <span class="storage-factoryCount">世界工厂数</span>
+                    <span class="storage-day">进度</span>
+                </div>
+                <div class="storage-list">
+                    <a @click="onTapStorage(storage)" class="storage" v-for="(storage,index) in storageList">
+                        <span class="storage-code">{{storage.code}}</span>
+                        <span class="storage-boss">{{storage.data.game.workerList[0].name}}</span>
+                        <span class="storage-factoryCount">{{storage.data.game.factoryList.length}}</span>
+                        <span class="storage-day">{{storage.data.day}} 天</span>
+                    </a>
+                </div>
+            </div>
         </div>
         <!-- <div id="t" style="box-shadow:0 0 4px 4px grey;width:100px;height:100px;margin: 0 auto;overflow:hidden;position:relative"></div> -->
     </div>
@@ -46,14 +63,14 @@
 <script>
 // Copyright (c) 2018 Copyright Holder All Rights Reserved.
 import { query, r, bulbsort, percent, genRandomWorkerName, genRandomRoomName, genRandomFactoryName, genRandomRoom, genRandomWorker, genRandomTerminal, getListByID } from '../tools/utils';
-import { DEBUG, CONFIG } from '../config/config';
+import { DEBUG, CONFIG, CACHE, } from '../config/config';
 export default {
     name: 'Start',
     data(){
         return {
             loading: false,
             state: 0,
-            loadcode: localStorage.getItem('CODE')||'',
+            loadcode: localStorage.getItem(CACHE.code)||'',
             newcode: '',
             myname: '',
             mystrength: 1,
@@ -61,6 +78,8 @@ export default {
             mycommunication: 1,
             myimage: 1,
             factoryCount: 3,
+
+            storageList: [],
         };
     },
     mounted(){
@@ -71,6 +90,10 @@ export default {
             accTerminalID: 1, // 终端ID累加基数
             accWorkerID: 1, // 工人ID累加基数
         }
+
+        let _storageList = localStorage.getItem(CACHE.list)||'[]';
+        let storageList = JSON.parse(_storageList);
+        this.storageList = storageList;
         // @TEST
         // function y(x){
         //     return Math.sin(Math.pow(x/5,.5))*20+50;
@@ -108,32 +131,45 @@ export default {
                     factoryCount: this.factoryCount,
                 },
                 game = this.genGameData(initConfig); // 生成游戏初始数据
-            if(DEBUG){
-                window.GLOBAL.game = game;
-                console.log(window.GLOBAL);
-                // let wl = [];
-                // for(let i=0;i<100;i++){
-                //     wl.push(genRandomWorker(-1));
-                // }
-                // let sort = bulbsort(wl,'str');
-                // for(let i=0;i<sort.length;i++){
-                //     let y = sort[i].str;
-                //     $('#t').append(`<div style="width:2px;height:2px;background:blue;position:absolute;border-radius: 2px;bottom:${y}px;left:${i}px"></div>`);
-                // }
-                // this.$router.push('home');
-                // for(let i=0;i<100;i++){
-                //     console.log(genName(CONFIG.namespace.common,CONFIG.namespace.common,CONFIG.namespace.factory));
-                //     console.log(r(0,2)?genName(CONFIG.namespace.worker1,CONFIG.namespace.worker2,CONFIG.namespace.worker2):genName(CONFIG.namespace.worker1,CONFIG.namespace.worker2));
-                //     console.log(genName(CONFIG.namespace.common,CONFIG.namespace.common,CONFIG.namespace.room));
-                // }
-                return;
-            }
             this.loading = true;
             this.loading = this.$toast.loading();
             window.GLOBAL.game = game;
             window.GLOBAL.day = 1;
             window.GLOBAL.dayLimit = CONFIG.days_limit_range[initConfig.factoryCount-3];
-            query(DEBUG?'http://darkmirror.cn/api/monopoly_new.php':'../../api/monopoly_new.php',rdata=>{ // 新建存档
+
+            let _storageList = localStorage.getItem(CACHE.list)||'[]';
+            let storageList = JSON.parse(_storageList);
+            // 遍历存档
+            let savedStorage;
+            for(let storage of storageList){
+                if(storage.code==this.newcode){
+                    savedStorage = storage;
+                    break;
+                }
+            }
+            if(savedStorage){ // 已有存档
+                this.$toast.text('该存档代码已存在，请使用其他代码');
+            }
+            else{ // 没有该存档
+                try{
+                    let newStorage = {
+                        code: this.newcode,
+                        data: window.GLOBAL,
+                    }
+                    storageList.push(newStorage);
+                    _storageList = JSON.stringify(storageList);
+                    localStorage.setItem(CACHE.list,_storageList);
+                    localStorage.setItem(CACHE.code,this.newcode);
+                    this.$router.push('home');
+                }
+                catch(err){
+                    this.$toast.text(`存储失败（${err}）`);
+                }
+            }
+            this.loading.hide();
+            this.loading = null;
+
+            /*query(DEBUG?'http://darkmirror.cn/api/monopoly_new.php':'../../api/monopoly_new.php',rdata=>{ // 新建存档
                 this.loading.hide();
                 this.loading = null;
                 localStorage.setItem('CODE',this.newcode);
@@ -145,7 +181,7 @@ export default {
             },1,{
                 code: this.newcode,
                 data: JSON.stringify(window.GLOBAL),
-            });
+            });*/
         },
         back(){
             if(this.loading) return;
@@ -161,14 +197,33 @@ export default {
             this.state = 2;
         },
         load(){
-            if(DEBUG){
-                return;
-            }
             if(this.loading) return;
             if(this.loadcode.length<=0) return;
             this.loading = true;
             this.loading = this.$toast.loading();
-            query(DEBUG?'http://darkmirror.cn/api/monopoly_load.php':'../../api/monopoly_load.php',rdata=>{ // 读取存档
+
+            let _storageList = localStorage.getItem(CACHE.list)||'[]';
+            let storageList = JSON.parse(_storageList);
+            // 遍历存档
+            let savedStorage;
+            for(let storage of storageList){
+                if(storage.code==this.loadcode){
+                    savedStorage = storage;
+                    break;
+                }
+            }
+            if(savedStorage){ // 已有存档
+                window.GLOBAL = savedStorage.data;
+                localStorage.setItem(CACHE.code,this.loadcode);
+                this.$router.push('home');
+            }
+            else{ // 没有该存档
+                this.$toast.text('找不到该存档');
+            }
+            this.loading.hide();
+            this.loading = null;
+
+            /*query(DEBUG?'http://darkmirror.cn/api/monopoly_load.php':'../../api/monopoly_load.php',rdata=>{ // 读取存档
                 this.loading.hide();
                 this.loading = null;
                 window.GLOBAL = JSON.parse(rdata.data.data);
@@ -180,7 +235,29 @@ export default {
                 this.$toast.text(edata.msg);
             },1,{
                 code: this.loadcode,
+            });*/
+        },
+        onTapStorage(storage){ // 点击【存档】按钮
+            this.loadcode = storage.code;
+        },
+        onTapTruncate(){ // 点击【清空所有存档】按钮
+            let _this = this;
+            this.$dialog({
+                title: '确定清空所有存档？',
+                onOkBtn: function(){
+                    _this.deleteAllStorange();
+                    this.close();
+                }
             });
+        },
+        deleteAllStorange(){ // 清空所有存档
+            localStorage.removeItem(CACHE.list);
+            localStorage.removeItem(CACHE.code);
+            this.storageList = [];
+            this.loadcode = '';
+            if(this.storageList.length<=0){
+                this.state = 0;
+            }
         },
         genGameData({myname,mystrength,myintelligence,mycommunication,myimage,factoryCount}){ // 生成随机的游戏数据
             let factoryList = [],
@@ -209,8 +286,9 @@ export default {
                 });
             }
             // 生成房间列表
+            let id = window.GLOBAL.accRoomID++;
             roomList.push({
-                id: window.GLOBAL.accRoomID++,
+                id,
                 fid: factoryList[0].id,
                 fname: factoryList[0].name,
                 name: genRandomRoomName(init.roomType),
@@ -221,6 +299,7 @@ export default {
                 level: init.roomLevel,
                 type: init.roomType,
                 basicImage: init.roomBasicImage,
+                order: 1,
                 group: 0,
             });
             for(let f=1;f<factoryList.length;f++){
@@ -331,8 +410,8 @@ export default {
         font-size: 1rem;
         margin-bottom: 1rem;
     }
-    .warp{
-        margin-bottom: 1.2rem;
+    .wrap{
+
     }
     .row{
         display: flex;
@@ -362,5 +441,67 @@ export default {
         width: 6rem;
         margin-left: auto;
         margin-right: auto;
+    }
+
+    /* 存档列表 */
+    .storage-list-wrap{
+        width: 6rem;
+        margin: 0 auto;
+        color: #4a4a4a;
+    }
+    .storage-list-title{
+        height: .5rem;
+        line-height: .5rem;
+        text-align: left;
+        border-bottom: 1px solid #848484;
+        font-size: .3rem;
+    }
+    .btn-truncate{
+        display: inline-block;
+        float: right;
+        color: orange;
+        margin: 0;
+        width: auto;
+        padding: 0 4px;
+        font-size: .2rem;
+    }
+    .storage-list-head,.storage{
+        display: flex;
+        justify-content: space-around;
+        align-items: center;
+        width: 100%;
+        height: .5rem;
+        line-height: .5rem;
+        font-size: .24rem;
+    }
+    .storage-list-head{
+        color: #848484;
+    }
+    .storage-list{
+        max-height: 2rem;
+        overflow-y: auto;
+    }
+    .storage{
+        background-color: #eaeaea;
+        border-bottom: 1px solid #fff;
+    }
+    .storage-code,.storage-boss,.storage-day,.storage-factoryCount{
+        white-space: nowrap;
+        word-break: keep-all;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        padding: 0 4px;
+    }
+    .storage-code{
+        width: 30%;
+    }
+    .storage-boss{
+        width: 20%;
+    }
+    .storage-day{
+        width: 20%;
+    }
+    .storage-factoryCount{
+        width: 30%;
     }
 </style>
