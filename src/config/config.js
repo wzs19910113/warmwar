@@ -119,9 +119,9 @@ module.exports = {
 			durab_increase_factor: .2,
 			durab_terminal_factor: .5,
 
-			type_increase_factor: 1.1,
+			type_increase_factor: 1.3,
 			type_normal_factor: 1,
-			type_decrease_factor: .9,
+			type_decrease_factor: .7,
 		},
 
 		factory: {
