@@ -5,7 +5,7 @@
             <a class="touch-dom" @click="showSystemMenu=true">系统<br/>菜单</a>
         </nut-drag>
         <!--作弊-->
-        <nut-drag direction="y" :style="{right:'0px',top:'75px'}" v-if="debug">
+        <nut-drag direction="y" :style="{right:'0px',top:'75px'}" v-if="DEBUG">
             <a class="touch-dom" @click="onTapCheat">CHEAT</a>
         </nut-drag>
         <!--页面内容-->
@@ -206,8 +206,8 @@
                     </div>
                     <div class="row no-margin">
                         <div class="index">
-                            <div class="index-cell"><b>房间搜索点数: {{game.factoryList[0].rrp}}</b> <a class="btn btn-small" @click="onTapSearch(1)">花费所有点数搜索新房间</a></div>
-                            <div class="index-cell"><b>人力搜索点数: {{game.factoryList[0].hrp}}</b> <a class="btn btn-small" @click="onTapSearch(2)">花费所有点数搜索新人员</a></div>
+                            <div class="index-cell"><b>房间搜索点数: <span :class="`${game.factoryList[0].rrp>=CONFIG.searchRoomPointCost?'':'index-cell-grey'}`">{{game.factoryList[0].rrp}}</span> / {{CONFIG.searchRoomPointCost}}</b> <a class="btn btn-small" @click="onTapSearch(1)">搜索房间</a></div>
+                            <div class="index-cell"><b>人力搜索点数: <span :class="`${game.factoryList[0].hrp>=CONFIG.searchWorkerPointCost?'':'index-cell-grey'}`">{{game.factoryList[0].hrp}}</span> / {{CONFIG.searchWorkerPointCost}}</b> <a class="btn btn-small" @click="onTapSearch(2)">搜索人员</a></div>
                         </div>
                     </div>
                     <div class="row flex">
@@ -243,7 +243,11 @@
                 <!--工厂-->
                 <div class="tab-panel" v-if="tempData.factory" v-show="state==7">
                     <div class="row no-margin">
-                        <h1 class="room-name">{{tempData.factory.name}} <a class="btn btn-edit" @click="onTapEditFactory">执行策略</a> <a class="btn btn-edit" @click="onTapTab(6)">离开</a></h1>
+                        <h1 class="room-name">{{tempData.factory.name}}
+                            <a class="btn btn-edit" @click="onTapEditFactory">执行策略</a>
+                            <!-- <a class="btn btn-edit" @click="onTapStudy">深造派遣<span v-if="tempData.studyWorker">（{{tempData.studyWorker.name}}）</span></a> -->
+                            <a class="btn btn-edit" @click="onTapTab(6)">离开</a>
+                        </h1>
                         <h4 class="my-name">董事长：{{tempData.factory.boss.name}}</h4>
                     </div>
                     <div class="row no-margin">
@@ -279,8 +283,18 @@
                         <List title="人员列表" remark="双击偷取" ref="factoryWorkerList" :data="tempData.factoryWorkerList" :columns="WORKER_LIST_7_COLUMN" @onDoubleTap="onDoubleTapFactoryWorker" />
                     </div>
                 </div>
+                <!--深造-->
+                <div class="tab-panel" v-if="tempData.factory" v-show="state==8">
+                    <div class="row no-margin">
+                        <h1 class="room-name">在{{tempData.factory.name}}进行能力深造</h1>
+                        <h4 class="my-name">派遣员工来此公司进行深造，以提升能力</h4>
+                    </div>
+                    <div class="row no-margin">
+
+                    </div>
+                </div>
                 <!--报表-->
-                <div class="tab-panel" v-show="state==8">
+                <div class="tab-panel" v-show="state==99">
                     <div class="row no-margin">
                         <h2 class="room-name">经营报表</h2>
                         <div class="my-name" v-if="dayLimit-day>=0">当前第 <b>{{day}}</b> 天，共 <b>{{dayLimit}}</b> 天，还剩 <b>{{dayLimit-day}}</b> 天</div>
@@ -299,12 +313,12 @@
             <!--底部导航-->
             <div class="tab-wrap">
                 <a class="btn btn-tab" :class="{'active':state==1}" @click="onTapTab(1)">工厂</a>
-                <a class="btn btn-tab" :class="{'active':state==2}" @click="onTapTab(2)">房间</a>
-                <a class="btn btn-tab" :class="{'active':state==3}" @click="onTapTab(3)">终端</a>
+                <a class="btn btn-tab" :class="{'active':state==2,'btn-tab-ban':!calcRoomLockStat()}" @click="onTapTab(2)">房间</a>
+                <a class="btn btn-tab" :class="{'active':state==3,'btn-tab-ban':!calcTerminalLockStat()}" @click="onTapTab(3)">终端</a>
                 <a class="btn btn-tab" :class="{'active':state==4}" @click="onTapTab(4)">人员</a>
                 <a class="btn btn-tab" :class="{'active':state==5}" @click="onTapTab(5)">市场</a>
-                <a class="btn btn-tab" :class="{'active':state==6||state==7}" @click="onTapTab(6)">外交</a>
-                <a class="btn btn-tab" :class="{'active':state==8}" @click="onTapTab(8)">报表</a>
+                <a class="btn btn-tab" :class="{'active':state==6||state==7||state==8,'btn-tab-ban':!calcRelationLockStat()}" @click="onTapTab(6)">外交</a>
+                <a class="btn btn-tab" :class="{'active':state==99}" @click="onTapTab(99)">报表</a>
             </div>
         </div>
         <!--脚部-->
@@ -335,7 +349,7 @@
                 <div class="row room-level">
                     <div class="main-level">
                         <h3>房间等级 {{tempData.room.level}}</h3>
-                        <a class="btn" v-if="tempData.room.level<config.max_room_level" @click="onTapRoomLevelUp">提升等级（{{config.room_levelup_cost[tempData.room.level-1]}} $）</a>
+                        <a class="btn" v-if="tempData.room.level<config.max_room_level" @click="onTapRoomLevelUp">提升房间等级（{{config.room_levelup_cost[tempData.room.level-1]}} $）</a>
                     </div>
                     <div class="order-con">
                         排序：
@@ -411,10 +425,13 @@
         <nut-popup v-model="showWorkerPop">
             <div class="row worker-board" v-if="tempData.myWorker">
                 <div class="title">
-                    <h3>{{tempData.myWorker.name}} [ID{{tempData.myWorker.id}}] <span v-if="tempData.myWorker.boss">董事长</span></h3>
+                    <h3>{{tempData.myWorker.name}} [ID{{tempData.myWorker.id}}]
+                        <span v-if="tempData.myWorker.boss">董事长</span>
+                        <span>({{tempData.myWorker.gender?'男':'女'}} {{tempData.myWorker.age}})</span>
+                    </h3>
                 </div>
                 <div class="item">
-                    <h3>体力:</h3><span>{{tempData.myWorker.str}}</span>
+                    <h3>体能:</h3><span>{{tempData.myWorker.str}}</span>
                 </div>
                 <div class="item">
                     <h3>智力:</h3><span>{{tempData.myWorker.int}}</span>
@@ -464,10 +481,13 @@
         <nut-popup v-model="showConfirmBuyWorker">
             <div class="row worker-board" v-if="tempData.buyWorker">
                 <div class="title">
-                    <h3>{{tempData.buyWorker.name}}</h3>
+                    <h3>
+                        {{tempData.buyWorker.name}}
+                        <span>({{tempData.buyWorker.gender?'男':'女'}} {{tempData.buyWorker.age}})</span>
+                    </h3>
                 </div>
                 <div class="item">
-                    <h3>体力:</h3><span>{{tempData.buyWorker.str}}</span>
+                    <h3>体能:</h3><span>{{tempData.buyWorker.str}}</span>
                 </div>
                 <div class="item">
                     <h3>智力:</h3><span>{{tempData.buyWorker.int}}</span>
@@ -527,10 +547,13 @@
         <nut-popup v-model="showStealWorker">
             <div class="row worker-board" v-if="tempData.stealWorker">
                 <div class="title">
-                    <h3>{{tempData.stealWorker.name}} <span v-if="tempData.stealWorker.boss">董事长</span></h3>
+                    <h3>{{tempData.stealWorker.name}}
+                        <span v-if="tempData.stealWorker.boss">董事长</span>
+                        <span>({{tempData.stealWorker.gender?'男':'女'}} {{tempData.stealWorker.age}})</span>
+                    </h3>
                 </div>
                 <div class="item">
-                    <h3>体力:</h3><span>{{tempData.stealWorker.str}}</span>
+                    <h3>体能:</h3><span>{{tempData.stealWorker.str}}</span>
                 </div>
                 <div class="item">
                     <h3>智力:</h3><span>{{tempData.stealWorker.int}}</span>
@@ -586,7 +609,7 @@
         <nut-popup v-model="showInvest">
             <div class="row room-board" v-if="tempData.factory">
                 <div class="row">
-                    <nut-textinput placeholder="输入投资金额" v-model="tempData.investMoney" />
+                    <nut-textinput :placeholder="`最大投资金额：${CONFIG.max_investment-game.investedMoney}`" v-model="tempData.investMoney" />
                     <nut-numberkeyboard :visible="showKeyborad" v-model="tempData.investMoney" maxlength="8" @close="showKeyborad=false"></nut-numberkeyboard>
                 </div>
                 <div class="row sell">
@@ -645,7 +668,7 @@
                     <a class="btn" @click="onTapConfirmGo(1)">结束本日</a>
                 </div>
                 <div class="row">
-                    <a class="btn" @click="onTapConfirmGo(2)">结束本旬（10日）</a>
+                    <a class="btn" @click="onTapConfirmGo(2)">结束本旬（剩余 {{10-(day-1)%10}} 日）</a>
                 </div>
             </div>
         </nut-popup>
@@ -742,20 +765,20 @@
                     </div>
                     <div class="sub-row">
                         <h3><label>发电站</label></h3>
-                        <p>发电收益提升一倍，挖矿和交易收益减少一半。</p>
+                        <p>发电收益提升 10%，挖矿和交易收益减少 10%。</p>
                     </div>
                     <div class="sub-row">
                         <h3><label>挖矿厂</label></h3>
-                        <p>挖矿收益提升一倍，发电和交易收益减少一半。</p>
+                        <p>挖矿收益提升 10%，发电和交易收益减少 10%。</p>
                     </div>
                     <div class="sub-row">
                         <h3><label>交易所</label></h3>
-                        <p>交易收益提升一倍，发电和挖矿收益减少一半。</p>
+                        <p>交易收益提升 10%，发电和挖矿收益减少 10%。</p>
                     </div>
                 </div>
                 <div class="row">
                     <h3><label>电力</label></h3>
-                    <p>电力通过任命终端人员发电获取，收益与人员「体力」值相关；<br/>挖矿、交易和提升自动化都会消耗电力，请确保每个房间的电力足够。</p>
+                    <p>电力通过任命终端人员发电获取，收益与人员「体能」值相关；<br/>挖矿、交易和提升自动化都会消耗电力，请确保每个房间的电力足够。</p>
                 </div>
                 <div class="row">
                     <h3><label>策略</label></h3>
@@ -777,15 +800,15 @@
                     <p>房间最终收益为其终端收益总和的协调值百分比，因此协调值越高越好；<br/>当只有一个人员工作时，协调值为 100%；当有多个人员工作时，协调值为其「交流」能力值的平均值。</p>
                     <div class="sub-row">
                         <h3><label>管理员</label></h3>
-                        <p>如果安排了管理员，不论房间内有多少人员工作，房间的协调值固定为管理员的「交流」能力值；<br/><br/>如果安排了管理员，在冒险模式下，房间的总收益将取决于管理员对应不同房间类型的能力值（体力-发电站，智力-挖矿厂，交流-交易所，平均值-通用房）；<br/><br/>比如当房间类型为挖矿厂，管理员的智力为 100 时，房间的总收益将固定提升 150%。</p>
+                        <p>如果安排了管理员，不论房间内有多少人员工作，房间的协调值固定为管理员的「交流」能力值；<br/><br/>如果安排了管理员，在冒险模式下，房间的总收益将取决于管理员对应不同房间类型的能力值（体能-发电站，智力-挖矿厂，交流-交易所，平均值-通用房）；<br/><br/>比如当房间类型为挖矿厂，管理员的智力为 100 时，房间的总收益将固定提升 150%。</p>
                     </div>
                 </div>
                 <div class="row">
                     <h3><label>老化</label></h3>
-                    <p>当有终端工作时，房间会老化；<br/>老化值低于 50% 不会有任何影响；达到 50% 时，所有收益都会根据老化值按比例减少。</p>
+                    <p>当有终端工作时，房间和该终端会持续老化；<br/>老化值越高，房间和终端的整体收益越低；老化值达到 50% 时，收益会急剧下降。</p>
                     <div class="sub-row">
                         <h3><label>维护工人</label></h3>
-                        <p>安排维护工人可以降低房间老化，同时小幅降低每个终端的老化；<br/>维护不会消耗电力，但会消耗资金；<br/>维护的效果取决于维护工人的「体力」值。</p>
+                        <p>安排维护工人可以降低房间老化，同时小幅降低每个终端的老化；<br/>维护不会消耗电力，但会消耗资金；<br/>维护的效果取决于维护工人的「体能」值。</p>
                     </div>
                 </div>
                 <div class="row">
@@ -812,6 +835,14 @@
                         <p>消耗电力和资金以提升房间的自动化；<br/>提升速度取决于工程师的「智力」值。</p>
                     </div>
                 </div>
+                <div class="row">
+                    <h3><label>加入备用</label></h3>
+                    <p>将暂时用不到的房间加入备用以方便其他房间的管理。</p>
+                </div>
+                <div class="row">
+                    <h3><label>加入自营</label></h3>
+                    <p>让房间进入托管状态；<br/>系统每天将自动安排房间内人员的工作。</p>
+                </div>
             </div>
             <div class="rule-board" v-show="state==3">
                 <div class="row">
@@ -819,7 +850,7 @@
                     <p>安排人员在终端工作。</p>
                     <div class="sub-row">
                         <h3><label>发电</label></h3>
-                        <p>为房间提供电力；<br/>收益取决于人员「体力」值和终端的发电等级。</p>
+                        <p>为房间提供电力；<br/>收益取决于人员「体能」值和终端的发电等级。</p>
                     </div>
                     <div class="sub-row">
                         <h3><label>挖矿</label></h3>
@@ -831,7 +862,7 @@
                     </div>
                     <div class="sub-row">
                         <h3><label>终端维护</label></h3>
-                        <p>降低终端的老化；<br/>收益取决于人员「体力」值。</p>
+                        <p>降低终端的老化；<br/>收益取决于人员「体能」值。</p>
                     </div>
                 </div>
                 <div class="row">
@@ -852,7 +883,7 @@
             <div class="rule-board" v-show="state==5">
                 <div class="row">
                     <h3><label>房间搜索点数</label></h3>
-                    <p>安排人员进行房间搜索可增加房间搜索点数；<br/>增加值取决于进行搜索的人员数量，以及每个搜索人员的「体力」和「智力」中最高的一项。</p>
+                    <p>安排人员进行房间搜索可增加房间搜索点数；<br/>增加值取决于进行搜索的人员数量，以及每个搜索人员的「体能」和「智力」中最高的一项。</p>
                     <div class="sub-row">
                         <h3><label>花费所有点数搜索新房间</label></h3>
                         <p>以 1000 点为单位一次性消耗完所有房间搜索点数，在房间市场中生成新的房间作为商品供我厂选购；<br/>生成的房间数量越多，你想要的房间类型出现的概率就越高；<br/>请注意，每旬（10日）结束时，市场里的商品（房间和人员）将全部清空。</p>
@@ -903,7 +934,7 @@
                     <p>将此工厂的资源变为自己的资源；<br/>偷取将消耗大量支持率和你厂形象；<br/>只有资金量为负的工厂才能被收购。</p>
                 </div>
             </div>
-            <div class="rule-board" v-show="state==8">
+            <div class="rule-board" v-show="state==99">
                 <div class="row">
                     <h3><label>日报表</label></h3>
                     <p>点击列表可查看报表详情。</p>
@@ -926,7 +957,6 @@ export default {
             state: 1,
             day: 0,
             dayLimit: 0,
-            debug: DEBUG,
             game: {},
             filter: 1, // 人员列表页过滤器
             marketType: 1, // 市场页搜索类型
@@ -985,6 +1015,7 @@ export default {
                 stealRoom: null,
                 stealWorker: null,
                 investMoney: '',
+                studyWorker: null,
 
                 // 报表
                 log: {},
@@ -1036,9 +1067,9 @@ export default {
 
             // const
             ROOM_LIST_COLUMN: [ // 首页房间列表基本情况
-                {name:'name',title:'房间名',width:'35%',format:(name,room)=>`[${room.order}] ${name}`,},
+                {name:'name',title:'房间名',width:'35%',format:(name,room)=>`${room.order} ${name}`,},
                 {name:'power',title:'电力',isPower:true,width:'12%',},
-                {name:'basicImage',title:'基门',width:'10%',},
+                {name:'basicImage',title:'门面',width:'10%',},
                 {name:'durab',title:'老化',isRoomDurab:true,width:'12%',format:v=>`${percent(v,CONFIG.max_durab)}%`,},
                 {name:'risk',title:'策略',isMode:true,width:'8%',format:v=>`${CONFIG.risk_name_map[v-1]}`,},
                 {name:'auto',title:'自动化',isAuto:true,width:'13%',format:v=>`${percent(v,CONFIG.max_auto)}%`,},
@@ -1059,7 +1090,7 @@ export default {
             ROOM_LIST_4_COLUMN: [ // 工厂页房间列表
                 {name:'name',title:'房间名',width:'30%',},
                 {name:'power',title:'电力',isPower:true,width:'15%',},
-                {name:'basicImage',title:'基门',width:'15%',},
+                {name:'basicImage',title:'门面',width:'15%',},
                 {name:'durab',title:'老化',isRoomDurab:true,width:'15%',format:v=>`${percent(v,CONFIG.max_durab)}%`,},
                 {name:'auto',title:'自动化',isAuto:true,width:'15%',format:v=>`${percent(v,CONFIG.max_auto)}%`,},
                 {name:'level',title:'等级',isLevel:true,width:'10%',format:v=>`LV.${v}`,},
@@ -1076,7 +1107,7 @@ export default {
             ROOM_LIST_6_COLUMN: [ // 首页备用房间列表
                 {name:'name',title:'房间名',width:'29%',},
                 {name:'power',title:'电力',isPower:true,width:'12%',},
-                {name:'basicImage',title:'基门',width:'10%',},
+                {name:'basicImage',title:'门面',width:'10%',},
                 {name:'durab',title:'老化',isRoomDurab:true,width:'12%',format:v=>`${percent(v,CONFIG.max_durab)}%`,},
                 {name:'imageAgentName',title:'门面',width:'14%',},
                 {name:'auto',title:'自动化',isAuto:true,width:'13%',format:v=>`${percent(v,CONFIG.max_auto)}%`,},
@@ -1085,21 +1116,21 @@ export default {
             ROOM_LIST_7_COLUMN: [ // 首页自营房间列表
                 {name:'name',title:'房间名',width:'27%',},
                 {name:'power',title:'电力',isPower:true,width:'12%',},
-                {name:'basicImage',title:'基门',width:'10%',},
+                {name:'basicImage',title:'门面',width:'10%',},
                 {name:'durab',title:'老化',isRoomDurab:true,width:'12%',format:v=>`${percent(v,CONFIG.max_durab)}%`,},
                 {name:'risk',title:'策略',isMode:true,width:'8%',format:v=>`${CONFIG.risk_name_map[v-1]}`,},
                 {name:'auto',title:'自动化',isAuto:true,width:'13%',format:v=>`${percent(v,CONFIG.max_auto)}%`,},
                 {name:'workerCount',title:'人数',width:'8%',},
                 {name:'level',title:'等级',isLevel:true,width:'10%',format:v=>`LV.${v}`,},
             ],
-            TERMINAL_LIST_COLUMN: [
+            TERMINAL_LIST_COLUMN: [ // 房间设备列表
                 {name:'powerLevel',title:'供电Lv',isLevel:true,width:'1.3rem',format:v=>`LV.${v}`,},
                 {name:'digLevel',title:'挖矿Lv',isLevel:true,width:'1.3rem',format:v=>`LV.${v}`,},
                 {name:'tradeLevel',title:'交易Lv',isLevel:true,width:'1.3rem',format:v=>`LV.${v}`,},
                 {name:'durab',title:'老化',width:'.7rem',isDurab:true,format:v=>`${percent(v,CONFIG.max_durab)}%`,},
                 {name:'workerName',title:'工人',width:'1rem',format:v=>`${v||'-'}`},
                 {name:'jobName',title:'运行',width:'1rem',format:v=>`${v||'-'}`},
-                {name:'str',title:'体力',width:'1rem',showAbi:true,format:v=>`${v||'-'}`},
+                {name:'str',title:'体能',width:'1rem',showAbi:true,format:v=>`${v||'-'}`},
                 {name:'int',title:'智力',width:'1rem',showAbi:true,format:v=>`${v||'-'}`},
                 {name:'com',title:'交流',width:'1rem',showAbi:true,format:v=>`${v||'-'}`},
                 {name:'img',title:'形象',width:'1rem',showAbi:true,format:v=>`${v||'-'}`},
@@ -1107,7 +1138,7 @@ export default {
             WORKER_LIST_COLUMN: [ // 弹窗人员列表
                 {name:'name',title:'名字',width:'15%',},
                 // {name:'abi-chart',title:'能力图形',width:'24%',},
-                {name:'str',title:'体力',width:'10%',},
+                {name:'str',title:'体能',width:'10%',},
                 {name:'int',title:'智力',width:'10%',},
                 {name:'com',title:'交流',width:'10%',},
                 {name:'img',title:'形象',width:'10%',},
@@ -1115,23 +1146,23 @@ export default {
                 {name:'job',title:'职能',width:'15%',format:v=>`${CONFIG.job_name_map[v]}`,},
             ],
             WORKER_LIST_2_COLUMN: [ // 人员列表
-                {name:'name',title:'名字',width:'15%',},
-                {name:'str',title:'体力',width:'10%',},
-                {name:'int',title:'智力',width:'10%',},
-                {name:'com',title:'交流',width:'10%',},
-                {name:'img',title:'形象',width:'10%',},
+                {name:'name',title:'名字',width:'23%',format:(name,worker)=>`${name} (${worker.gender?'男':'女'} ${worker.age})`,},
+                {name:'str',title:'体能',width:'8%',},
+                {name:'int',title:'智力',width:'8%',},
+                {name:'com',title:'交流',width:'8%',},
+                {name:'img',title:'形象',width:'8%',},
                 {name:'rname',title:'房间',width:'30%',format:v=>`${v||'-'}`,},
                 {name:'job',title:'职能',width:'15%',format:v=>`${CONFIG.job_name_map[v]}`,},
             ],
             WORKER_LIST_3_COLUMN: [ // 房间人员列表
                 {name:'id',title:'ID',width:'0',},
-                {name:'name',title:'名字',width:'50%',},
+                {name:'name',title:'名字',width:'50%',format:(name,worker)=>`${name} (${worker.gender?'男':'女'} ${worker.age})`,},
                 {name:'job',title:'职能',width:'50%',format:v=>`${CONFIG.job_name_map[v]}`,},
             ],
             WORKER_LIST_4_COLUMN: [ // 房间搜索人员列表
                 {name:'id',title:'ID',width:'0',},
                 {name:'name',title:'名字',width:'50%',},
-                {name:'str',title:'体力',width:'25%',},
+                {name:'str',title:'体能',width:'25%',},
                 {name:'int',title:'智力',width:'25%',},
             ],
             WORKER_LIST_5_COLUMN: [ // 人力搜索人员列表
@@ -1142,16 +1173,16 @@ export default {
             ],
             WORKER_LIST_6_COLUMN: [ // 市场页人员列表
                 {name:'id',title:'ID',width:'0',},
-                {name:'name',title:'名字',width:'26%',},
-                {name:'str',title:'体力',width:'12%',},
+                {name:'name',title:'名字',width:'26%',format:(name,worker)=>`${name} (${worker.gender?'男':'女'} ${worker.age})`,},
+                {name:'str',title:'体能',width:'12%',},
                 {name:'int',title:'智力',width:'12%',},
                 {name:'com',title:'交流',width:'12%',},
                 {name:'img',title:'形象',width:'12%',},
                 {name:'price',title:'售价',width:'26%',format:v=>`${v} $`,},
             ],
             WORKER_LIST_7_COLUMN: [ // 工厂页人员列表
-                {name:'name',title:'名字',width:'28%',},
-                {name:'str',title:'体力',width:'18%',},
+                {name:'name',title:'名字',width:'28%',format:(name,worker)=>`${name} (${worker.gender?'男':'女'} ${worker.age})`,},
+                {name:'str',title:'体能',width:'18%',},
                 {name:'int',title:'智力',width:'18%',},
                 {name:'com',title:'交流',width:'18%',},
                 {name:'img',title:'形象',width:'18%',},
@@ -1169,7 +1200,11 @@ export default {
                 {name:'jointName',title:'外交员',width:'12.5%',format:v=>`${v||'-'}`,},
                 {name:'spyCount',title:'间谍数',width:'12.5%',},
             ],
+
+            CONFIG,
+            DEBUG,
         };
+
     },
     mounted(){
         if(window.GLOBAL&&window.GLOBAL.game){
@@ -1197,7 +1232,7 @@ export default {
             if(!no_tip2){
                 this.tip2 = true;
             }
-            if(!no_tip3){
+            if(!no_tip3&&this.game.factoryList[0].image>=CONFIG.relation.joint_image_threshold){
                 this.tip3 = true;
             }
         }
@@ -1406,6 +1441,17 @@ export default {
             if(relation.invest>0)
                 sum += relation.invest/5;
             return Math.round(sum);
+        },
+
+
+        calcRoomLockStat(){ // 判断房间按钮状态
+            return this.tempData.room;
+        },
+        calcTerminalLockStat(){ // 判断终端按钮状态
+            return this.tempData.terminal;
+        },
+        calcRelationLockStat(){ // 判断外交解锁状态
+            return this.day>10;
         },
         acquireRoom(room){ // 收纳房间
             let myFactory = this.game.factoryList[0],
@@ -1722,7 +1768,7 @@ export default {
             }
             return _roomFreeWorkerList;
         },
-        endOneDay(){ // 一天的数据计算 @MODIFY
+        endOneDay(){ // 一天的数据计算
             let logContent = {},
                 logSuffix = '',
                 logRoomList = [],
@@ -1742,20 +1788,21 @@ export default {
                     return 2-(2*x/(x+1));
                 },
                 calcRoomIncome = (room,income,riskImpact,roomWorkerList,abi) =>{
-                    let balance = this.calcBalance(roomWorkerList),durabImpact = 1;
-                    if(room.durab>0&&room.durab<10){
+                    let balance = this.calcBalance(roomWorkerList);
+                    let durabImpact = 1;
+                    if(room.durab>=1000&&room.durab<2000){
                         durabImpact = .95;
                     }
-                    else if(room.durab>=10&&room.durab<20){
+                    else if(room.durab>=2000&&room.durab<3000){
                         durabImpact = .9;
                     }
-                    else if(room.durab>=20&&room.durab<30){
+                    else if(room.durab>=3000&&room.durab<4000){
                         durabImpact = .85;
                     }
-                    else if(room.durab>=30&&room.durab<40){
+                    else if(room.durab>=4000&&room.durab<CONFIG.room.durab_threshold){
                         durabImpact = .8;
                     }
-                    else if(room.durab>CONFIG.room.durab_threshold){
+                    else if(room.durab>=CONFIG.room.durab_threshold){
                         durabImpact = 1-room.durab/CONFIG.max_durab;
                     }
                     if(abi&&abi>0){ // 重新计算 riskImpact
@@ -1921,7 +1968,7 @@ export default {
 
                 }
                 if(roomImageAgent){ // 房间门面
-                    roomImageIncome = Math.round(roomImageAgent.img*CONFIG.room.image_factor+room.basicImage);
+                    roomImageIncome = Math.round((roomImageAgent.img+room.basicImage)*CONFIG.room.image_increse_factor+CONFIG.room.image_increse_base);
                 }
                 if(myFactory.money>0&&maintainer){ // 房间维护
                     roomDurabReduce = Math.round(maintainer.str*CONFIG.room.durab_factor);
@@ -1978,6 +2025,7 @@ export default {
 
             // 计算我的工厂数据
             if(imageAgent){
+                let imgBase = Math.pow(imageAgent.img,2)/60;
                 imageIncome += Math.round(imageAgent.img*CONFIG.factory.image_increse_factor)+CONFIG.factory.image_increse_base;
             }
             let searchRoomWorkerList = getListByID(10,'job',workerList),
@@ -2169,6 +2217,10 @@ export default {
             myFactory.image += imageIncome;
             if(myFactory.image>=CONFIG.relation.joint_image_threshold&&!myFactory.canViewRelation){
                 myFactory.canViewRelation = true;
+                let no_tip3 = localStorage.getItem(CACHE.tip3);
+                if(!no_tip3){
+                    this.tip3 = true;
+                }
                 logSuffix += `<p>- 外交系统已解锁 -</p>`;
             }
 
@@ -2211,10 +2263,12 @@ export default {
             this.asynAllPages();
         },
 
-        onTapCheat(){ // 点击【作弊】按钮 @MODIFY
+        onTapCheat(){ // 点击【作弊】按钮
             console.log(this.game.factoryList[0]);
             this.game.factoryList[0].rrp = 10000;
+            this.game.factoryList[0].hrp = 100000;
             this.game.factoryList[0].money = 1000000;
+            this.game.factoryList[0].image = 30000;
             this.asynAllPages();
         },
 
@@ -2276,61 +2330,64 @@ export default {
             this.showConfirmGo = true;
         },
         onTapConfirmGo(type){ // 点击【确认结束】按钮
-            this.showConfirmGo = false;
-            if(type==1){
-                this.endOneDay();
-            }
-            else if(type==2){ // 快进至本旬结束
-                while(this.day%CONFIG.period){
+            try{
+                this.showConfirmGo = false;
+                if(type==1){
                     this.endOneDay();
                 }
-                this.endOneDay();
-            }
-            this.jump(8);
-            this.onTapLog(this.day-1);
-            if(this.autoSave){
-                if(!((this.day-1)%CONFIG.period)){
-                    this.save();
+                else if(type==2){ // 快进至本旬结束
+                    while(this.day%CONFIG.period){
+                        this.endOneDay();
+                    }
+                    this.endOneDay();
+                }
+                this.jump(99);
+                this.onTapLog(this.day-1);
+                if(this.autoSave){
+                    if(!((this.day-1)%CONFIG.period)){
+                        this.save();
+                    }
+                }
+                let remainDays = this.dayLimit-this.day+1;
+                if((remainDays==200||remainDays==100)&&this.game.factoryList.length>1){
+                    this.$dialog({
+                        title: '请注意',
+                        textAlign: 'center',
+                        content: `你还剩 ${remainDays} 天的时间，请尽快收购所有工厂。`,
+                        noCancelBtn: true,
+                        noOkBtn: true,
+                    });
+                }
+                else if(remainDays==0&&this.game.factoryList.length>1){
+                    this.$dialog({
+                        title: '游戏失败',
+                        content: `你未在规定时间内垄断整个行业。`,
+                        noCancelBtn: true,
+                        noOkBtn: true,
+                    });
                 }
             }
-            let remainDays = this.dayLimit-this.day+1;
-            if((remainDays==200||remainDays==100)&&this.game.factoryList.length>1){
-                this.$dialog({
-                    title: '请注意',
-                    textAlign: 'center',
-                    content: `你还剩 ${remainDays} 天的时间，请尽快收购所有工厂。`,
-                    noCancelBtn: true,
-                    noOkBtn: true,
-                });
-            }
-            else if(remainDays==0&&this.game.factoryList.length>1){
-                this.$dialog({
-                    title: '游戏失败',
-                    content: `你未在规定时间内垄断整个行业。`,
-                    noCancelBtn: true,
-                    noOkBtn: true,
-                });
+            catch(e){
+                window.alert(e);
             }
         },
 
         onTapTab(index){ // 点击【标签页码】
-            if((index==2&&!this.tempData.room)
-                ||(index==3&&!this.tempData.terminal)){
+            if((index==2&&!this.calcRoomLockStat())||(index==3&&!this.calcTerminalLockStat())){
                 return ;
             }
+
+            if(index==2&&this.searchingRoomID){
+                this.jump(index,this.searchingRoomID);
+            }
+            else if(index==3&&this.searchingTerminalID){
+                this.jump(index,this.searchingTerminalID);
+            }
+            else if(index==4&&this.searchingWorkerID){
+                this.jump(index,this.searchingWorkerID);
+            }
             else{
-                if(index==2&&this.searchingRoomID){
-                    this.jump(index,this.searchingRoomID);
-                }
-                else if(index==3&&this.searchingTerminalID){
-                    this.jump(index,this.searchingTerminalID);
-                }
-                else if(index==4&&this.searchingWorkerID){
-                    this.jump(index,this.searchingWorkerID);
-                }
-                else{
-                    this.jump(index);
-                }
+                this.jump(index);
             }
         },
         onTapEditFactoryName(){ // 点击【编辑工厂名】按钮
@@ -2391,7 +2448,7 @@ export default {
                 aroom.risk = room.risk;
             this.asynAllPages();
         },
-        onTapAddWorker(mode){ // 点击【+】按钮 @MODIFY
+        onTapAddWorker(mode){ // 点击【+】按钮
             this.tempData.workListPopMode = mode;
             this.showWorkerList = true;
             switch(mode){
@@ -2402,7 +2459,7 @@ export default {
                     this.popTip = `选择「交流」能力高的人来固定房间的协调值`;
                 break;
                 case 3: // 房间维护工人
-                    this.popTip = `选择「体力」高的人，降低房间老化，同时小幅降低每个终端的老化，同时会持续消耗资金`;
+                    this.popTip = `选择「体能」高的人，降低房间老化，同时小幅降低每个终端的老化，同时会持续消耗资金`;
                 break;
                 case 4: // 房间门面
                     this.popTip = `选择「形象」高的人，持续提升工厂形象`;
@@ -2411,10 +2468,10 @@ export default {
                     this.popTip = `选择「智力」高的人，消耗电力和资金以提升房间的自动化程度`;
                 break;
                 case 6: // 终端工人
-                    this.popTip = `发电和维护需要「体力」，挖矿需要「智力」，交易需要「交流」能力`;
+                    this.popTip = `发电和维护需要「体能」，挖矿需要「智力」，交易需要「交流」能力`;
                 break;
                 case 7: // 房间搜索点数
-                    this.popTip = `房间搜索点数的增量取决于搜索人员的「体力」和「智力」中最高的一项，可任命多人`;
+                    this.popTip = `房间搜索点数的增量取决于搜索人员的「体能」和「智力」中最高的一项，可任命多人`;
                 break;
                 case 8: // 人力搜索点数
                     this.popTip = `人力搜索点数的增量取决于搜索人员的「交流」和「形象」中最高的一项，可任命多人`;
@@ -2430,7 +2487,7 @@ export default {
             }
             this.asynAllPages();
         },
-        onTapRemoveWorker(mode){ // 点击【-】按钮 @MODIFY
+        onTapRemoveWorker(mode){ // 点击【-】按钮
             let rid = (this.tempData.room||{}).id,
                 tid = (this.tempData.terminal||{}).id,
                 roomWorkerList = [];
@@ -2498,12 +2555,14 @@ export default {
             room.risk = 1;
             room.avgPower = 0;
             this.asynAllPages();
+            this.$toast.text('该房间已禁用');
         },
         onTapAutoService(){ // 点击【加入自营】按钮
             let room = getListByID(this.tempData.room.id,'id',this.game.roomList)[0];
             room.group = 2;
             room.avgPower = 0;
             this.asynAllPages();
+            this.$toast.text('该房间已托管');
         },
         onTapReuse(){ // 点击【回归管理】按钮
             let room = getListByID(this.tempData.room.id,'id',this.game.roomList)[0];
@@ -2633,7 +2692,7 @@ export default {
             if(type==1){ // 搜索房间
                 let point = factory.rrp;
                 if(point<CONFIG.searchRoomPointCost){
-                    this.$toast.text(`搜索点数不够（需${CONFIG.searchRoomPointCost}点）`);
+                    this.$toast.text(`搜索点数不够`);
                 }
                 else{ // 生成新房间
                     let count = Math.floor(point/CONFIG.searchRoomPointCost),
@@ -2659,7 +2718,7 @@ export default {
             else if(type==2){ // 搜索人员
                let point = factory.hrp;
                if(point<CONFIG.searchWorkerPointCost){
-                   this.$toast.text(`搜索点数不够（需${CONFIG.searchWorkerPointCost}点）`);
+                   this.$toast.text(`搜索点数不够`);
                }
                else{ // 生成新人员
                    let count = Math.floor(point/CONFIG.searchWorkerPointCost),
@@ -2803,6 +2862,10 @@ export default {
             this.showEditFactory = false;
             this.showInvest = true;
         },
+        onTapStudy(){ // 点击【深造派遣】按钮
+            this.showEditFactory = false;
+            this.jump(8);
+        },
         onTapSanction(){ // 点击【经济打压】按钮
             this.showEditFactory = false;
             this.showSanction = true;
@@ -2938,6 +3001,10 @@ export default {
             if(investMoney<=0){
                 return ;
             }
+            if(investMoney>CONFIG.max_investment-this.game.investedMoney){
+                this.$toast.text(`投资不能超过最大额度（${CONFIG.max_investment-this.game.investedMoney}）`);
+                return ;
+            }
             if(myFactory.image<=0){
                 this.$toast.text(`我厂形象必须为正`);
                 return ;
@@ -2946,6 +3013,7 @@ export default {
                 let relation = getListByID(this.tempData.relation.id,'id',this.game.relationList)[0];
                 relation.invest += investMoney;
                 myFactory.money -= investMoney;
+                this.game.investedMoney += investMoney;
                 this.asynAllPages();
                 this.investMoney = '';
                 this.showInvest = false;
@@ -3109,7 +3177,7 @@ export default {
             this.tip2 = false;
             this.jump(3,id);
         },
-        onDoubleTapPopWorker(id){ // 双击【弹窗工人】按钮 @MODIFY
+        onDoubleTapPopWorker(id){ // 双击【弹窗工人】按钮
             // console.log('任职',id);
             let worker = getListByID(id,'id',this.game.workerList)[0],
                 rid = (this.tempData.room||{}).id,
@@ -3288,8 +3356,8 @@ export default {
                     //     this.$toast.text(`工厂形象达到 ${CONFIG.relation.joint_image_threshold} 解锁外交系统`);
                     //     canJump = false;
                     // }
-                    if(this.day<=10){
-                        this.$toast.text(`世界工厂信息将在 ${11-this.day} 天后公布`);
+                    if(!this.calcRelationLockStat()){
+                        this.$toast.text(`外交功能将在 ${11-this.day} 天后解锁`);
                         canJump = false;
                     }
                 break;
@@ -3360,7 +3428,7 @@ export default {
                 }
             }
             // 工位情况列表
-            let myRoomList2 = [...myMainRoomList];
+            let myRoomList2 = bulbsort(myMainRoomList,'order',0);
             this.tempData.myRoomList2 = myRoomList2;
             for(let room of myRoomList2){
                 let roomWorkerList = getListByID(room.id,'rid',this.game.workerList);
@@ -3447,7 +3515,7 @@ export default {
             this.tempData.powerLevelUpCost = powerLevelUpCost;
             this.tempData.digLevelUpCost = digLevelUpCost;
             this.tempData.tradeLevelUpCost = tradeLevelUpCost;
-            this.tempData.myPopRoomList = myMainRoomList;
+            this.tempData.myPopRoomList = bulbsort(myMainRoomList,'order',0);
             this.tempData.myTerminalList = myTerminalList;
             this.tempData.myRoomWorkerList = myRoomWorkerList;
         },
@@ -3526,6 +3594,7 @@ export default {
                     factoryWorkerList = getListByID(id,'fid',this.game.workerList),
                     joint = getMatchList(this.game.workerList,[['tfid',factory.id],['job',12],['fid',this.game.factoryList[0].id]])[0],
                     spyList = getMatchList(this.game.workerList,[['tfid',factory.id],['job',13],['fid',this.game.factoryList[0].id]]),
+                    studyWorker = getMatchList(this.game.workerList,[['studyfid',this.game.factoryList[0].id]])[0],
                     myFactory = {...factory},
                     myJoint = {...joint},
                     mySpyList = [...spyList],
@@ -3535,6 +3604,7 @@ export default {
                 this.tempData.factory.boss = getMatchList(factoryWorkerList,[['boss',true]])[0];
                 this.tempData.joint = myJoint;
                 this.tempData.mySpyList = mySpyList;
+                this.tempData.studyWorker = studyWorker;
                 this.tempData.factoryRoomList = myFactoryRoomList;
                 this.tempData.factoryWorkerList = myFactoryWorkerList;
             }
@@ -3542,6 +3612,7 @@ export default {
                 this.tempData.factory = null;
                 this.tempData.joint = null;
                 this.tempData.mySpyList = [];
+                this.tempData.studyWorker = null;
                 this.tempData.factoryRoomList = [];
                 this.tempData.factoryWorkerList = [];
             }
@@ -3690,7 +3761,7 @@ export default {
         padding-left: .2rem;
         width: 1.2rem;
         height: .8rem;
-        line-height: .4rem;
+        line-height: .37rem;
         font-size: .24rem;
         word-break: break-all;
         color: #fff;
@@ -3763,6 +3834,10 @@ export default {
         white-space: nowrap;
         word-break: keep-all;
     }
+    .tab-wrap .btn-tab-ban{
+        background-color: #ccc;
+        color: #eaeaea;
+    }
     .tab-wrap .active{
         background: linear-gradient(315deg, #ff4f18 0%, #f20000 100%);
         color: #fff;
@@ -3786,6 +3861,10 @@ export default {
         width: 100%;
         white-space: nowrap;
         word-break: keep-all;
+    }
+    .index-cell-grey{
+        font-weight: normal;
+        color: #777;
     }
     .pct-wrap b{
         width: 35%;
@@ -3819,6 +3898,7 @@ export default {
     .filter .select,
     .market .select{
         font-weight: bold;
+        text-decoration: underline;
     }
     .filter .btn,
     .market .btn{

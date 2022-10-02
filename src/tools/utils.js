@@ -6,6 +6,10 @@ import { DEBUG, CONFIG } from '../config/config';
 export function r(min,max){
     return Math.floor(Math.random()*(min-max-1)+max+1);
 }
+export function exptr(min,max,exp){ // 指数随机
+    let v = r(min,max-1);
+    return Math.round((v-min)*Math.pow(v/(max-min),exp||1)+min+r(0,1));
+}
 /*
   冒泡排序
   @Param arr {Array} 要进行排序的数组 [{val:30,...},{val:10,...},{val:20,...},...]
@@ -162,8 +166,15 @@ function genName(arr1,arr2,arr3){ // 生成名字
     }
     return c1+c2+c3;
 }
-export function genRandomWorkerName(){ // 随机生成工人名字
-    return r(0,2)?genName(CONFIG.namespace.worker1,CONFIG.namespace.worker2,CONFIG.namespace.worker2):genName(CONFIG.namespace.worker1,CONFIG.namespace.worker2);
+export function genRandomWorkerName(gender=1){ // 随机生成工人名字
+    let givennames = [];
+    if(gender==1){ // 男
+        givennames = [...CONFIG.namespace.worker2,...CONFIG.namespace.worker3];
+    }
+    else{ // 女
+        givennames = [...CONFIG.namespace.worker2,...CONFIG.namespace.worker4];
+    }
+    return `${CONFIG.namespace.worker1[r(0,CONFIG.namespace.worker1.length-1)]}${r(0,1)?givennames[r(0,givennames.length-1)]:''}${givennames[r(0,givennames.length-1)]}`;
 }
 export function genRandomRoomName(type){ // 随机生成房间名字
     return genName(CONFIG.namespace.common,CONFIG.namespace.common,CONFIG.namespace.room)+CONFIG.room_type_name_map[type];
@@ -191,7 +202,7 @@ export function genRandomRoom(id,{fid,fname,power,durab,risk,auto,level,type,bas
     }
 }
 export function genRandomWorker(id,{fid,fname,rid,rname,tid,initJob,boss}={}){ // 随机生成工人
-    function rate(){
+    /*function rate(age){
         let a = r(0,4),
             z;
         if(a) z = r(1,50);
@@ -202,10 +213,28 @@ export function genRandomWorker(id,{fid,fname,rid,rname,tid,initJob,boss}={}){ /
             if(z>100) z = 100;
         }
         return z;
+    }*/
+    let age = r(16,35);
+    let gender = r(0,1); // [0:女|1:男]
+    if(boss){
+        age = r(16,60);
     }
     function adjust(val){
         return Math.floor((100-val)/2)+val;
     }
+    let str,int,com,img;
+    // 体能
+    str = r(1,gender?60:20);
+    str += exptr(0,(100-str),gender?3:5);
+    // 智力
+    int = r(1,50);
+    int += exptr(0,(100-int),4);
+    // 交流
+    com = r(1,age+14+(gender?-15:25));
+    com += exptr(0,(100-com),gender?5:3);
+    // 形象
+    img = r(1,50+(gender?-20:20));
+    img += exptr(0,(100-img),gender?7:5);
     let res = {
         id,
         fid: fid||0,
@@ -215,17 +244,76 @@ export function genRandomWorker(id,{fid,fname,rid,rname,tid,initJob,boss}={}){ /
         tid: tid||0,
         tfid: 0,
         tfname: '',
-        name: genRandomWorkerName(),
-        str: rate(),
-        int: rate(),
-        com: rate(),
-        img: rate(),
+        studyfid: 0,
+        studyfname: '',
+        gender,
+        age,
+        name: genRandomWorkerName(gender),
+        str,
+        int,
+        com,
+        img,
         job: initJob||0,
         boss: boss?true:false,
     };
     if(boss){
-        res.int = adjust(res.int);
-        res.com = adjust(res.com);
+        if(r(0,1)){
+            res.str = adjust(res.str);
+            res.int = adjust(res.int);
+        }
+        else{
+            res.com = adjust(res.com);
+            res.img = adjust(res.img);
+        }
+    }
+    return res;
+}
+export function genRandomPartner(id,{fid,fname,}={},bossAge,partnerCount){ // 随机生成同伴
+    let age = r(bossAge-r(6,15),bossAge+r(-5,5));
+    let gender = r(0,1); // [0:女|1:男]
+    let str,int,com,img;
+    let enhanceTime = 10-partnerCount;
+    if(age<16){
+        age = 16;
+    }
+    // 体能
+    str = r(10,20);
+    str += gender*20;
+    // 智力
+    int = r(10,20);
+    // 交流
+    com = r(5,10);
+    com -= (gender-1)*5;
+    com += age - 16;
+    // 形象
+    img = r(10,20);
+    img -= (gender-1)*15;
+    let res = {
+        id,
+        fid: fid||0,
+        fname: fname||'',
+        rid: 0,
+        rname: '',
+        tid: 0,
+        tfid: 0,
+        tfname: '',
+        studyfid: 0,
+        studyfname: '',
+        gender,
+        age,
+        name: genRandomWorkerName(gender),
+        str,
+        int,
+        com,
+        img,
+        job: 0,
+        boss: false,
+    };
+    // 提升
+    let abimap = ['str','int','com','img'];
+    for(let i=0;i<enhanceTime;i++){
+        let abi = abimap[r(0,3)];
+        res[abi] += Math.round((100-res[abi])*.05*enhanceTime);
     }
     return res;
 }
@@ -270,8 +358,6 @@ export function releaseAllByJob(job,arr){ // 解除所有相关职务
         }
     });
 }
-
-
 
 
 

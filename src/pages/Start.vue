@@ -11,7 +11,23 @@
                 <nut-textinput class="input" v-model="myname" placeholder="公司创始人的姓名" :disabled="false"/>
             </div>
             <div class="row">
-                <div class="label">你的体力</div>
+                <div class="label">你的性别：</div>
+                <div class="radio-group input">
+                    <a class="btn" :class="`${mygender==1?'btn-sel':''}`" @click="mygender=1">男</a>
+                    <a class="btn" :class="`${mygender==0?'btn-sel':''}`" @click="mygender=0">女</a>
+                </div>
+            </div>
+            <div class="row">
+                <div class="label">你的年龄</div>
+                <nut-slider class="input" v-model="myage" :range="[16,60]" :showLabel="true" :showLabelAlways="true" :showRangeTxt="true"></nut-slider>
+            </div>
+            <div class="h-line"></div>
+            <div class="row">
+                <div class="label">可用能力点数：</div>
+                <div class="input abi-point" :class="`${calcAbiPoint()<0?'abi-point-ban':''}`"><b>{{calcAbiPoint()}}</b></div>
+            </div>
+            <div class="row">
+                <div class="label">你的体能</div>
                 <nut-slider class="input" v-model="mystrength" :range="[1,100]" :showLabel="true" :showLabelAlways="true" ></nut-slider>
             </div>
             <div class="row">
@@ -19,18 +35,25 @@
                 <nut-slider class="input" v-model="myintelligence" :range="[1,100]" :showLabel="true" :showLabelAlways="true" ></nut-slider>
             </div>
             <div class="row">
-                <div class="label">你的交流力</div>
+                <div class="label">你的交流</div>
                 <nut-slider class="input" v-model="mycommunication" :range="[1,100]" :showLabel="true" :showLabelAlways="true" ></nut-slider>
             </div>
             <div class="row">
                 <div class="label">你的形象</div>
                 <nut-slider class="input" v-model="myimage" :range="[1,100]" :showLabel="true" :showLabelAlways="true" ></nut-slider>
             </div>
+            <div class="h-line"></div>
+            <div class="row">
+                <div class="label">初始同伴数量<br/><small class="label-tip">(同伴越少能力越强)</small></div>
+                <nut-slider class="input" v-model="partnerCount" :range="[1,4]" :showLabel="true" :showLabelAlways="true" :showRangeTxt="true" ></nut-slider>
+            </div>
+            <div class="h-line"></div>
             <div class="row">
                 <div class="label">世界工厂数量</div>
                 <nut-slider class="input" v-model="factoryCount" :range="[3,8]" :showLabel="true" :showLabelAlways="true" :showRangeTxt="true" ></nut-slider>
             </div>
-            <nut-textinput class="row code" v-model="newcode" label="" placeholder="输入新的存档代码，用于存档" :disabled="false"/>
+            <div class="h-line"></div>
+            <nut-textinput class="row code" ref="code" v-model="newcode" label="" placeholder="输入新的存档代码，用于存档" :disabled="false"/>
             <nut-button class="btn btn-start" @click="start">开始游戏</nut-button>
             <nut-button class="btn btn-back" @click="back">返回</nut-button>
         </div>
@@ -62,7 +85,7 @@
 
 <script>
 // Copyright (c) 2018 Copyright Holder All Rights Reserved.
-import { query, r, bulbsort, percent, genRandomWorkerName, genRandomRoomName, genRandomFactoryName, genRandomRoom, genRandomWorker, genRandomTerminal, getListByID } from '../tools/utils';
+import { query, r, bulbsort, percent, genRandomWorkerName, genRandomRoomName, genRandomFactoryName, genRandomRoom, genRandomWorker, genRandomPartner, genRandomTerminal, getListByID } from '../tools/utils';
 import { DEBUG, CONFIG, CACHE, } from '../config/config';
 export default {
     name: 'Start',
@@ -73,11 +96,14 @@ export default {
             loadcode: localStorage.getItem(CACHE.code)||'',
             newcode: '',
             myname: '',
+            mygender: 1,
+            myage: 16,
             mystrength: 1,
             myintelligence: 1,
             mycommunication: 1,
             myimage: 1,
             factoryCount: 3,
+            partnerCount: 1,
 
             storageList: [],
         };
@@ -105,6 +131,7 @@ export default {
     },
     methods: {
         start(){
+            let abiPoint = this.calcAbiPoint();
             if(this.loading) return;
             if(this.myname.length<=0){
                 this.$toast.text('输入角色名字');
@@ -114,16 +141,24 @@ export default {
                 this.$toast.text('角色名字过长');
                 return;
             }
+            if(abiPoint<0){
+                this.$toast.text('能力点数不足');
+                return;
+            }
             if(this.newcode.length<=0){
                 this.$toast.text('输入一个代码');
+                this.$refs.code.focus();
                 return;
             }
             if(this.newcode.length>10){
                 this.$toast.text('代码过长');
+                this.$refs.code.focus();
                 return;
             }
             let initConfig = {
                     myname: this.myname,
+                    mygender: this.mygender,
+                    myage: this.myage,
                     mystrength: this.mystrength,
                     myintelligence: this.myintelligence,
                     mycommunication: this.mycommunication,
@@ -237,6 +272,10 @@ export default {
                 code: this.loadcode,
             });*/
         },
+        calcAbiPoint(){ // 计算能力虽大值
+            return 134-(this.mystrength+this.myintelligence+this.mycommunication+this.myimage)+Math.round(120/this.partnerCount);
+        },
+
         onTapStorage(storage){ // 点击【存档】按钮
             this.loadcode = storage.code;
         },
@@ -253,13 +292,19 @@ export default {
         deleteAllStorange(){ // 清空所有存档
             localStorage.removeItem(CACHE.list);
             localStorage.removeItem(CACHE.code);
+
+            localStorage.removeItem(CACHE.tip1);
+            localStorage.removeItem(CACHE.tip2);
+            localStorage.removeItem(CACHE.tip3);
+            localStorage.removeItem(CACHE.not_show_guide);
+
             this.storageList = [];
             this.loadcode = '';
             if(this.storageList.length<=0){
                 this.state = 0;
             }
         },
-        genGameData({myname,mystrength,myintelligence,mycommunication,myimage,factoryCount}){ // 生成随机的游戏数据
+        genGameData({myname,mygender,myage,mystrength,myintelligence,mycommunication,myimage,factoryCount}){ // 生成随机的游戏数据
             let factoryList = [],
                 roomList = [],
                 terminalList = [],
@@ -343,7 +388,11 @@ export default {
                 rname: '',
                 tfname: '',
             	tfid: 0,
+                studyfid: 0,
+                studyfname: '',
             	name: myname,
+                gender: mygender,
+                age: myage,
             	str: mystrength,
             	int: myintelligence,
             	com: mycommunication,
@@ -351,8 +400,8 @@ export default {
             	job: 0,
                 boss: true,
             });
-            for(let i=0;i<init.workerCount;i++){ // 我的初始员工
-                workerList.push(genRandomWorker(window.GLOBAL.accWorkerID++,{fid:factoryList[0].id,fname:factoryList[0].name,}));
+            for(let i=0;i<this.partnerCount;i++){ // 我的同伴
+                workerList.push(genRandomPartner(window.GLOBAL.accWorkerID++,{fid:factoryList[0].id,fname:factoryList[0].name,},this.myage,this.partnerCount));
             }
             for(let f=1;f<factoryList.length;f++){ // 生成其他工厂员工
                 let factory = factoryList[f],
@@ -390,7 +439,7 @@ export default {
                 }
             }
             // 合成初始数据
-            data = { factoryList, roomList, terminalList, workerList, relationList, logList, };
+            data = { factoryList, roomList, terminalList, workerList, relationList, logList, investedMoney: 0 };
             return data;
         },
     }
@@ -410,6 +459,12 @@ export default {
         font-size: 1rem;
         margin-bottom: 1rem;
     }
+    .h-line{
+        margin: .8rem 0;
+        width: 100%;
+        height: 1px;
+        background-image: linear-gradient(to right, rgba(0,0,0,0) 0%, #aaa 50%, rgba(0,0,0,0) 100%);
+    }
     .wrap{
 
     }
@@ -422,6 +477,9 @@ export default {
     .row .label,.row. .input{
 
     }
+    .row .label .label-tip{
+        color: #777;
+    }
     .row .label{
         width: 2.5rem;
         white-space: nowrap;
@@ -432,6 +490,16 @@ export default {
     .row .input{
         width: 5rem;
     }
+    .row .abi-point{
+        text-align: left;
+        padding: 0 10px;
+    }
+    .row .abi-point b{
+        font-size: 18px;
+    }
+    .row .abi-point-ban{
+        color: #f0250f;
+    }
     .btn{
         display: block;
         width: 4rem;
@@ -441,6 +509,22 @@ export default {
         width: 6rem;
         margin-left: auto;
         margin-right: auto;
+    }
+    .radio-group{
+        display: flex;
+        justify-content: space-around;
+        align-items: center;
+    }
+    .radio-group .btn{
+        display: inline-block;
+        width: 50%;
+        margin: 0;
+    }
+    .radio-group .btn-sel{
+        color: #fff;
+        background-color: #f0250f;
+        font-weight: bold;
+        border: 1px solid #f0250f;
     }
 
     /* 存档列表 */

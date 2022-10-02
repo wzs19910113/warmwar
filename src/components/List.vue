@@ -173,7 +173,8 @@ export default {
         left: 10%;
         height: .5rem;
         line-height: .5rem;
-        width: 1.2rem;
+        width: 1.4rem;
+        padding: 0 .1rem;
         font-size: .2rem;
         color: #fff;
         background-color: black;
@@ -271,8 +272,9 @@ export default {
     .btn-option{
     }
     .abi-hl{
-        font-style: italic;
         font-weight: bold;
+        color: #000;
+        text-decoration: underline;
     }
     .mg-r{
         margin-left: 0;
