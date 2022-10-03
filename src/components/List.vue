@@ -79,7 +79,7 @@ export default {
                 'lv1': column.isLevel&&item[column.name]==1,
                 'lv2': column.isLevel&&item[column.name]==2,
                 'lv3': (column.isLevel&&item[column.name]==3)
-                        ||(column.isRoomDurab&&item[column.name]<=0)
+                        ||((column.isRoomDurab||column.isDurab)&&item[column.name]<=0)
                         ||(column.isMode&&item[column.name]==3)
                         ||(column.isAuto&&item[column.name]>=10000),
                 'abi-hl': (column.name=='str'&&(item.job==1||item.job==4||item.job==6)

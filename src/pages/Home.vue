@@ -228,7 +228,8 @@
                         <List title="市场房间列表" remark="双击购买" ref="marketRoomList" :data="tempData.marketRoomList" :columns="ROOM_LIST_2_COLUMN" @onDoubleTap="onDoubleTapMarketRoom" />
                     </div>
                     <div class="row" v-if="marketType==2">
-                        <List title="市场人员列表" remark="双击购买" ref="marketWorkerList" :data="tempData.marketWorkerList" :columns="WORKER_LIST_6_COLUMN" @onDoubleTap="onDoubleTapMarketWorker" />
+                        <List title="市场人员列表" remark="双击购买" option="购买全部" v-if="tempData.marketWorkerList.length>1" @onTapOption="onTapBuyAllWorkers" ref="marketWorkerList" :data="tempData.marketWorkerList" :columns="WORKER_LIST_6_COLUMN" @onDoubleTap="onDoubleTapMarketWorker" />
+                        <List title="市场人员列表" remark="双击购买" v-else ref="marketWorkerList" :data="tempData.marketWorkerList" :columns="WORKER_LIST_6_COLUMN" @onDoubleTap="onDoubleTapMarketWorker" />
                     </div>
                 </div>
                 <!--外交-->
@@ -503,6 +504,16 @@
                 </div>
             </div>
         </nut-popup>
+        <nut-popup v-model="showConfirmBuyAllWorker">
+            <div class="row worker-board">
+                <div class="title">
+                    确认要购买所有人员吗？<br/>（共 {{tempData.marketWorkerList.length}} 人）
+                </div>
+                <div class="item sell">
+                    <a class="risk-item" @click="onTapConfirmBuyAllWorkers">购买（{{tempData.totalCost}} $）</a>
+                </div>
+            </div>
+        </nut-popup>
         <nut-popup v-model="showConfirmBuyRoom">
             <div class="row worker-board" v-if="tempData.buyRoom">
                 <div class="title">
@@ -578,7 +589,7 @@
                     <a class="risk-item" @click="showConfirmDamage=true"><b>形象破坏</b></a>
                 </div>
                 <div class="row btn" v-if="!tempData.factory.sanctioned">
-                    <a class="risk-item" @click="onTapSanction"><b>经济打压</b></a>
+                    <a class="risk-item" @click="onTapSanction"><b>经济制裁</b></a>
                 </div>
                 <div class="row btn">
                     <a class="risk-item" @click="showConfirmBuyFactory=true"><b>收购</b></a>
@@ -595,7 +606,7 @@
         <nut-popup v-model="showSanction">
             <div class="row room-board" v-if="tempData.factory">
                 <div class="row level">
-                    <a class="btn" @click="onTapConfirmSanction">对{{tempData.factory.name}}执行一次经济打压（100万 $）</a>
+                    <a class="btn" @click="onTapConfirmSanction">对{{tempData.factory.name}}执行一次经济制裁（100万 $）</a>
                 </div>
             </div>
         </nut-popup>
@@ -696,7 +707,7 @@
                     <h3><label>新手指导</label></h3>
                     <p>
                         你是工厂的董事长。你的目的很简单：在规定时间内收购所有其他工厂，垄断整个行业。<br/>
-                        收购工厂前你需要对其进行经济打压，这需要消耗你厂的「资金」和「工厂形象」，因此你必须先提高你厂的实力。<br/>
+                        收购工厂前你需要对其进行经济制裁，这需要消耗你厂的「资金」和「工厂形象」，因此你必须先提高你厂的实力。<br/>
                     </p>
                 </div>
                 <div class="row">
@@ -926,8 +937,8 @@
                     <p>消耗 100万 $ 资金让此工厂的形象减半；<br/>每十天可执行一次。</p>
                 </div>
                 <div class="row">
-                    <h3><label>经济打压</label></h3>
-                    <p>消耗 100万 $ 资金让此工厂的资金减少 50万 $；<br/>执行打压后，你厂的形象将减少，减少量为此工厂的形象值；<br/>每十天可执行一次。</p>
+                    <h3><label>经济制裁</label></h3>
+                    <p>消耗 100万 $ 资金让此工厂损失大量资金；<br/>两厂的形象差距越大，此工厂损失的资金越多；<br/>执行制裁后，你厂的形象将减少，减少量为此工厂的形象值；<br/>每十天可执行一次。</p>
                 </div>
                 <div class="row">
                     <h3><label>偷取和收购</label></h3>
@@ -1001,6 +1012,7 @@ export default {
                 myHRList: [],
                 buyRoom: null,
                 buyWorker: null,
+                totalCost: 0,
 
                 // 外交
                 relationList: [],
@@ -1045,9 +1057,9 @@ export default {
             showWorkerPop: false,
             showConfirmSellRoom: false,
             showConfirmSellWorker: false,
-            showConfirmSellWorker: false,
             showConfirmBuyRoom: false,
             showConfirmBuyWorker: false,
+            showConfirmBuyAllWorker: false,
             showConfirmBuyFactory: false,
             showEditFactory: false,
             showStealRoom: false,
@@ -1789,12 +1801,15 @@ export default {
                 },
                 calcRoomIncome = (room,income,riskImpact,roomWorkerList,abi) =>{
                     let balance = this.calcBalance(roomWorkerList);
-                    let durabImpact = 1;
-                    if(room.durab>=1000&&room.durab<2000){
+                    let durabImpact = 1.1;
+                    if(room.durab>0&&room.durab<1000){
+                        durabImpact = 1;
+                    }
+                    else if(room.durab>=1000&&room.durab<2000){
                         durabImpact = .95;
                     }
                     else if(room.durab>=2000&&room.durab<3000){
-                        durabImpact = .9;
+                        durabImpact = .8;
                     }
                     else if(room.durab>=3000&&room.durab<4000){
                         durabImpact = .85;
@@ -1874,8 +1889,25 @@ export default {
                         terminalPowerConsume = 0,
                         terminalMoneyConsume = 0;
                     if(myWorker&&myWorker.job){ // 如果该终端有正在工作的工人
-                        let durabImpact = 1, roomLevelImpact = room.level+CONFIG.room.base, typeImpact = CONFIG.room.type_normal_factor;
-                        if(terminal.durab>CONFIG.terminal.durab_threshold){
+                        let durabImpact = 1.1,
+                            roomLevelImpact = room.level+CONFIG.room.base,
+                            typeImpact = CONFIG.room.type_normal_factor;
+                        if(terminal.durab>0&&terminal.durab<1000){
+                            durabImpact = 1;
+                        }
+                        else if(terminal.durab>=1000&&terminal.durab<2000){
+                            durabImpact = .95;
+                        }
+                        else if(terminal.durab>=2000&&terminal.durab<3000){
+                            durabImpact = .8;
+                        }
+                        else if(terminal.durab>=3000&&terminal.durab<4000){
+                            durabImpact = .85;
+                        }
+                        else if(terminal.durab>=4000&&terminal.durab<CONFIG.terminal.durab_threshold){
+                            durabImpact = .8;
+                        }
+                        else if(terminal.durab>CONFIG.terminal.durab_threshold){
                             durabImpact = 1-terminal.durab/CONFIG.max_durab;
                         }
                         switch(myWorker.job){
@@ -2266,8 +2298,8 @@ export default {
         onTapCheat(){ // 点击【作弊】按钮
             console.log(this.game.factoryList[0]);
             this.game.factoryList[0].rrp = 10000;
-            this.game.factoryList[0].hrp = 100000;
-            this.game.factoryList[0].money = 1000000;
+            this.game.factoryList[0].hrp = 50000;
+            this.game.factoryList[0].money = 40000;
             this.game.factoryList[0].image = 30000;
             this.asynAllPages();
         },
@@ -2760,6 +2792,31 @@ export default {
                 this.$toast.text('资金不足');
             }
         },
+        onTapBuyAllWorkers(){ // 点击【购买全部人员】按钮
+            let factory = this.game.factoryList[0];
+            let totalCost = 0;
+            for(let worker of this.tempData.marketWorkerList){
+                totalCost += worker.price;
+            }
+            this.tempData.totalCost = totalCost;
+            this.showConfirmBuyAllWorker = true;
+        },
+        onTapConfirmBuyAllWorkers(){ // 点击【确认购买全部人员】按钮
+            let factory = this.game.factoryList[0];
+            if(factory.money>=this.tempData.totalCost){
+                for(let worker of this.tempData.marketWorkerList){
+                    let buyWorker = getListByID(worker.id,'id',this.game.workerList)[0];
+                    buyWorker.fid = factory.id;
+                    buyWorker.fname = factory.name;
+                }
+                this.game.factoryList[0].money -= this.tempData.totalCost;
+                this.showConfirmBuyAllWorker = false;
+                this.asynAllPages();
+            }
+            else{
+                this.$toast.text('资金不足');
+            }
+        },
         onTapLog(id){ // 点击【报表】按钮
             this.tempData.log = getListByID(id,'id',this.game.logList)[0];
             this.showLog = true;
@@ -2866,7 +2923,7 @@ export default {
             this.showEditFactory = false;
             this.jump(8);
         },
-        onTapSanction(){ // 点击【经济打压】按钮
+        onTapSanction(){ // 点击【经济制裁】按钮
             this.showEditFactory = false;
             this.showSanction = true;
         },
@@ -2904,7 +2961,7 @@ export default {
                 noOkBtn: true,
             });
         },
-        onTapConfirmSanction(){ // 点击【确认经济打压】按钮
+        onTapConfirmSanction(){ // 点击【确认经济制裁】按钮
             let factory = getListByID(this.tempData.factory.id,'id',this.game.factoryList)[0],
                 myFactory = this.game.factoryList[0];
             if(myFactory.image<=0){
@@ -2912,15 +2969,17 @@ export default {
                 return ;
             }
             if(factory.sanctioned){
-                this.$toast.text(`已经打压过了`);
+                this.$toast.text(`10 日内不能重复制裁`);
                 return ;
             }
             if(myFactory.money<CONFIG.saction_money_cost){
                 this.$toast.text(`资金不足`);
                 return ;
             }
-            let damage = Math.floor(CONFIG.saction_money_cost/2),
-                imageCost = factory.image;
+            let damage = Math.floor(CONFIG.saction_money_cost/2);
+            let imageCost = factory.image;
+            let imageDiff = Math.abs(myFactory.image-facotry.image); // 两工厂形象差值
+            damage = damage*(imageDiff/100000);
             myFactory.money -= CONFIG.saction_money_cost;
             myFactory.image -= imageCost;
             factory.money -= damage;
@@ -2929,9 +2988,9 @@ export default {
             this.asynAllPages();
             this.tempData.factory.sell = Math.round(this.calcFactoryValue(this.tempData.factory)*CONFIG.sell_factor);
             this.$dialog({
-                title: '经济打压结果报告',
+                title: '经济制裁结果报告',
                 textAlign: 'left',
-                content: `${factory.name}的总资金减少了<b>50 万 $</b><br/>我厂共花费 <b>100 万 $</b><br/>我厂形象${imageCost>=0?'下降':'提升'}了 <b>${Math.abs(imageCost)}</b>`,
+                content: `${factory.name}的总资金减少了<b>${damage} $</b><br/>我厂共花费 <b>100 万 $</b><br/>我厂形象${imageCost>=0?'下降':'提升'}了 <b>${Math.abs(imageCost)}</b>`,
                 noCancelBtn: true,
                 noOkBtn: true,
             });
@@ -4068,7 +4127,7 @@ export default {
         text-align: left;
     }
     .worker-board .title{
-        height: .8rem;
+        min-height: .8rem;
         line-height: .8rem;
         margin-bottom: .2rem;
         font-size: .3rem;

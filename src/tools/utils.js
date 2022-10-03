@@ -234,7 +234,7 @@ export function genRandomWorker(id,{fid,fname,rid,rname,tid,initJob,boss}={}){ /
     com += exptr(0,(100-com),gender?5:3);
     // 形象
     img = r(1,50+(gender?-20:20));
-    img += exptr(0,(100-img),gender?7:5);
+    img += exptr(0,(100-img),gender?8:3);
     let res = {
         id,
         fid: fid||0,
