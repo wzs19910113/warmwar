@@ -46,10 +46,11 @@ module.exports = {
 		risk_name_map: ['平稳','常规','冒险'], // 风险类别名称
 		job_name_map: ['-','发电','挖矿','交易','终端维护','自动化','房间维护','管理员','门面','人力搜索','房间搜索','形象总代言','外交','间谍'], // 职能类别名称
 		room_type_name_map: ['通用房','发电站','挖矿厂','交易所'], // 房间类型名称
-		randomRoomBasicImageProb: 50, // 其他公司初始房间拥有基础形象概率
+		randomRoomBasicImageProb: 90, // 其他公司初始房间拥有基础形象概率
         max_durab: 10000, // 最大老化值
         max_balance: 100, // 房间最大平衡值
         max_auto: 10000, // 房间最大自动化值
+        min_basicImage: 20, // 房间最大基础门面
         max_basicImage: 120, // 房间最大基础门面
         max_room_level: 3, // 最大房间等级
         max_terminal_level: 3, // 最大终端等级
@@ -62,7 +63,7 @@ module.exports = {
         dig_levelup_cost: [3000,6000], // 挖矿等级升级费用
         trade_levelup_cost: [3000,6000], // 交易等级升级费用
 		sell_factor: .5, // 贩卖系数
-		randmNewRoomDurabRange: [0,6000], // 新生成房间老化化随机范围
+		randmNewRoomDurabRange: [2000,3000], // 新生成房间老化化随机范围
 		randmNewRoomAutoRange: [0,0], // 新生成房间自动化随机范围
 
 		searchRoomPointCost: 1000, // 一个房间的搜索点数花费
@@ -222,7 +223,18 @@ relation = {
 	support: 0, // 支持率(0-10000)
 }
 
-
+task = {
+	id: 1,
+	fid: 1,
+	fname: '',
+	desc: '',
+	type: 1, // 完成类型 [1:形象|2:总资金|3:工人数量|4:支持率]
+	day: 100,
+	target: 1000,
+	stat: 1, // 状态 [1:未完成|2:已完成|3:已失败]
+	rewardType: 1, // 奖励类型 [1:形象|2:总资金|3:工人数量|4:支持率|5:]
+	reward: 50000, // 奖励
+}
 
 
 

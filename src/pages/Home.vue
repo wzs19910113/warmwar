@@ -323,12 +323,15 @@
             </div>
         </div>
         <!--脚部-->
-        <div class="footer">
+        <div class="footer" v-if="dayLimit-day+1>0">
             <div class="fact">
                 <div class="fact-item">总资金：{{numFormat(game.factoryList[0].money)}} $</div>
                 <div class="fact-item">工厂形象：{{game.factoryList[0].image}}</div>
             </div>
             <nut-button class="btn btn-go" @click="onTapGo"><p>第 {{day}} 天结束</p><small>共 {{dayLimit}} 天</small></nut-button>
+        </div>
+        <div class="footer" v-else>
+            <div class="gameover">游戏结束</div>
         </div>
         <!--弹出层-->
         <nut-popup class="pop pop-system-menu" :round="true" v-model="showSystemMenu">
@@ -371,9 +374,9 @@
                     <p class="tip">{{[`收益减少，老化速度为零`,`收益和老化速度正常`,`收益提升，耗电提升，老化速度大幅提升；若房间有管理员，收益会根据房间类型和管理员能力值固定大幅提升`][tempData.room.risk-1]}}</p>
                 </div>
                 <div class="row risk">
-                    <h3>参与平分电力:</h3>
+                    <h3>参与均分电力:</h3>
                     <nut-switch :active.sync="tempData.room.avgPower==1" @change="onChangeAvgPower"></nut-switch>
-                    <p class="tip">当其他房间平均分配电力时，该房间接受电力分配</p>
+                    <p class="tip">当其他房间均匀分配电力时，该房间接受电力分配</p>
                 </div>
                 <div class="row risk">
                     <h3>全体终端人员命令:</h3>
@@ -688,6 +691,10 @@
                 <List title="世界工厂列表" remark="选择目标工厂" ref="relationList2" :simple="true" :data="tempData.relationList" :columns="RELATION_LIST_COLUMN" @onDoubleTap="onDoubleTapRelationOnPop" />
             </div>
         </nut-popup>
+        <nut-popup v-model="showTasks">
+            <div class="row task-board">
+            </div>
+        </nut-popup>
         <!-- <nut-popup v-model="showEditWorkerPage">
             <div class="row room-board">
                 <div class="row">
@@ -852,7 +859,7 @@
                 </div>
                 <div class="row">
                     <h3><label>加入自营</label></h3>
-                    <p>让房间进入托管状态；<br/>系统每天将自动安排房间内人员的工作。</p>
+                    <p>让房间进入托管状态；<br/>系统每天将自动安排所有自营人员的调控和工作。</p>
                 </div>
             </div>
             <div class="rule-board" v-show="state==3">
@@ -1076,6 +1083,7 @@ export default {
             showRule: false,
             showGuide: false,
             showSpyTargets: false,
+            showTasks: false,
 
             // const
             ROOM_LIST_COLUMN: [ // 首页房间列表基本情况
@@ -1801,21 +1809,21 @@ export default {
                 },
                 calcRoomIncome = (room,income,riskImpact,roomWorkerList,abi) =>{
                     let balance = this.calcBalance(roomWorkerList);
-                    let durabImpact = 1.1;
+                    let durabImpact = 1;
                     if(room.durab>0&&room.durab<1000){
-                        durabImpact = 1;
+                        durabImpact = .98;
                     }
                     else if(room.durab>=1000&&room.durab<2000){
-                        durabImpact = .95;
+                        durabImpact = .96;
                     }
                     else if(room.durab>=2000&&room.durab<3000){
-                        durabImpact = .8;
+                        durabImpact = .94;
                     }
                     else if(room.durab>=3000&&room.durab<4000){
-                        durabImpact = .85;
+                        durabImpact = .92;
                     }
                     else if(room.durab>=4000&&room.durab<CONFIG.room.durab_threshold){
-                        durabImpact = .8;
+                        durabImpact = .9;
                     }
                     else if(room.durab>=CONFIG.room.durab_threshold){
                         durabImpact = 1-room.durab/CONFIG.max_durab;
@@ -1889,23 +1897,23 @@ export default {
                         terminalPowerConsume = 0,
                         terminalMoneyConsume = 0;
                     if(myWorker&&myWorker.job){ // 如果该终端有正在工作的工人
-                        let durabImpact = 1.1,
+                        let durabImpact = 1,
                             roomLevelImpact = room.level+CONFIG.room.base,
                             typeImpact = CONFIG.room.type_normal_factor;
                         if(terminal.durab>0&&terminal.durab<1000){
-                            durabImpact = 1;
+                            durabImpact = .98;
                         }
                         else if(terminal.durab>=1000&&terminal.durab<2000){
-                            durabImpact = .95;
+                            durabImpact = .96;
                         }
                         else if(terminal.durab>=2000&&terminal.durab<3000){
-                            durabImpact = .8;
+                            durabImpact = .94;
                         }
                         else if(terminal.durab>=3000&&terminal.durab<4000){
-                            durabImpact = .85;
+                            durabImpact = .92;
                         }
                         else if(terminal.durab>=4000&&terminal.durab<CONFIG.terminal.durab_threshold){
-                            durabImpact = .8;
+                            durabImpact = .9;
                         }
                         else if(terminal.durab>CONFIG.terminal.durab_threshold){
                             durabImpact = 1-terminal.durab/CONFIG.max_durab;
@@ -2177,7 +2185,8 @@ export default {
                         digRoomList = getListByID(2,'type',youRoomList),
                         tradeRoomList = getListByID(3,'type',youRoomList),
                         relation = getListByID(youFactory.id,'to',this.game.relationList)[0],
-                        rand = 0;
+                        rand = 0,
+                        youBoss = getMatchList(this.game.workerList,[['fid',youFactory.id,'boss',true]])[0];
                     for(let worker of youWorkerList){
                         let moneyImp = worker.str*powerRoomList.length+worker.int*digRoomList.length+worker.com*tradeRoomList.length+45*commonRoomList.length,
                             imageImp = worker.img;
@@ -2236,6 +2245,7 @@ export default {
                                 fid: youFactory.id,
                                 fname: youFactory.name,
                                 boss: false,
+                                baseOn: youBoss,
                             }));
                         }
                     }
@@ -2299,7 +2309,7 @@ export default {
             console.log(this.game.factoryList[0]);
             this.game.factoryList[0].rrp = 10000;
             this.game.factoryList[0].hrp = 50000;
-            this.game.factoryList[0].money = 40000;
+            this.game.factoryList[0].money = 2400000;
             this.game.factoryList[0].image = 30000;
             this.asynAllPages();
         },
@@ -2381,7 +2391,7 @@ export default {
                     }
                 }
                 let remainDays = this.dayLimit-this.day+1;
-                if((remainDays==200||remainDays==100)&&this.game.factoryList.length>1){
+                if((remainDays==200||remainDays==100||remainDays==50||remainDays==40||remainDays==30||remainDays==20||remainDays==10)&&this.game.factoryList.length>1){
                     this.$dialog({
                         title: '请注意',
                         textAlign: 'center',
@@ -2978,8 +2988,8 @@ export default {
             }
             let damage = Math.floor(CONFIG.saction_money_cost/2);
             let imageCost = factory.image;
-            let imageDiff = Math.abs(myFactory.image-facotry.image); // 两工厂形象差值
-            damage = damage*(imageDiff/100000);
+            let imageDiff = Math.abs(myFactory.image-factory.image); // 两工厂形象差值
+            damage = Math.round(damage*(imageDiff/100000));
             myFactory.money -= CONFIG.saction_money_cost;
             myFactory.image -= imageCost;
             factory.money -= damage;
@@ -2990,7 +3000,7 @@ export default {
             this.$dialog({
                 title: '经济制裁结果报告',
                 textAlign: 'left',
-                content: `${factory.name}的总资金减少了<b>${damage} $</b><br/>我厂共花费 <b>100 万 $</b><br/>我厂形象${imageCost>=0?'下降':'提升'}了 <b>${Math.abs(imageCost)}</b>`,
+                content: `${factory.name}的总资金减少了 <b>${numFormat(damage)} $</b><br/>我厂共花费 <b>100 万 $</b><br/>我厂形象${imageCost>=0?'下降':'提升'}了 <b>${Math.abs(imageCost)}</b>`,
                 noCancelBtn: true,
                 noOkBtn: true,
             });
@@ -3820,7 +3830,7 @@ export default {
         padding-left: .2rem;
         width: 1.2rem;
         height: .8rem;
-        line-height: .37rem;
+        line-height: .4rem;
         font-size: .24rem;
         word-break: break-all;
         color: #fff;
@@ -4009,6 +4019,16 @@ export default {
         width: 3.3rem;
         height: 1.2rem;
         font-size: .32rem;
+    }
+    .gameover{
+        width: 100%;
+        height: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 30px;
+        background-color: #aaa;
+        color: #fff;
     }
     /* 弹窗 */
     .room-board{

@@ -190,7 +190,7 @@ export function genRandomRoom(id,{fid,fname,power,durab,risk,auto,level,type,bas
         fname: fname||'',
         name: genRandomRoomName(type),
         type,
-        basicImage: (basicImage||basicImage==0)?basicImage:(r(0,100)>CONFIG.randomRoomBasicImageProb?0:r(1,CONFIG.max_basicImage)),
+        basicImage: (basicImage||basicImage==0)?basicImage:(r(1,100)<=CONFIG.randomRoomBasicImageProb?r(CONFIG.min_basicImage,CONFIG.max_basicImage):0),
         power: (power||power==0)?power:r(CONFIG.init.randmOtherRoomPowerRange[0],CONFIG.init.randmOtherRoomPowerRange[1]),
         durab: (durab||durab==0)?durab:r(CONFIG.init.randmOtherRoomDurabRange[0],CONFIG.init.randmOtherRoomDurabRange[1]),
         risk: (risk||risk==0)?risk:r(CONFIG.init.randmOtherRoomRiskRange[0],CONFIG.init.randmOtherRoomRiskRange[1]),
@@ -201,7 +201,7 @@ export function genRandomRoom(id,{fid,fname,power,durab,risk,auto,level,type,bas
         group: group||0,
     }
 }
-export function genRandomWorker(id,{fid,fname,rid,rname,tid,initJob,boss}={}){ // 随机生成工人
+export function genRandomWorker(id,{fid,fname,rid,rname,tid,initJob,boss,baseOn}={}){ // 随机生成工人
     /*function rate(age){
         let a = r(0,4),
             z;
@@ -266,6 +266,60 @@ export function genRandomWorker(id,{fid,fname,rid,rname,tid,initJob,boss}={}){ /
             res.img = adjust(res.img);
         }
     }
+    if(baseOn){
+        if(r(1,100)<=baseOn.str){
+            res.str = adjust(res.str);
+        }
+        if(r(50,100)<=baseOn.str){
+            res.str = adjust(res.str);
+        }
+        if(r(1,100)<=baseOn.int){
+            res.int = adjust(res.int);
+        }
+        if(r(50,100)<=baseOn.int){
+            res.int = adjust(res.int);
+        }
+        if(r(1,100)<=baseOn.com){
+            res.com = adjust(res.com);
+        }
+        if(r(50,100)<=baseOn.com){
+            res.com = adjust(res.com);
+        }
+        if(r(1,100)<=baseOn.img){
+            res.img = adjust(res.img);
+        }
+        if(r(50,100)<=baseOn.img){
+            res.img = adjust(res.img);
+        }
+    }
+    res.str += r(-3,3);
+    res.int += r(-3,3);
+    res.com += r(-3,3);
+    res.img += r(-3,3);
+    if(res.str>100){
+        res.str = 100;
+    }
+    if(res.str<1){
+        res.str = 1;
+    }
+    if(res.int>100){
+        res.int = 100;
+    }
+    if(res.int<1){
+        res.int = 1;
+    }
+    if(res.com>100){
+        res.com = 100;
+    }
+    if(res.com<1){
+        res.com = 1;
+    }
+    if(res.img>100){
+        res.img = 100;
+    }
+    if(res.img<1){
+        res.img = 1;
+    }
     return res;
 }
 export function genRandomPartner(id,{fid,fname,}={},bossAge,partnerCount){ // 随机生成同伴
@@ -316,6 +370,9 @@ export function genRandomPartner(id,{fid,fname,}={},bossAge,partnerCount){ // �
         res[abi] += Math.round((100-res[abi])*.05*enhanceTime);
     }
     return res;
+}
+export function genRandomTask(id,{fid,fname,}={},day){ // 随机生成任务
+
 }
 export function getListByID(id,idname,arr){ // 根据ID获取列表
     let res = [];

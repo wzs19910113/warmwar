@@ -115,6 +115,7 @@ export default {
             accRoomID: 1, // 房间ID累加基数
             accTerminalID: 1, // 终端ID累加基数
             accWorkerID: 1, // 工人ID累加基数
+            accTaskID: 1, // 任务ID累加基数
         }
 
         let _storageList = localStorage.getItem(CACHE.list)||'[]';
@@ -311,6 +312,7 @@ export default {
                 workerList = [],
                 relationList = [],
                 logList = [],
+                taskList = [],
                 data,
                 init = CONFIG.init;
             // 生成工厂列表
@@ -439,7 +441,7 @@ export default {
                 }
             }
             // 合成初始数据
-            data = { factoryList, roomList, terminalList, workerList, relationList, logList, investedMoney: 0 };
+            data = { factoryList, roomList, terminalList, workerList, relationList, logList, taskList, investedMoney: 0 };
             return data;
         },
     }
