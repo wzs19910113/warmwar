@@ -10,17 +10,20 @@
             <div class="list-header">
                 <a class="list-cell" v-for="(column,index) in localColumns" v-if="column.width!=0" :style="{width:column.width}" @click="onTapHead(index)">{{column.title}}</a>
             </div>
-            <div class="list" v-if="localData.length>0">
-                <a class="list-item" :class="{'select':item.select}" :data-id="item.id" v-for="(item,index) in localData" @click="onTapListItem($event)">
+            <div class="list" :class="{'list-room':type&&type=='room'}" v-if="localData.length>0">
+                <a class="list-item" :class="{'select':item.select,'bg-1':(type&&type=='room'&&item.type==1),'bg-2':(type&&type=='room'&&item.type==2),'bg-3':(type&&type=='room'&&item.type==3)}" :data-id="item.id" v-for="(item,index) in localData" @click="onTapListItem($event)">
                     <a class="tip" v-if="index==0&&showTip">双击可查看</a>
-                    <div class="list-cell" :class="genClassName(column,item)" :style="genStyle(column,item)" v-for="(column,index) in localColumns" v-if="column.width!=0">
+                    <p class="list-cell" :class="genClassName(column,item)" :style="genStyle(column,item)" v-for="(column,index) in localColumns" v-if="column.width!=0">
                         <!-- <div class="abi-chart" v-if="column.name=='abi-chart'" v-for="abiName in ['str','int','com','img']">
                             <div class="abi-bar-wrap">
                                 <div class="abi-bar-fill" :class="`abi-${abiName}`" :style="{width:`${item[abiName]}%`}"></div>
                             </div>
                         </div> -->
-                        {{column.format?column.format(item[column.name],item):item[column.name]}}
-                    </div>
+                        <span class="cell-s" v-if="column.name!='terminalOccupies'">{{column.format?column.format(item[column.name],item):item[column.name]}}</span>
+                        <span class="cell-occupies" :class="`cell-occupies-${item.terminalOccupies.length}`" v-else>
+                            <b :class="dot?'on':'off'" v-for="dot of item.terminalOccupies"></b>
+                        </span>
+                    </p>
                 </a>
             </div>
             <div class="list" v-else>
@@ -46,6 +49,7 @@ export default {
         onTapOption: Function, // 点击其他操作事件
         showTip: Boolean, // 显示提示
         remark: String, // 标题备注
+        type: String, // 对象类型
     },
     data() {
         return {
@@ -157,6 +161,21 @@ export default {
     .v-scroll{
         overflow-x: scroll;
     }
+    .list .bg-1{
+        /* color: #c445fd; */
+        text-shadow: 0 0 2px #fff;
+        box-shadow: 0 0 24px #c445fd inset;
+    }
+    .list .bg-2{
+        /* color: #fa6540; */
+        text-shadow: 0 0 2px #fff;
+        box-shadow: 0 0 24px #fac540 inset;
+    }
+    .list .bg-3{
+        /* color: #4cb321; */
+        text-shadow: 0 0 2px #fff;
+        box-shadow: 0 0 24px #4ce371 inset;
+    }
     .list-item,.list-header{
         position: relative;
         display: inline-block;
@@ -166,6 +185,9 @@ export default {
         height: .6rem;
         line-height: .3rem;
         border-bottom: .01rem solid #ccc;
+    }
+    .list-room .list-item{
+        border-bottom: .01rem solid #eee;
     }
     .list-item .tip{
         position: absolute;
@@ -238,6 +260,8 @@ export default {
     }
     .list .select{
         background-color: #dcdcdc;
+    }
+    .list-room .select{
     }
     .list-title{
         height: .5rem;
@@ -325,5 +349,41 @@ export default {
     }
     .abi-img{
         background-color: green;
+    }
+    /* 终端灯位 */
+    .cell-occupies{
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        height: 100%;
+        width: 100%;
+    }
+    .cell-occupies b{
+        position: relative;
+        display: block;
+        height: 50%;
+        width: 10%;
+    }
+    .cell-occupies .on::after,
+    .cell-occupies .off::after{
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        right: 0;
+        margin: auto;
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+    }
+    .cell-occupies .on::after{
+        background-color: #0E56FF;
+        box-shadow: 0 0 2px #0E56FF;
+        border: 1px solid #333;
+    }
+    .cell-occupies .off::after{
+        background-color: #eee;
+        border: 1px solid #777;
     }
 </style>

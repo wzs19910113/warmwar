@@ -38,16 +38,16 @@
                         </div>
                     </div>
                     <div class="row" v-show="tempData.viewType==0">
-                        <List title="房间列表" remark="双击查看" ref="roomList" option="工位情况" @onTapOption="tempData.viewType=1" :data="tempData.myRoomList" :columns="ROOM_LIST_COLUMN" @onDoubleTap="onDoubleTapRoom" :showTip="tip1" />
+                        <List title="房间列表" type="room" remark="双击查看" ref="roomList" option="工位情况" @onTapOption="tempData.viewType=1" :data="tempData.myRoomList" :columns="ROOM_LIST_COLUMN" @onDoubleTap="onDoubleTapRoom" :showTip="tip1" />
                     </div>
                     <div class="row" v-show="tempData.viewType==1">
-                        <List title="房间列表" remark="双击查看" ref="roomList2" option="基本情况" @onTapOption="tempData.viewType=0" :data="tempData.myRoomList2" :columns="ROOM_LIST_5_COLUMN" @onDoubleTap="onDoubleTapRoom" :showTip="tip1" />
+                        <List title="房间列表" type="room" remark="双击查看" ref="roomList2" option="基本情况" @onTapOption="tempData.viewType=0" :data="tempData.myRoomList2" :columns="ROOM_LIST_5_COLUMN" @onDoubleTap="onDoubleTapRoom" :showTip="tip1" />
                     </div>
                     <div class="row" v-if="tempData.myAgentRoomList.length>0">
-                        <List title="备用房间列表" ref="roomList3" :data="tempData.myAgentRoomList" :columns="ROOM_LIST_6_COLUMN" @onDoubleTap="onDoubleTapRoom" />
+                        <List title="备用房间列表" type="room" ref="roomList3" :data="tempData.myAgentRoomList" :columns="ROOM_LIST_6_COLUMN" @onDoubleTap="onDoubleTapRoom" />
                     </div>
                     <div class="row" v-if="tempData.myAutoServiceRoomList.length>0">
-                        <List title="自营房间列表" ref="roomList4" :data="tempData.myAutoServiceRoomList" :columns="ROOM_LIST_7_COLUMN" @onDoubleTap="onDoubleTapRoom" />
+                        <List title="自营房间列表" type="room" ref="roomList4" :data="tempData.myAutoServiceRoomList" :columns="ROOM_LIST_7_COLUMN" @onDoubleTap="onDoubleTapRoom" />
                     </div>
                 </div>
                 <!--房间-->
@@ -206,8 +206,14 @@
                     </div>
                     <div class="row no-margin">
                         <div class="index">
-                            <div class="index-cell"><b>房间搜索点数: <span :class="`${game.factoryList[0].rrp>=CONFIG.searchRoomPointCost?'':'index-cell-grey'}`">{{game.factoryList[0].rrp}}</span> / {{CONFIG.searchRoomPointCost}}</b> <a class="btn btn-small" @click="onTapSearch(1)">搜索房间</a></div>
-                            <div class="index-cell"><b>人力搜索点数: <span :class="`${game.factoryList[0].hrp>=CONFIG.searchWorkerPointCost?'':'index-cell-grey'}`">{{game.factoryList[0].hrp}}</span> / {{CONFIG.searchWorkerPointCost}}</b> <a class="btn btn-small" @click="onTapSearch(2)">搜索人员</a></div>
+                            <div class="index-cell"><b>房间搜索点数: <span :class="`${game.factoryList[0].rrp>=CONFIG.searchRoomPointCost?'':'index-cell-grey'}`">{{game.factoryList[0].rrp}}</span> / {{CONFIG.searchRoomPointCost}}</b>
+                                <a class="btn btn-small" @click="onTapSearch(1,1)">搜索房间</a>
+                                <a class="btn btn-small" @click="onTapSearch(1)">搜索全部房间</a>
+                            </div>
+                            <div class="index-cell"><b>人力搜索点数: <span :class="`${game.factoryList[0].hrp>=CONFIG.searchWorkerPointCost?'':'index-cell-grey'}`">{{game.factoryList[0].hrp}}</span> / {{CONFIG.searchWorkerPointCost}}</b>
+                                <a class="btn btn-small" @click="onTapSearch(2,1)">搜索人员</a>
+                                <a class="btn btn-small" @click="onTapSearch(2)">搜索全部人员</a>
+                            </div>
                         </div>
                     </div>
                     <div class="row flex">
@@ -225,7 +231,7 @@
                         </div>
                     </div>
                     <div class="row" v-if="marketType==1">
-                        <List title="市场房间列表" remark="双击购买" ref="marketRoomList" :data="tempData.marketRoomList" :columns="ROOM_LIST_2_COLUMN" @onDoubleTap="onDoubleTapMarketRoom" />
+                        <List title="市场房间列表" type="room" remark="双击购买" ref="marketRoomList" :data="tempData.marketRoomList" :columns="ROOM_LIST_2_COLUMN" @onDoubleTap="onDoubleTapMarketRoom" />
                     </div>
                     <div class="row" v-if="marketType==2">
                         <List title="市场人员列表" remark="双击购买" option="购买全部" v-if="tempData.marketWorkerList.length>1" @onTapOption="onTapBuyAllWorkers" ref="marketWorkerList" :data="tempData.marketWorkerList" :columns="WORKER_LIST_6_COLUMN" @onDoubleTap="onDoubleTapMarketWorker" />
@@ -278,7 +284,7 @@
                         </div>
                     </div>
                     <div class="row">
-                        <List title="房间列表" remark="双击偷取" ref="factoryRoomList" :data="tempData.factoryRoomList" :columns="ROOM_LIST_4_COLUMN" @onDoubleTap="onDoubleTapFactoryRoom" />
+                        <List title="房间列表" type="room" remark="双击偷取" ref="factoryRoomList" :data="tempData.factoryRoomList" :columns="ROOM_LIST_4_COLUMN" @onDoubleTap="onDoubleTapFactoryRoom" />
                     </div>
                     <div class="row">
                         <List title="人员列表" remark="双击偷取" ref="factoryWorkerList" :data="tempData.factoryWorkerList" :columns="WORKER_LIST_7_COLUMN" @onDoubleTap="onDoubleTapFactoryWorker" />
@@ -374,9 +380,16 @@
                     <p class="tip">{{[`收益减少，老化速度为零`,`收益和老化速度正常`,`收益提升，耗电提升，老化速度大幅提升；若房间有管理员，收益会根据房间类型和管理员能力值固定大幅提升`][tempData.room.risk-1]}}</p>
                 </div>
                 <div class="row risk">
-                    <h3>参与均分电力:</h3>
-                    <nut-switch :active.sync="tempData.room.avgPower==1" @change="onChangeAvgPower"></nut-switch>
-                    <p class="tip">当其他房间均匀分配电力时，该房间接受电力分配</p>
+                    <div class="risk-side risk-side-border">
+                        <h3>参与均分电力:</h3>
+                        <nut-switch :active.sync="tempData.room.avgPower==1" @change="onChangeAvgPower"></nut-switch>
+                        <p class="tip">当其他房间均匀分配电力时，该房间接受电力分配</p>
+                    </div>
+                    <div class="risk-side">
+                        <h3>智能输出电力:</h3>
+                        <nut-switch :active.sync="tempData.room.assignPower==1" @change="onChangeAssignPower"></nut-switch>
+                        <p class="tip">当有房间电力过低时自动为其输送电力</p>
+                    </div>
                 </div>
                 <div class="row risk">
                     <h3>全体终端人员命令:</h3>
@@ -401,7 +414,7 @@
                     <nut-slider class="input" v-model="tempData.assignPowerPct" :range="[0,100]" :showLabel="true" :stage="10" ></nut-slider>
                 </div>
                 <div class="row">
-                    <List title="双击选择房间" ref="roomListPop" option="均匀分配" :data="tempData.myPopRoomList" :columns="ROOM_LIST_3_COLUMN" @onDoubleTap="onDoubleTapPopRoom" @onTapOption="onTapAvgAssign" />
+                    <List title="双击选择房间" type="room" ref="roomListPop" option="均匀分配" :data="tempData.myPopRoomList" :columns="ROOM_LIST_3_COLUMN" @onDoubleTap="onDoubleTapPopRoom" @onTapOption="onTapAvgAssign" />
                 </div>
             </div>
         </nut-popup>
@@ -801,7 +814,7 @@
                 <div class="row">
                     <h3><label>策略</label></h3>
                     <div class="sub-row">
-                        <h3><label>平稳</label></h3>
+                        <h3><label>保护</label></h3>
                         <p>发电、挖矿和交易收益减少 50%，老化速度下降至 0。</p>
                     </div>
                     <div class="sub-row">
@@ -809,7 +822,7 @@
                         <p>收益和消耗都为 100%。</p>
                     </div>
                     <div class="sub-row">
-                        <h3><label>冒险</label></h3>
+                        <h3><label>高强</label></h3>
                         <p>发电、挖矿和交易收益提升至 200-250%，耗电量提升至 200%，老化速度提升至 300%。</p>
                     </div>
                 </div>
@@ -818,7 +831,7 @@
                     <p>房间最终收益为其终端收益总和的协调值百分比，因此协调值越高越好；<br/>当只有一个人员工作时，协调值为 100%；当有多个人员工作时，协调值为其「交流」能力值的平均值。</p>
                     <div class="sub-row">
                         <h3><label>管理员</label></h3>
-                        <p>如果安排了管理员，不论房间内有多少人员工作，房间的协调值固定为管理员的「交流」能力值；<br/><br/>如果安排了管理员，在冒险模式下，房间的总收益将取决于管理员对应不同房间类型的能力值（体能-发电站，智力-挖矿厂，交流-交易所，平均值-通用房）；<br/><br/>比如当房间类型为挖矿厂，管理员的智力为 100 时，房间的总收益将固定提升 150%。</p>
+                        <p>如果安排了管理员，不论房间内有多少人员工作，房间的协调值固定为管理员的「交流」能力值；<br/><br/>如果安排了管理员，在高强模式下，房间的总收益将取决于管理员对应不同房间类型的能力值（体能-发电站，智力-挖矿厂，交流-交易所，平均值-通用房）；<br/><br/>比如当房间类型为挖矿厂，管理员的智力为 100 时，房间的总收益将固定提升 150%。</p>
                     </div>
                 </div>
                 <div class="row">
@@ -850,7 +863,7 @@
                     <p>自动化程度越高，房间和终端的老化速度越慢；<br/>当房间的自动化达到 100% 时，房间和房间里的终端都将永不老化。</p>
                     <div class="sub-row">
                         <h3><label>工程师</label></h3>
-                        <p>消耗电力和资金以提升房间的自动化；<br/>提升速度取决于工程师的「智力」值。</p>
+                        <p>消耗资金以提升房间的自动化；<br/>提升速度取决于工程师的「智力」值。</p>
                     </div>
                 </div>
                 <div class="row">
@@ -903,16 +916,16 @@
                     <h3><label>房间搜索点数</label></h3>
                     <p>安排人员进行房间搜索可增加房间搜索点数；<br/>增加值取决于进行搜索的人员数量，以及每个搜索人员的「体能」和「智力」中最高的一项。</p>
                     <div class="sub-row">
-                        <h3><label>花费所有点数搜索新房间</label></h3>
-                        <p>以 1000 点为单位一次性消耗完所有房间搜索点数，在房间市场中生成新的房间作为商品供我厂选购；<br/>生成的房间数量越多，你想要的房间类型出现的概率就越高；<br/>请注意，每旬（10日）结束时，市场里的商品（房间和人员）将全部清空。</p>
+                        <h3><label>花费点数搜索新房间</label></h3>
+                        <p>消耗 1000 点房间搜索点数，在房间市场中生成一个新的房间作为商品供我厂选购；<br/>请注意，每旬（10日）结束时，市场里的商品（房间和人员）将全部清空。</p>
                     </div>
                 </div>
                 <div class="row">
                     <h3><label>人力搜索点数</label></h3>
                     <p>安排人员进行房间搜索可增加人力搜索点数；<br/>增加值取决于进行搜索的人员数量，每个搜索人员的「交流」和「形象」中最高的一项，以及我厂总形象值在世界所有工厂总形象值中的占比。</p>
                     <div class="sub-row">
-                        <h3><label>花费所有点数搜索新人员</label></h3>
-                        <p>以 1000 点为单位一次性消耗完所有人力搜索点数，在人员市场中生成新的人员作为商品供我厂选购。</p>
+                        <h3><label>花费点数搜索新人员</label></h3>
+                        <p>消耗 1000 点人力搜索点数，在人员市场中生成一个新的人员作为商品供我厂选购。</p>
                     </div>
                 </div>
                 <div class="row">
@@ -941,7 +954,7 @@
                 </div>
                 <div class="row">
                     <h3><label>形象破坏</label></h3>
-                    <p>消耗 100万 $ 资金让此工厂的形象减半；<br/>每十天可执行一次。</p>
+                    <p>消耗 70万 $ 资金让此工厂的形象减半；<br/>每十天可执行一次。</p>
                 </div>
                 <div class="row">
                     <h3><label>经济制裁</label></h3>
@@ -1120,8 +1133,9 @@ export default {
                 {name:'maintainerName',title:'维护工',width:'16%',},
                 {name:'imageAgentName',title:'门面',width:'16%',},
                 {name:'autoWorkerName',title:'工程师',width:'16%',},
-                {name:'freeTerminalCount',title:'空置',width:'12%',},
-                {name:'workerCount',title:'人数',width:'12%',},
+                // {name:'freeTerminalCount',title:'空置',width:'12%',},
+                // {name:'workerCount',title:'人数',width:'12%',},
+                {name:'terminalOccupies',title:'终端灯位',width:'24%',},
                 {name:'freeWorkerCount',title:'空闲',width:'12%',},
             ],
             ROOM_LIST_6_COLUMN: [ // 首页备用房间列表
@@ -1463,7 +1477,6 @@ export default {
             return Math.round(sum);
         },
 
-
         calcRoomLockStat(){ // 判断房间按钮状态
             return this.tempData.room;
         },
@@ -1569,7 +1582,7 @@ export default {
             let occupyCount = [2,3,4][room.level-1]+CONFIG.terminal_count_distribution[room.level-1];
             return workerList.length>=occupyCount;
         },
-        calcFreeTerminalCount(room){ // 计算一个房间内的空置终端数量
+        /*calcFreeTerminalCount(room){ // 计算一个房间内的空置终端数量
             let terminalList = getListByID(room.id,'rid',this.game.terminalList),
                 workerList = getListByID(room.id,'rid',this.game.workerList),
                 count = 0;
@@ -1579,7 +1592,7 @@ export default {
                     count += 1;
             }
             return count;
-        },
+        },*/
         calcFreeWorkerCount(room){ // 计算一个房间内的空置人员数量
             let workerList = getListByID(room.id,'rid',this.game.workerList),
                 count = 0;
@@ -1588,6 +1601,21 @@ export default {
                     count += 1;
             }
             return count;
+        },
+        calcTerminalOccupies(room){ // 计算房间的终端占用情况
+            let res = [];
+            let terminalList = getListByID(room.id,'rid',this.game.terminalList);
+            let workerList = getListByID(room.id,'rid',this.game.workerList);
+            for(let terminal of terminalList){
+                let worker = getListByID(terminal.id,'tid',workerList)[0];
+                if(!worker||worker.job==0){
+                    res.push(0);
+                }
+                else{
+                    res.push(1);
+                }
+            }
+            return res;
         },
         arrangeRoom(room){ // 自动安排房间内部人员工位
             let factory = getListByID(room.fid,'id',this.game.factoryList)[0],
@@ -1829,7 +1857,7 @@ export default {
                         durabImpact = 1-room.durab/CONFIG.max_durab;
                     }
                     if(abi&&abi>0){ // 重新计算 riskImpact
-                        if(room.risk==3){ // 冒险
+                        if(room.risk==3){ // 高强
                             riskImpact = 2+.5*abi/CONFIG.max_worker_ability;
                         }
                     }
@@ -1960,10 +1988,10 @@ export default {
                                 }
                             break;
                         }
-                        if(room.risk==1){ // 如果房间处于平稳模式
+                        if(room.risk==1){ // 如果房间处于保护模式
                             terminalDurabIncrese = 0;
                         }
-                        else if(room.risk==3){ // 如果房间处于冒险模式
+                        else if(room.risk==3){ // 如果房间处于高强模式
                             terminalDurabIncrese = terminalDurabIncrese*3;
                         }
                     }
@@ -1984,11 +2012,11 @@ export default {
 
                 // 计算房间数据
                 let roomRiskImpact = 1, durabImpact = 1;
-                if(room.risk==1){ // 平稳
+                if(room.risk==1){ // 保护
                     durabImpact = 0;
                     roomRiskImpact = .5;
                 }
-                else if(room.risk==3){ // 冒险
+                else if(room.risk==3){ // 高强
                     durabImpact = 3;
                     roomRiskImpact = 2;
                 }
@@ -2094,6 +2122,29 @@ export default {
             rrpIncome = Math.round(rrpIncome*calcFade(searchRoomWorkerList.length));
             hrpIncome = Math.round(hrpIncome*calcFade(searchWorkerWorkerList.length));
 
+            // 智能输送电力
+            for(let froom of myRoomList){
+                if(froom.assignPower){
+                    let toRoomList = []; // 需要输送的房间列表
+                    for(let troom of myRoomList){
+                        if(troom.avgPower&&troom.power<=froom.power){
+                            toRoomList.push(troom);
+                        }
+                    }
+                    let ind = 0;
+                    let assignPower = Math.floor(froom.power/2);
+                    let avgPower = Math.round(assignPower/toRoomList.length);
+                    if(toRoomList.length>0){ // 进行输送
+                        froom.power -= assignPower;
+                        for(;ind<toRoomList.length-1;ind++){
+                            toRoomList[ind].power += avgPower;
+                            assignPower -= avgPower;
+                        }
+                        toRoomList[ind].power += assignPower;
+                    }
+                }
+            }
+
             // 还债
             let remainDays = this.dayLimit-this.day+1;
             if(remainDays<=0&&this.game.factoryList.length>1){
@@ -2138,14 +2189,14 @@ export default {
                     relation.support = CONFIG.max_support;
                 // 间谍
                 if(spyList.length>0&&myFactory.money>0){
-                    let sortedMySpyList = bulbsort(spyList,'int'),
-                        youWorkerList = getListByID(youFactory.id,'fid',this.game.workerList),
-                        sortedYouWorkerList = bulbsort(youWorkerList,'int');
+                    let sortedMySpyList = bulbsort(spyList,'int');
+                    let youWorkerList = getListByID(youFactory.id,'fid',this.game.workerList);
+                    let sortedYouWorkerList = bulbsort(youWorkerList,'int');
+                    let youTopWorker = sortedYouWorkerList[0];
                     for(let i=0;i<sortedYouWorkerList.length;i++){
                         let mySpy = sortedMySpyList[i],
-                            youWorker = sortedYouWorkerList[i],
                             myInt = mySpy?mySpy.int:0,
-                            youInt = youWorker?youWorker.int:0,
+                            youInt = youTopWorker?youTopWorker.int:0,
                             imageDamage = 0,
                             spyConsume = myInt*5-(100-youInt)*4+CONFIG.relation.image_decrease_consume_fix;
                         if(mySpy&&myInt>youInt){
@@ -2155,9 +2206,9 @@ export default {
                             moneyIncome -= spyConsume;
                             logSuffix += `<p><span style="color:green">▲</span> ${mySpy.name}（${myInt}）的间谍工作对${youFactory.name}造成了 <b>${imageDamage}</b> 的形象损失（我厂消耗 <b>${spyConsume}</b> $）</p>`;
                         }
-                        else if(mySpy&&youWorker){
+                        else if(mySpy&&youTopWorker){
                             moneyIncome -= spyConsume;
-                            logSuffix += `<p><span style="color:red">▼</span> ${mySpy.name}（${myInt}）的间谍工作被 ${youWorker.name}（${youInt}）识破了，没有造成任何效果（我厂消耗 <b>${spyConsume}</b> $）</p>`;
+                            logSuffix += `<p><span style="color:red">▼</span> ${mySpy.name}（${myInt}）的间谍工作被 ${youTopWorker.name}（${youInt}）识破了，没有造成任何效果（我厂消耗 <b>${spyConsume}</b> $）</p>`;
                         }
                     }
                 }
@@ -2278,6 +2329,12 @@ export default {
                 }
                 logSuffix += `<p>- 搜索资源已清空 -</p>`;
             }
+            if(this.day%365==0){ // 过年
+                for(let worker of this.game.workerList){
+                    worker.age += 1;
+                }
+            }
+
             // 生产工厂报表
             logContent = {
                 moneyIncome,
@@ -2302,6 +2359,11 @@ export default {
         onChangeAvgPower(status){ // 修改【参与平分电力】
             let room = getListByID(this.tempData.room.id,'id',this.game.roomList)[0];
             room.avgPower = status?1:0;
+            this.asynAllPages();
+        },
+        onChangeAssignPower(status){ // 修改【智能输送电力】
+            let room = getListByID(this.tempData.room.id,'id',this.game.roomList)[0];
+            room.assignPower = status?1:0;
             this.asynAllPages();
         },
 
@@ -2507,7 +2569,7 @@ export default {
                     this.popTip = `选择「形象」高的人，持续提升工厂形象`;
                 break;
                 case 5: // 房间工程师
-                    this.popTip = `选择「智力」高的人，消耗电力和资金以提升房间的自动化程度`;
+                    this.popTip = `选择「智力」高的人，消耗资金以提升房间的自动化程度`;
                 break;
                 case 6: // 终端工人
                     this.popTip = `发电和维护需要「体能」，挖矿需要「智力」，交易需要「交流」能力`;
@@ -2729,7 +2791,7 @@ export default {
             this.marketType = type;
             this.asynAllPages();
         },
-        onTapSearch(type){ // 点击【搜索】按钮
+        onTapSearch(type,precount){ // 点击【搜索】按钮
             let factory = this.game.factoryList[0];
             if(type==1){ // 搜索房间
                 let point = factory.rrp;
@@ -2737,9 +2799,7 @@ export default {
                     this.$toast.text(`搜索点数不够`);
                 }
                 else{ // 生成新房间
-                    let count = Math.floor(point/CONFIG.searchRoomPointCost),
-                        mod = point%CONFIG.searchRoomPointCost;
-                    factory.rrp = mod;
+                    let count = precount||Math.floor(point/CONFIG.searchRoomPointCost);
                     for(let i=0;i<count;i++){
                         let newRoom = genRandomRoom(window.GLOBAL.accRoomID++,{fid:0,risk:2,power:0,level:1,auto:r(CONFIG.randmNewRoomAutoRange[0],CONFIG.randmNewRoomAutoRange[1]),durab:r(CONFIG.randmNewRoomDurabRange[0],CONFIG.randmNewRoomDurabRange[1])});
                         this.game.roomList.push(newRoom);
@@ -2754,6 +2814,7 @@ export default {
                             	tradeLevel: CONFIG.init.terminalTradeLevel,
                             });
                         }
+                        factory.rrp -= CONFIG.searchRoomPointCost;
                     }
                 }
             }
@@ -2763,11 +2824,10 @@ export default {
                    this.$toast.text(`搜索点数不够`);
                }
                else{ // 生成新人员
-                   let count = Math.floor(point/CONFIG.searchWorkerPointCost),
-                       mod = point%CONFIG.searchWorkerPointCost;
-                   factory.hrp = mod;
+                   let count = precount||Math.floor(point/CONFIG.searchWorkerPointCost);
                    for(let i=0;i<count;i++){
                        this.game.workerList.push(genRandomWorker(window.GLOBAL.accWorkerID++,{fid:0,}));
+                       factory.hrp -= CONFIG.searchWorkerPointCost;
                    }
                }
             }
@@ -3505,8 +3565,9 @@ export default {
                 let imageAgent = getListByID(8,'job',roomWorkerList)[0];
                 let maintainer = getListByID(6,'job',roomWorkerList)[0];
                 let autoWorker = getListByID(5,'job',roomWorkerList)[0];
-                room.freeTerminalCount = this.calcFreeTerminalCount(room);
+                // room.freeTerminalCount = this.calcFreeTerminalCount(room);
                 room.freeWorkerCount = this.calcFreeWorkerCount(room);
+                room.terminalOccupies = this.calcTerminalOccupies(room);
                 room.workerCount = roomWorkerList.length;
                 room.managerName = manager?manager.name:'-';
                 room.imageAgentName = imageAgent?imageAgent.name:'-';
@@ -4109,11 +4170,19 @@ export default {
     }
     .room-board .risk{
         text-align: left;
-        height: 2rem;
+        min-height: 2rem;
     }
     .room-board .risk h3{
         height: .6rem;
         line-height: .6rem;
+    }
+    .room-board .risk .risk-side{
+        display: inline-block;
+        width: 49%;
+        padding: 0 4px;
+    }
+    .room-board .risk .risk-side-border{
+        border-right: 1px solid #ccc;
     }
     .room-board .risk .select{
         color: #ff4f18;
