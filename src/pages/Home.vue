@@ -132,7 +132,8 @@
                 <!--终端-->
                 <div class="tab-panel" v-if="tempData.terminal" v-show="state==3">
                     <div class="row no-margin">
-                        <h2 class="room-name">{{tempData.terminal.room.name}}的终端[ID{{tempData.terminal.id}}] <a class="btn btn-edit" @click="showEditTerminal=true">操作</a></h2>
+                        <!-- <h2 class="room-name">{{tempData.terminal.room.name}}的终端[ID{{tempData.terminal.id}}] <a class="btn btn-edit" @click="showEditTerminal=true">操作</a></h2> -->
+                        <h2 class="room-name">{{tempData.terminal.room.name}}的终端[ID{{tempData.terminal.id}}]</h2>
                     </div>
                     <div class="row">
                         <div class="index">
@@ -154,20 +155,23 @@
                             </div>
                             <!-- <div class="index-cell"><b>老化: {{percent(tempData.terminal.durab,config.max_durab)}}%</b></div> -->
                             <div class="index-cell pct-wrap"><b>老化:</b>&nbsp;<div class="pct"><nut-progress :text-inside="true" :percentage="percent(tempData.terminal.durab,config.max_durab)"></nut-progress></div></div>
-                            <div class="index-cell">
+                            <div class="index-cell index-lg">
                                 <b>供电等级:</b>
                                 <span class="level-bar" :class="`level-bar-${tempData.terminal.powerLevel}`" v-for="i in tempData.terminal.powerLevel"></span>
                                 <span class="level-text">{{tempData.terminal.powerLevel}}</span>
+                                <a class="btn btn-lvlup" v-if="tempData.terminal.powerLevel<config.max_terminal_level" @click="onTapTerminalLevelUp('power')">升级（{{config.power_levelup_cost[tempData.terminal.powerLevel-1]}} $）</a>
                             </div>
-                            <div class="index-cell">
+                            <div class="index-cell index-lg">
                                 <b>挖矿等级:</b>
                                 <span class="level-bar" :class="`level-bar-${tempData.terminal.digLevel}`" v-for="i in tempData.terminal.digLevel"></span>
                                 <span class="level-text">{{tempData.terminal.digLevel}}</span>
+                                <a class="btn btn-lvlup" v-if="tempData.terminal.digLevel<config.max_terminal_level" @click="onTapTerminalLevelUp('dig')">升级（{{config.dig_levelup_cost[tempData.terminal.digLevel-1]}} $）</a>
                             </div>
-                            <div class="index-cell">
+                            <div class="index-cell index-lg">
                                 <b>交易等级:</b>
                                 <span class="level-bar" :class="`level-bar-${tempData.terminal.tradeLevel}`" v-for="i in tempData.terminal.tradeLevel"></span>
                                 <span class="level-text">{{tempData.terminal.tradeLevel}}</span>
+                                <a class="btn btn-lvlup" v-if="tempData.terminal.tradeLevel<config.max_terminal_level" @click="onTapTerminalLevelUp('trade')">升级（{{config.trade_levelup_cost[tempData.terminal.tradeLevel-1]}} $）</a>
                             </div>
                         </div>
                     </div>
@@ -359,7 +363,7 @@
                 <div class="row room-level">
                     <div class="main-level">
                         <h3>房间等级 {{tempData.room.level}}</h3>
-                        <a class="btn" v-if="tempData.room.level<config.max_room_level" @click="onTapRoomLevelUp">提升房间等级（{{config.room_levelup_cost[tempData.room.level-1]}} $）</a>
+                        <a class="btn" v-if="tempData.room.level<config.max_room_level" @click="onTapRoomLevelUp">房间升级（{{config.room_levelup_cost[tempData.room.level-1]}} $）</a>
                     </div>
                     <div class="order-con">
                         排序：
@@ -368,9 +372,9 @@
                         </div>
                     </div>
                     <div class="all-level" v-if="tempData.powerLevelUpCost>0||tempData.digLevelUpCost>0||tempData.tradeLevelUpCost>0">
-                        <a class="risk-item btn-small" @click="onTapAllTerminalLevelUp(1)" v-if="tempData.powerLevelUpCost>0">提升所有终端发电等级（{{tempData.powerLevelUpCost}} $）</a>
-                        <a class="risk-item btn-small btn-small" @click="onTapAllTerminalLevelUp(2)" v-if="tempData.digLevelUpCost>0">提升所有终端挖矿等级（{{tempData.digLevelUpCost}} $）</a>
-                        <a class="risk-item btn-small" @click="onTapAllTerminalLevelUp(3)" v-if="tempData.tradeLevelUpCost>0">提升所有终端交易等级（{{tempData.tradeLevelUpCost}} $）</a>
+                        <a class="risk-item btn-small" @click="onTapAllTerminalLevelUp(1)" v-if="tempData.powerLevelUpCost>0">所有终端发电升级（{{tempData.powerLevelUpCost}} $）</a>
+                        <a class="risk-item btn-small" @click="onTapAllTerminalLevelUp(2)" v-if="tempData.digLevelUpCost>0">所有终端挖矿升级（{{tempData.digLevelUpCost}} $）</a>
+                        <a class="risk-item btn-small" @click="onTapAllTerminalLevelUp(3)" v-if="tempData.tradeLevelUpCost>0">所有终端交易升级（{{tempData.tradeLevelUpCost}} $）</a>
                     </div>
                     <div class="clr"></div>
                 </div>
@@ -421,13 +425,13 @@
         <nut-popup v-model="showEditTerminal">
             <div class="row room-board" v-if="tempData.terminal">
                 <div class="row level">
-                    <h3>供电等级 {{tempData.terminal.powerLevel}}</h3><a class="btn" v-if="tempData.terminal.powerLevel<config.max_terminal_level" @click="onTapTerminalLevelUp('power')">提升等级（{{config.power_levelup_cost[tempData.terminal.powerLevel-1]}} $）</a>
+                    <h3>供电等级 {{tempData.terminal.powerLevel}}</h3><a class="btn" v-if="tempData.terminal.powerLevel<config.max_terminal_level" @click="onTapTerminalLevelUp('power')">升级（{{config.power_levelup_cost[tempData.terminal.powerLevel-1]}} $）</a>
                 </div>
                 <div class="row level">
-                    <h3>挖矿等级 {{tempData.terminal.digLevel}}</h3><a class="btn" v-if="tempData.terminal.digLevel<config.max_terminal_level" @click="onTapTerminalLevelUp('dig')">提升等级（{{config.dig_levelup_cost[tempData.terminal.digLevel-1]}} $）</a>
+                    <h3>挖矿等级 {{tempData.terminal.digLevel}}</h3><a class="btn" v-if="tempData.terminal.digLevel<config.max_terminal_level" @click="onTapTerminalLevelUp('dig')">升级（{{config.dig_levelup_cost[tempData.terminal.digLevel-1]}} $）</a>
                 </div>
                 <div class="row level">
-                    <h3>交易等级 {{tempData.terminal.tradeLevel}}</h3><a class="btn" v-if="tempData.terminal.tradeLevel<config.max_terminal_level" @click="onTapTerminalLevelUp('trade')">提升等级（{{config.trade_levelup_cost[tempData.terminal.tradeLevel-1]}} $）</a>
+                    <h3>交易等级 {{tempData.terminal.tradeLevel}}</h3><a class="btn" v-if="tempData.terminal.tradeLevel<config.max_terminal_level" @click="onTapTerminalLevelUp('trade')">升级（{{config.trade_levelup_cost[tempData.terminal.tradeLevel-1]}} $）</a>
                 </div>
             </div>
         </nut-popup>
@@ -448,16 +452,16 @@
                     </h3>
                 </div>
                 <div class="item">
-                    <h3>体能:</h3><span>{{tempData.myWorker.str}}</span>
+                    <h3>体能:</h3><span><b>{{tempData.myWorker.str}}</b><Bar :data="tempData.myWorker.str" /></span>
                 </div>
                 <div class="item">
-                    <h3>智力:</h3><span>{{tempData.myWorker.int}}</span>
+                    <h3>智力:</h3><span><b>{{tempData.myWorker.int}}</b><Bar :data="tempData.myWorker.int" /></span>
                 </div>
                 <div class="item">
-                    <h3>交流:</h3><span>{{tempData.myWorker.com}}</span>
+                    <h3>交流:</h3><span><b>{{tempData.myWorker.com}}</b><Bar :data="tempData.myWorker.com" /></span>
                 </div>
                 <div class="item">
-                    <h3>形象:</h3><span>{{tempData.myWorker.img}}</span>
+                    <h3>形象:</h3><span><b>{{tempData.myWorker.img}}</b><Bar :data="tempData.myWorker.img" /></span>
                 </div>
                 <div class="item">
                     <h3>所属:</h3><span>{{tempData.myWorker.fname||'-'}} {{tempData.myWorker.rname||''}}</span>
@@ -504,16 +508,16 @@
                     </h3>
                 </div>
                 <div class="item">
-                    <h3>体能:</h3><span>{{tempData.buyWorker.str}}</span>
+                    <h3>体能:</h3><span><b>{{tempData.buyWorker.str}}</b><Bar :data="tempData.buyWorker.str" /></span>
                 </div>
                 <div class="item">
-                    <h3>智力:</h3><span>{{tempData.buyWorker.int}}</span>
+                    <h3>智力:</h3><span><b>{{tempData.buyWorker.int}}</b><Bar :data="tempData.buyWorker.int" /></span>
                 </div>
                 <div class="item">
-                    <h3>交流:</h3><span>{{tempData.buyWorker.com}}</span>
+                    <h3>交流:</h3><span><b>{{tempData.buyWorker.com}}</b><Bar :data="tempData.buyWorker.com" /></span>
                 </div>
                 <div class="item">
-                    <h3>形象:</h3><span>{{tempData.buyWorker.img}}</span>
+                    <h3>形象:</h3><span><b>{{tempData.buyWorker.img}}</b><Bar :data="tempData.buyWorker.img" /></span>
                 </div>
                 <div class="item sell">
                     <a class="risk-item" @click="onTapBuyWorker">购买（{{tempData.buyWorker.price}} $）</a>
@@ -580,16 +584,16 @@
                     </h3>
                 </div>
                 <div class="item">
-                    <h3>体能:</h3><span>{{tempData.stealWorker.str}}</span>
+                    <h3>体能:</h3><span><b>{{tempData.stealWorker.str}}</b><Bar :data="tempData.stealWorker.str" /></span>
                 </div>
                 <div class="item">
-                    <h3>智力:</h3><span>{{tempData.stealWorker.int}}</span>
+                    <h3>智力:</h3><span><b>{{tempData.stealWorker.int}}</b><Bar :data="tempData.stealWorker.int" /></span>
                 </div>
                 <div class="item">
-                    <h3>交流:</h3><span>{{tempData.stealWorker.com}}</span>
+                    <h3>交流:</h3><span><b>{{tempData.stealWorker.com}}</b><Bar :data="tempData.stealWorker.com" /></span>
                 </div>
                 <div class="item">
-                    <h3>形象:</h3><span>{{tempData.stealWorker.img}}</span>
+                    <h3>形象:</h3><span><b>{{tempData.stealWorker.img}}</b><Bar :data="tempData.stealWorker.img" /></span>
                 </div>
                 <div class="item sell" v-if="!tempData.stealWorker.boss">
                     <a class="risk-item" @click="onTapStealWorker">偷取人员</a>
@@ -976,7 +980,8 @@
 </template>
 
 <script>
-import List from '../components/List'
+import List from '../components/List';
+import Bar from '../components/Bar';
 import { query, r, bulbsort, getParentNode, numFormat, avg, percent, getListByID, getMatchList, removeFromList, genRandomWorkerName, genRandomRoomName, genRandomFactoryName, genRandomRoom, genRandomWorker, genRandomTerminal, releaseAllByJob } from '../tools/utils';
 import { DEBUG, CONFIG, CACHE, } from '../config/config';
 export default {
@@ -1451,11 +1456,17 @@ export default {
         },
         calcWorkerValue(worker){ // 计算人员价格
             let sum = 100;
-            sum += worker.str*15;
-            sum += worker.int*15;
-            sum += worker.com*15;
-            sum += worker.img*17;
-            return Math.round(Math.round(sum/100)*100);
+            let attrList = [
+                {'val':worker.str},
+                {'val':worker.int},
+                {'val':worker.com},
+                {'val':worker.img},
+            ];
+            let sortedAttrList = bulbsort(attrList,'val');
+            sum += sortedAttrList[0].val*30;
+            sum += sortedAttrList[1].val*5;
+            sum += sortedAttrList[2].val*2;
+            return Math.round(Math.round(sum/25)*25);
         },
         calcFactoryValue(factory){ // 计算工厂价格
             let workerList = getListByID(factory.id,'fid',this.game.workerList),
@@ -2190,17 +2201,23 @@ export default {
                 // 间谍
                 if(spyList.length>0&&myFactory.money>0){
                     let sortedMySpyList = bulbsort(spyList,'int');
-                    let youWorkerList = getListByID(youFactory.id,'fid',this.game.workerList);
+                    let _youWorkerList = getListByID(youFactory.id,'fid',this.game.workerList);
+                    let youWorkerList = [];
+                    for(let worker of _youWorkerList){ // boss不参与识破工作
+                        if(!worker.boss){
+                            youWorkerList.push(worker);
+                        }
+                    }
                     let sortedYouWorkerList = bulbsort(youWorkerList,'int');
                     let youTopWorker = sortedYouWorkerList[0];
-                    for(let i=0;i<sortedYouWorkerList.length;i++){
+                    let youTopInt = youTopWorker?youTopWorker.int:0;
+                    for(let i=0;i<sortedMySpyList.length;i++){
                         let mySpy = sortedMySpyList[i],
                             myInt = mySpy?mySpy.int:0,
-                            youInt = youTopWorker?youTopWorker.int:0,
                             imageDamage = 0,
-                            spyConsume = myInt*5-(100-youInt)*4+CONFIG.relation.image_decrease_consume_fix;
-                        if(mySpy&&myInt>youInt){
-                            imageDamage = Math.round(myInt*1.8+15-youInt/4);
+                            spyConsume = myInt*5-(100-youTopInt)*4+CONFIG.relation.image_decrease_consume_fix;
+                        if(mySpy&&myInt>youTopInt){
+                            imageDamage = Math.round(myInt*1.8+15-youTopInt/4);
                             youFactory.imageDamaged = true;
                             youFactory.image -= imageDamage;
                             moneyIncome -= spyConsume;
@@ -2208,7 +2225,7 @@ export default {
                         }
                         else if(mySpy&&youTopWorker){
                             moneyIncome -= spyConsume;
-                            logSuffix += `<p><span style="color:red">▼</span> ${mySpy.name}（${myInt}）的间谍工作被 ${youTopWorker.name}（${youInt}）识破了，没有造成任何效果（我厂消耗 <b>${spyConsume}</b> $）</p>`;
+                            logSuffix += `<p><span style="color:red">▼</span> ${mySpy.name}（${myInt}）的间谍工作被 ${youTopWorker.name}（${youTopWorker.name}）识破了，没有造成任何效果（我厂消耗 <b>${spyConsume}</b> $）</p>`;
                         }
                     }
                 }
@@ -3238,6 +3255,7 @@ export default {
                 room = getListByID(this.tempData.room.id,'id',this.game.roomList)[0],
                 terminalList = getListByID(room.id,'rid',this.game.terminalList),
                 targetValueName = ['power','dig','trade'][type-1];
+            let effectCount = 0;
             if(room&&targetValueName){
                 for(let terminal of terminalList){
                     let level = terminal[`${targetValueName}Level`];
@@ -3246,9 +3264,13 @@ export default {
                         if(myFactory.money>=cost){
                             myFactory.money -= cost;
                             terminal[`${targetValueName}Level`] += 1;
+                            effectCount += 1;
                         }
                     }
                 }
+            }
+            if(effectCount==0){
+                this.$toast.text(`资金不足`);
             }
             this.asynAllPages();
         },
@@ -3750,6 +3772,7 @@ export default {
     },
     components:{
         List,
+        Bar,
     },
 }
 </script>
@@ -3996,6 +4019,9 @@ export default {
         font-weight: normal;
         color: #777;
     }
+    .index-lg{
+        margin-top: 35px;
+    }
     .pct-wrap b{
         width: 35%;
     }
@@ -4111,7 +4137,7 @@ export default {
         height: 1.5rem;
     }
     .room-board .room-level{
-
+        padding-bottom: 0;
     }
     .room-board .room-level .btn{
         font-weight: bold;
@@ -4167,6 +4193,7 @@ export default {
         font-size: .22rem;
         color: #ff4f18;
         display: block;
+        margin-bottom: 10px;
     }
     .room-board .risk{
         text-align: left;
@@ -4228,7 +4255,7 @@ export default {
     }
     .worker-board .item{
         display: flex;
-        justify-content: space-around;
+        justify-content: flex-start;
         align-items: center;
     }
     .worker-board .item h3{
@@ -4240,10 +4267,16 @@ export default {
         word-break: keep-all;
     }
     .worker-board .item span{
-        width: 65%;
+        width: 60%;
+        display: flex;
+        justify-content: flex-start;
+        align-items: center;
         text-align: left;
         white-space: nowrap;
         word-break: keep-all;
+    }
+    .worker-board .item span b{
+        width: .65rem;
     }
     .worker-board .sell{
         color: #ff4f18;
@@ -4407,6 +4440,12 @@ export default {
         background-color: #0E56FF;
     }
     .level-text{
+        font-weight: bold;
+    }
+
+    .btn-lvlup{
+        display: inline-block;
+        margin-left: 10px;
         font-weight: bold;
     }
 

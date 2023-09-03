@@ -379,7 +379,6 @@ export default {
     }
     .cell-occupies .on::after{
         background-color: #0E56FF;
-        box-shadow: 0 0 2px #0E56FF;
         border: 1px solid #333;
     }
     .cell-occupies .off::after{
