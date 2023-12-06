@@ -15,7 +15,7 @@ module.exports = {
 			humanResourcePoint: 2000, // 初始人力资源点数
 			roomResourcePoint: 0, // 初始房间资源点数
 			roomType: 0, // 初始房间类型
-			roomBasicImage: 0, // 初始房间基础形象
+			roomBasicImage: 10, // 初始房间基础形象
 			randomOtherMoney: [10000,40000], // 其他公司初始资金随机范围
 			randomOtherImage: [500,3000], // 其他公司初始形象随机范围
 			roomPower: 1000, // 第一个房间的初始电力
