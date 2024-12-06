@@ -48,6 +48,18 @@ export function bulbsort(arr,valname='val',type=1){
     }
     return res;
 }
+/* 随机排序 */
+export function shuffle(arr){
+    let res = [...arr];
+    let len = res.length;
+    for(let i=0;i<len-1;i++){
+        let index = parseInt(Math.random()*(len-i));
+        let temp = res[index];
+        res[index] = res[len-i-1];
+        res[len-i-1] = temp;
+    }
+    return res;
+}
 /*
  获取离元素ele最近的父级 tagname 标签
  */
@@ -57,6 +69,21 @@ export function getParentNode(ele,tagname='a'){
     else if(ele)
         return getParentNode(ele.parentNode,tagname);
     return false;
+}
+export function cloneObj(obj,und){ // 深度复制数据对象
+    if(!obj){
+        return und;
+    }
+    let newObj = {};
+    if(obj instanceof Array){
+       newObj = [];
+    }
+    for(let key in obj){
+       let val = obj[key];
+       newObj[key] = typeof val==='object'?cloneObj(val):val;
+    }
+    return newObj;
+    // return JSON.parse(JSON.stringify(obj));
 }
 /*
  计算文本长度（汉字为2，英文和字符为1）
@@ -202,7 +229,7 @@ export function genRandomRoom(id,{fid,fname,power,durab,risk,auto,level,type,bas
         group: group||0,
     }
 }
-export function genRandomWorker(id,{fid,fname,rid,rname,tid,initJob,boss,baseOn}={}){ // 随机生成工人
+export function genRandomWorker(id,{fid,fname,rid,rname,tid,initJob,boss,baseOn,trend}={}){ // 随机生成工人
     /*function rate(age){
         let a = r(0,4),
             z;
@@ -297,6 +324,12 @@ export function genRandomWorker(id,{fid,fname,rid,rname,tid,initJob,boss,baseOn}
     res.int += r(-3,3);
     res.com += r(-3,3);
     res.img += r(-3,3);
+    if(trend&&trend.name){
+        res.str = Math.round((res.str+trend.str*2)/3);
+        res.int = Math.round((res.int+trend.int*2)/3);
+        res.com = Math.round((res.com+trend.com*2)/3);
+        res.img = Math.round((res.img+trend.img*2)/3);
+    }
     if(res.str>100){
         res.str = 100;
     }
@@ -415,6 +448,91 @@ export function releaseAllByJob(job,arr){ // 解除所有相关职务
             inst.job = 0;
         }
     });
+}
+export function storageSaveFilter(data){ // 存储全局数据过滤器
+    let dWorkerList = data.game.workerList;
+    let dTerminalList = data.game.terminalList;
+    let dRoomList = data.game.roomList;
+    let res = {...data};
+    res.game = {...data.game};
+    res.game.workerList = [];
+    res.game.terminalList = [];
+    res.game.roomList = [];
+    for(let dw of dWorkerList){
+        res.game.workerList.push([dw.age,dw.boss,dw.com,dw.fid,dw.fname,dw.gender,dw.id,dw.img,dw.int,dw.job,dw.name,dw.rid,dw.rname,dw.str,dw.studyfid,dw.studyfname,dw.tfid,dw.tfname,dw.tid,]);
+    }
+    for(let dt of dTerminalList){
+        res.game.terminalList.push([dt.digLevel,dt.durab,dt.fid,dt.id,dt.powerLevel,dt.rid,dt.tradeLevel,]);
+    }
+    for(let dr of dRoomList){
+        res.game.roomList.push([dr.auto,dr.basicImage,dr.durab,dr.fid,dr.fname,dr.group,dr.id,dr.level,dr.name,dr.order,dr.power,dr.risk,dr.type,]);
+    }
+    return res;
+}
+export function storageReadFilter(data){ // 读取全局数据过滤器
+    let dWorkerList = data.game.workerList;
+    let dTerminalList = data.game.terminalList;
+    let dRoomList = data.game.roomList;
+    let res = {...data};
+    res.game = {...data.game};
+    res.game.workerList = [];
+    res.game.terminalList = [];
+    res.game.roomList = [];
+    for(let dw of dWorkerList){
+        let rWorker = {
+            age: dw[0],
+            boss: dw[1],
+            com: dw[2],
+            fid: dw[3],
+            fname: dw[4],
+            gender: dw[5],
+            id: dw[6],
+            img: dw[7],
+            int: dw[8],
+            job: dw[9],
+            name: dw[10],
+            rid: dw[11],
+            rname: dw[12],
+            str: dw[13],
+            studyfid: dw[14],
+            studyfname: dw[15],
+            tfid: dw[16],
+            tfname: dw[17],
+            tid: dw[18],
+        }
+        res.game.workerList.push(rWorker);
+    }
+    for(let dt of dTerminalList){
+        let rTerminal = {
+            digLevel: dt[0],
+            durab: dt[1],
+            fid: dt[2],
+            id: dt[3],
+            powerLevel: dt[4],
+            rid: dt[5],
+            tradeLevel: dt[6],
+        }
+        res.game.terminalList.push(rTerminal);
+    }
+    for(let dr of dRoomList){
+        let rRoom = {
+            auto: dr[0],
+            basicImage: dr[1],
+            durab: dr[2],
+            fid: dr[3],
+            fname: dr[4],
+            group: dr[5],
+            id: dr[6],
+            level: dr[7],
+            name: dr[8],
+            order: dr[9],
+            power: dr[10],
+            risk: dr[11],
+            type: dr[12],
+        }
+        res.game.roomList.push(rRoom);
+    }
+    return res;
 }
 
 

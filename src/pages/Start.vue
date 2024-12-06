@@ -85,7 +85,7 @@
 
 <script>
 // Copyright (c) 2018 Copyright Holder All Rights Reserved.
-import { query, r, bulbsort, percent, genRandomWorkerName, genRandomRoomName, genRandomFactoryName, genRandomRoom, genRandomWorker, genRandomPartner, genRandomTerminal, getListByID } from '../tools/utils';
+import { query, r, bulbsort, percent, genRandomWorkerName, genRandomRoomName, genRandomFactoryName, genRandomRoom, genRandomWorker, genRandomPartner, genRandomTerminal, getListByID, storageSaveFilter, storageReadFilter, } from '../tools/utils';
 import { DEBUG, CONFIG, CACHE, } from '../config/config';
 export default {
     name: 'Start',
@@ -190,7 +190,7 @@ export default {
                 try{
                     let newStorage = {
                         code: this.newcode,
-                        data: window.GLOBAL,
+                        data: storageSaveFilter(window.GLOBAL),
                     }
                     storageList.push(newStorage);
                     _storageList = JSON.stringify(storageList);
@@ -249,7 +249,7 @@ export default {
                 }
             }
             if(savedStorage){ // 已有存档
-                window.GLOBAL = savedStorage.data;
+                window.GLOBAL = storageReadFilter(savedStorage.data);
                 localStorage.setItem(CACHE.code,this.loadcode);
                 this.$router.push('home');
             }
