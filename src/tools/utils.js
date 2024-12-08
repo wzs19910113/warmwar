@@ -462,10 +462,10 @@ export function storageSaveFilter(data){ // 存储全局数据过滤器
         res.game.workerList.push([dw.age,dw.boss,dw.com,dw.fid,dw.fname,dw.gender,dw.id,dw.img,dw.int,dw.job,dw.name,dw.rid,dw.rname,dw.str,dw.studyfid,dw.studyfname,dw.tfid,dw.tfname,dw.tid,]);
     }
     for(let dt of dTerminalList){
-        res.game.terminalList.push([dt.digLevel,dt.durab,dt.fid,dt.id,dt.powerLevel,dt.rid,dt.tradeLevel,]);
+        res.game.terminalList.push([dt.digLevel,dt.durab,dt.fid,dt.id,dt.powerLevel,dt.rid,dt.tradeLevel,dt.group,]);
     }
     for(let dr of dRoomList){
-        res.game.roomList.push([dr.auto,dr.basicImage,dr.durab,dr.fid,dr.fname,dr.group,dr.id,dr.level,dr.name,dr.order,dr.power,dr.risk,dr.type,]);
+        res.game.roomList.push([dr.auto,dr.basicImage,dr.durab,dr.fid,dr.fname,dr.group,dr.id,dr.level,dr.name,dr.order,dr.power,dr.risk,dr.type,dr.avgPower,dr.assignPower]);
     }
     return res;
 }
@@ -511,6 +511,7 @@ export function storageReadFilter(data){ // 读取全局数据过滤器
             powerLevel: dt[4],
             rid: dt[5],
             tradeLevel: dt[6],
+            group: dt[7],
         }
         res.game.terminalList.push(rTerminal);
     }
@@ -529,6 +530,8 @@ export function storageReadFilter(data){ // 读取全局数据过滤器
             power: dr[10],
             risk: dr[11],
             type: dr[12],
+            avgPower: dr[13],
+            assignPower: dr[14],
         }
         res.game.roomList.push(rRoom);
     }

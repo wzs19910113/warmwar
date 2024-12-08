@@ -1,6 +1,7 @@
 <template>
     <div class="main">
-        <h1 class="title"><i>Molopoly</i></h1>
+        <h1 class="title">- <i>Molopoly</i> -</h1>
+        <h4 class="version">Beta 10.4.1</h4>
         <div class="wrap" v-show="state==0">
             <nut-button class="btn btn-newgame" @click="newgame">新游戏</nut-button>
             <nut-button class="btn btn-read" @click="read" v-if="storageList.length>0">读档</nut-button>
@@ -459,7 +460,15 @@ export default {
     }
     .title{
         font-size: 1rem;
-        margin-bottom: 1rem;
+        margin-bottom: .1rem;
+    }
+    .version{
+        font-style: normal;
+        font-weight: normal;
+        color: #777;
+        height: .6rem;
+        line-height: .6rem;
+        margin-bottom: .8rem;
     }
     .h-line{
         margin: .8rem 0;
