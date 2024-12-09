@@ -84,7 +84,7 @@
                             </div>
                             <!-- <div class="index-cell left"><b>老化: {{percent(tempData.room.durab,config.max_durab)}}%</b></div> -->
                             <div class="index-cell" v-if="tempData.room.level>=2">
-                                <b>门面 <span v-if="tempData.room.basicImage>0">(基础门面+{{tempData.room.basicImage}})</span>:
+                                <b>公关 <span v-if="tempData.room.basicImage>0">(基础门面+{{tempData.room.basicImage}})</span>:
                                 <span v-if="tempData.room.imageAgent">
                                     <a class="orange" @click="jump(4,tempData.room.imageAgent.id)">{{tempData.room.imageAgent.name}}</a>
                                     <i>({{tempData.room.imageAgent.img}})</i>
@@ -191,7 +191,7 @@
                             <a class="btn" :class="{'select':filter==5&&searchingWorkerID==0}" @click="onTapWorkerListFilter(5)">终端维护</a><br/>
                             <a class="btn" :class="{'select':filter==11&&searchingWorkerID==0}" @click="onTapWorkerListFilter(11)">管理员</a>
                             <a class="btn" :class="{'select':filter==12&&searchingWorkerID==0}" @click="onTapWorkerListFilter(12)">房间维护</a>
-                            <a class="btn" :class="{'select':filter==13&&searchingWorkerID==0}" @click="onTapWorkerListFilter(13)">门面</a>
+                            <a class="btn" :class="{'select':filter==13&&searchingWorkerID==0}" @click="onTapWorkerListFilter(13)">公关</a>
                             <a class="btn" :class="{'select':filter==14&&searchingWorkerID==0}" @click="onTapWorkerListFilter(14)">自动化</a><br/>
                             <a class="btn" :class="{'select':filter==6&&searchingWorkerID==0}" @click="onTapWorkerListFilter(6)">房间搜索</a>
                             <a class="btn" :class="{'select':filter==7&&searchingWorkerID==0}" @click="onTapWorkerListFilter(7)">人力搜索</a>
@@ -748,7 +748,7 @@
                 <div class="row">
                     <h3><label>提升实力</label></h3>
                     <p>
-                        形象方面，你可以通过任命工厂的「形象代言人」以稳定提升工厂形象，同时每个房间的门面担当也会帮助你厂提高形象。<br/><br/>
+                        形象方面，你可以通过任命工厂的「形象代言人」以稳定提升工厂形象，同时每个房间的公关担当也会帮助你厂提高形象。<br/><br/>
                         资金方面，你可以任命房间内的工厂人员通过终端进行「挖矿」和「交易」的工作来获取资金；同时也要另外安排终端人员进行「发电」工作以提供房间电力，否则房间内的终端将无法产生资金收益。<br/><br/>
                         房间和终端都会老化，请注意定期维护（消耗资金）。<br/>
                     </p>
@@ -778,7 +778,7 @@
                 </div>
                 <div class="row">
                     <h3><label>工厂形象</label></h3>
-                    <p>工厂形象越高，人力搜索点数提升越快；<br/>可通过形象代言人和各房间门面人员获取。</p>
+                    <p>工厂形象越高，人力搜索点数提升越快；<br/>可通过形象代言人和各房间公关人员获取。</p>
                 </div>
                 <div class="row">
                     <h3><label>房间搜索点数</label></h3>
@@ -863,14 +863,14 @@
                 </div>
                 <div class="row">
                     <h3><label>房间等级</label></h3>
-                    <p>房间最高为 3 级；<br/>提升等级可以增加房间内的终端数量，也可以增加每个终端的收益；<br/>2 级房间能解锁门面工位；<br/>3 级房间能解锁自动化功能。</p>
+                    <p>房间最高为 3 级；<br/>提升等级可以增加房间内的终端数量，也可以增加每个终端的收益；<br/>2 级房间能解锁公关工位；<br/>3 级房间能解锁自动化功能。</p>
                 </div>
                 <div class="row">
-                    <h3><label>门面（2级房间解锁）</label></h3>
-                    <p>安排门面工作人员可以提高工厂形象；<br/>收益取决于门面人员的「形象」值。</p>
+                    <h3><label>公关（2级房间解锁）</label></h3>
+                    <p>安排公关工作人员可以提高工厂形象；<br/>收益取决于公关人员的「形象」值。</p>
                     <div class="sub-row">
                         <h3><label>基础门面</label></h3>
-                        <p>有的房间拥有基础门面，只要安排了人员负责门面就能额外固定增加形象收益</p>
+                        <p>有的房间拥有基础门面，只要安排了人员负责公关就能额外固定增加形象收益</p>
                     </div>
                 </div>
                 <div class="row">
@@ -1148,7 +1148,7 @@ export default {
             ROOM_LIST_5_COLUMN: [ // 首页页房间列表工位情况
                 {name:'managerName',title:'管理员',width:'16%',},
                 {name:'maintainerName',title:'维护工',width:'16%',},
-                {name:'imageAgentName',title:'门面',width:'16%',},
+                {name:'imageAgentName',title:'公关',width:'16%',},
                 {name:'autoWorkerName',title:'工程师',width:'16%',},
                 // {name:'freeTerminalCount',title:'空置',width:'12%',},
                 // {name:'workerCount',title:'人数',width:'12%',},
@@ -2091,7 +2091,7 @@ export default {
                 if(manager){ // 房间管理员
 
                 }
-                if(roomImageAgent){ // 房间门面
+                if(roomImageAgent){ // 房间公关
                     roomImageIncome = Math.round((roomImageAgent.img+room.basicImage)*CONFIG.room.image_increse_factor+CONFIG.room.image_increse_base);
                 }
                 if(myFactory.money>0&&maintainer){ // 房间维护
@@ -2627,7 +2627,7 @@ export default {
                 case 3: // 房间维护工人
                     this.popTip = `选择「体能」高的人，降低房间老化，同时小幅降低每个终端的老化，同时会持续消耗资金`;
                 break;
-                case 4: // 房间门面
+                case 4: // 房间公关
                     this.popTip = `选择「形象」高的人，持续提升工厂形象`;
                 break;
                 case 5: // 房间工程师
