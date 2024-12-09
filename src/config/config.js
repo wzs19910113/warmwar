@@ -1,5 +1,5 @@
 module.exports = {
-	DEBUG: 0,
+	DEBUG: 1,
 	CACHE: {
 		list: '_DS_MONO_L',
 		code: '_DS_MONO_C',

@@ -1160,14 +1160,14 @@ export default {
                 {name:'power',title:'电力',isPower:true,width:'12%',},
                 {name:'basicImage',title:'门面',width:'10%',},
                 {name:'durab',title:'老化',isRoomDurab:true,width:'12%',format:v=>`${percent(v,CONFIG.max_durab)}%`,},
-                {name:'imageAgentName',title:'门人',width:'14%',},
+                {name:'imageAgentName',title:'公关',width:'14%',},
                 {name:'auto',title:'自动化',isAuto:true,width:'13%',format:v=>`${percent(v,CONFIG.max_auto)}%`,},
                 {name:'level',title:'等级',isLevel:true,width:'10%',format:v=>`LV.${v}`,},
             ],
             ROOM_LIST_7_COLUMN: [ // 首页自营房间列表
                 {name:'name',title:'房间名',width:'27%',},
                 {name:'power',title:'电力',isPower:true,width:'12%',},
-                {name:'imageAgentName',title:'门人',width:'15%',},
+                {name:'imageAgentName',title:'公关',width:'15%',},
                 {name:'durab',title:'老化',isRoomDurab:true,width:'10%',format:v=>`${percent(v,CONFIG.max_durab)}%`,},
                 {name:'risk',title:'策略',isMode:true,width:'8%',format:v=>`${CONFIG.risk_name_map[v-1]}`,},
                 {name:'auto',title:'自动化',isAuto:true,width:'10%',format:v=>`${percent(v,CONFIG.max_auto)}%`,},
@@ -3665,6 +3665,8 @@ export default {
             // 自营房间列表
             for(let room of myAutoServiceRoomList){
                 let roomWorkerList = getListByID(room.id,'rid',this.game.workerList);
+                let imageAgent = getListByID(8,'job',roomWorkerList)[0];
+                room.imageAgentName = imageAgent?imageAgent.name:'-';
                 room.workerCount = roomWorkerList.length;
             }
         },

@@ -1,7 +1,7 @@
 <template>
     <div class="main">
         <h1 class="title">- <i>Molopoly</i> -</h1>
-        <h4 class="version">Beta 10.4.1</h4>
+        <h4 class="version">Beta 10.4.2</h4>
         <div class="wrap" v-show="state==0">
             <nut-button class="btn btn-newgame" @click="newgame">新游戏</nut-button>
             <nut-button class="btn btn-read" @click="read" v-if="storageList.length>0">读档</nut-button>
