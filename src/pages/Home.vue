@@ -365,6 +365,7 @@
             <a class="menu-item" @click="onTapDrag(3)">新手指导</a>
             <a class="menu-item" @click="onTapDrag(4)">{{['首','房间','终端','人员','市场','外交','外交工厂','报表'][this.state-1]}}页操作指南</a>
             <a class="menu-item" @click="onTapDrag(5)">返回初始界面</a>
+            <a class="menu-item" @click="onTapDrag(6)">GM</a>
         </nut-popup>
         <nut-popup v-model="showEditFactoryName">
             <nut-textinput class="input" v-model="game.factoryList[0].name" placeholder="工厂名字" :disabled="false"/>
@@ -721,6 +722,17 @@
         </nut-popup>
         <nut-popup v-model="showTasks">
             <div class="row task-board">
+            </div>
+        </nut-popup>
+        <nut-popup v-model="showGM">
+            <div class="row gm-board">
+                <a class='btn' @click="onTapGM(1)">资金+100w</a>
+                <a class='btn' @click="onTapGM(2)">形象+5w</a>
+                <a class='btn' @click="onTapGM(3)">房间资源+1w</a>
+                <a class='btn' @click="onTapGM(4)">人力资源+1w</a>
+                <a class='btn' @click="onTapGM(5)">所有房间电力+5w</a>
+                <a class='btn' @click="onTapGM(6)">所有其他工厂支持率+100%</a>
+                <a class='btn' @click="onTapGM(7)">超级董事长</a>
             </div>
         </nut-popup>
         <!-- <nut-popup v-model="showEditWorkerPage">
@@ -1114,6 +1126,7 @@ export default {
             showGuide: false,
             showSpyTargets: false,
             showTasks: false,
+            showGM: false,
 
             // const
             ROOM_LIST_COLUMN: [ // 首页房间列表基本情况
@@ -2466,6 +2479,9 @@ export default {
                 case 5: // 退出游戏
                     this.$router.push('/');
                 break;
+                case 6: // GM
+                    this.showGM = true;
+                break;
             }
         },
         onTapGo(){ // 点击【结束】按钮
@@ -3354,6 +3370,46 @@ export default {
                 this.asynAllPages();
             }
         },
+        onTapGM(flag){ // 点击【GM】按钮
+            let me = this.game.workerList[0];
+            let myFactory = this.game.factoryList[0];
+            let myRoomList = getMatchList(this.game.roomList,[['fid',1]]);
+            switch(flag){
+                case 1: // 资金+100w
+                    myFactory.money += 1000000;
+                break;
+                case 2: // 形象+5w
+                    myFactory.image += 50000;
+                break;
+                case 3: // 房间资源点数+1w
+                    myFactory.hrp += 10000;
+                break;
+                case 4: // 人力资源点数+1w
+                    myFactory.rrp += 10000;
+                break;
+                case 5: // 所有房间电力+5w
+                    for(let room of myRoomList){
+                        room.power += 50000;
+                    }
+                break;
+                case 6: // 其他工厂支持率+100%
+                    for(let relation of this.game.relationList){
+                        if(relation.from==1){
+                            relation.support = 10000;
+                        }
+                    }
+                break;
+                case 7: // 超级董事长
+                    me.str = 100;
+                    me.int = 100;
+                    me.com = 100;
+                    me.img = 100;
+                break;
+            }
+            this.asynAllPages();
+        },
+
+
         onDoubleTapRoom(id){ // 双击【房间】按钮
             localStorage.setItem(CACHE.tip1,1);
             this.tip1 = false;
@@ -4509,6 +4565,19 @@ export default {
         display: inline-block;
         margin-left: 10px;
         font-weight: bold;
+    }
+
+    .gm-board{
+        width: 5rem;
+        padding: .5rem;
+        text-align: right;
+    }
+    .gm-board .btn{
+        display: block;
+        height: .5rem;
+        line-height: .5rem;
+        margin-bottom: .1rem;
+        font-size: .32rem;
     }
 
     .factory-board{
